@@ -147,19 +147,19 @@ export class Loader
      * await loader.load('image1.png');
      */
     public loadOptions: LoadOptions = { ...Loader.defaultOptions };
-    private readonly _parsers: LoaderParser[] = [];
-    private _parserHash: Record<string, LoaderParser>;
+    readonly #_parsers: LoaderParser[] = [];
+    #_parserHash: Record<string, LoaderParser>;
 
-    private _parsersValidated = false;
+    #_parsersValidated = false;
 
     /**
      * All loader parsers registered
      * @type {assets.LoaderParser[]}
      */
-    public parsers = new Proxy(this._parsers, {
+    public parsers = new Proxy(this.#_parsers, {
         set: (target, key, value) =>
         {
-            this._parsersValidated = false;
+            this.#_parsersValidated = false;
 
             target[key as any as number] = value;
 
@@ -173,7 +173,7 @@ export class Loader
     /** function used for testing */
     public reset(): void
     {
-        this._parsersValidated = false;
+        this.#_parsersValidated = false;
         this.promiseCache = {};
     }
 
@@ -183,7 +183,7 @@ export class Loader
      * @param data - any custom additional information relevant to the asset being loaded
      * @returns - a promise that will resolve to an Asset for example a Texture of a JSON object
      */
-    private _getLoadPromiseAndParser(url: string, data?: ResolvedAsset): PromiseAndParser
+    #_getLoadPromiseAndParser(url: string, data?: ResolvedAsset): PromiseAndParser
     {
         const result: PromiseAndParser = {
             promise: null,
@@ -200,7 +200,7 @@ export class Loader
             if (data.parser || data.loadParser)
             {
                 // they have? lovely, lets use it
-                parser = this._parserHash[data.parser || data.loadParser];
+                parser = this.#_parserHash[data.parser || data.loadParser];
 
                 // #if _DEBUG
                 if (data.loadParser)
@@ -300,9 +300,9 @@ export class Loader
         onProgressOrOptions?: ProgressCallback | LoadOptions,
     ): Promise<T | Record<string, T>>
     {
-        if (!this._parsersValidated)
+        if (!this.#_parsersValidated)
         {
-            this._validateParsers();
+            this.#_validateParsers();
         }
 
         const options: LoadOptions = typeof onProgressOrOptions === 'function'
@@ -330,7 +330,7 @@ export class Loader
 
             if (assets[asset.src]) return;
 
-            await this._loadAssetWithRetry(url, asset, { onProgress, onError, strategy, retryCount, retryDelay }, assets);
+            await this.#_loadAssetWithRetry(url, asset, { onProgress, onError, strategy, retryCount, retryDelay }, assets);
 
             count += (asset.progressSize || 1);
             if (onProgress) onProgress(count / total);
@@ -382,11 +382,11 @@ export class Loader
     }
 
     /** validates our parsers, right now it only checks for name conflicts but we can add more here as required! */
-    private _validateParsers()
+    #_validateParsers()
     {
-        this._parsersValidated = true;
+        this.#_parsersValidated = true;
 
-        this._parserHash = this._parsers
+        this.#_parserHash = this.#_parsers
             .filter((parser) => parser.name || parser.id)
             .reduce((hash, parser) =>
             {
@@ -411,7 +411,7 @@ export class Loader
             }, {} as Record<string, LoaderParser>);
     }
 
-    private async _loadAssetWithRetry(
+    async #_loadAssetWithRetry(
         url: string,
         asset: ResolvedAsset,
         options: LoadOptions,
@@ -428,7 +428,7 @@ export class Loader
             {
                 if (!this.promiseCache[url])
                 {
-                    this.promiseCache[url] = this._getLoadPromiseAndParser(url, asset);
+                    this.promiseCache[url] = this.#_getLoadPromiseAndParser(url, asset);
                 }
 
                 assets[asset.src] = await this.promiseCache[url].promise;

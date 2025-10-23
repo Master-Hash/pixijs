@@ -21,16 +21,16 @@ class WorkerManagerClass
      * Hash map storing resolve/reject functions for pending worker requests.
      * Keyed by UUID to match responses with their corresponding promises.
      */
-    private _resolveHash: {
+    #_resolveHash: {
         [key: string]: {
             resolve: (...param: any[]) => void;
             reject: (...param: any[]) => void;
         }
     };
     /** Pool of available workers ready for use */
-    private readonly _workerPool: Worker[];
+    readonly #_workerPool: Worker[];
     /** Queue of pending work items waiting for available workers */
-    private readonly _queue: {
+    readonly #_queue: {
         id: string;
         arguments: any[];
         resolve: (...param: any[]) => void;
@@ -38,19 +38,19 @@ class WorkerManagerClass
     }[];
 
     /** Whether the worker manager has been initialized */
-    private _initialized = false;
+    #_initialized = false;
 
     /** Current number of created workers (used to enforce MAX_WORKERS limit) */
-    private _createdWorkers = 0;
+    #_createdWorkers = 0;
     /** Cached promise for ImageBitmap support check */
-    private _isImageBitmapSupported?: Promise<boolean>;
+    #_isImageBitmapSupported?: Promise<boolean>;
 
     constructor()
     {
-        this._workerPool = [];
-        this._queue = [];
+        this.#_workerPool = [];
+        this.#_queue = [];
 
-        this._resolveHash = {};
+        this.#_resolveHash = {};
     }
 
     /**
@@ -62,9 +62,9 @@ class WorkerManagerClass
      */
     public isImageBitmapSupported(): Promise<boolean>
     {
-        if (this._isImageBitmapSupported !== undefined) return this._isImageBitmapSupported;
+        if (this.#_isImageBitmapSupported !== undefined) return this.#_isImageBitmapSupported;
 
-        this._isImageBitmapSupported = new Promise((resolve) =>
+        this.#_isImageBitmapSupported = new Promise((resolve) =>
         {
             const { worker } = new CheckImageBitmapWorker();
 
@@ -76,7 +76,7 @@ class WorkerManagerClass
             });
         });
 
-        return this._isImageBitmapSupported;
+        return this.#_isImageBitmapSupported;
     }
 
     /**
@@ -92,18 +92,18 @@ class WorkerManagerClass
      */
     public loadImageBitmap(src: string, asset?: ResolvedAsset<TextureSourceOptions<any>>): Promise<ImageBitmap>
     {
-        return this._run('loadImageBitmap', [src, asset?.data?.alphaMode]) as Promise<ImageBitmap>;
+        return this.#_run('loadImageBitmap', [src, asset?.data?.alphaMode]) as Promise<ImageBitmap>;
     }
 
     /**
      * Initializes the worker pool if not already initialized.
      * Currently a no-op but reserved for future initialization logic.
      */
-    private async _initWorkers()
+    async #_initWorkers()
     {
-        if (this._initialized) return;
+        if (this.#_initialized) return;
 
-        this._initialized = true;
+        this.#_initialized = true;
     }
 
     /**
@@ -113,26 +113,26 @@ class WorkerManagerClass
      * Each worker is configured with a message handler for processing results.
      * @returns Available worker or undefined if pool is at capacity and no workers are free
      */
-    private _getWorker(): Worker
+    #_getWorker(): Worker
     {
         if (MAX_WORKERS === undefined)
         {
             MAX_WORKERS = navigator.hardwareConcurrency || 4;
         }
-        let worker = this._workerPool.pop();
+        let worker = this.#_workerPool.pop();
 
-        if (!worker && this._createdWorkers < MAX_WORKERS)
+        if (!worker && this.#_createdWorkers < MAX_WORKERS)
         {
             // only create as many as MAX_WORKERS allows..
-            this._createdWorkers++;
+            this.#_createdWorkers++;
             worker = new LoadImageBitmapWorker().worker;
 
             worker.addEventListener('message', (event: MessageEvent) =>
             {
-                this._complete(event.data);
+                this.#_complete(event.data);
 
-                this._returnWorker(event.target as Worker);
-                this._next();
+                this.#_returnWorker(event.target as Worker);
+                this.#_next();
             });
         }
 
@@ -143,27 +143,27 @@ class WorkerManagerClass
      * Returns a worker to the pool after completing a task.
      * @param worker - The worker to return to the pool
      */
-    private _returnWorker(worker: Worker)
+    #_returnWorker(worker: Worker)
     {
-        this._workerPool.push(worker);
+        this.#_workerPool.push(worker);
     }
 
     /**
      * Handles completion of a worker task by resolving or rejecting the corresponding promise.
      * @param data - Result data from the worker containing uuid, data, and optional error
      */
-    private _complete(data: LoadImageBitmapResult): void
+    #_complete(data: LoadImageBitmapResult): void
     {
         if (data.error !== undefined)
         {
-            this._resolveHash[data.uuid].reject(data.error);
+            this.#_resolveHash[data.uuid].reject(data.error);
         }
         else
         {
-            this._resolveHash[data.uuid].resolve(data.data);
+            this.#_resolveHash[data.uuid].resolve(data.data);
         }
 
-        this._resolveHash[data.uuid] = null;
+        this.#_resolveHash[data.uuid] = null;
     }
 
     /**
@@ -174,17 +174,17 @@ class WorkerManagerClass
      * @param args - Arguments to pass to the worker
      * @returns Promise that resolves with the worker's result
      */
-    private async _run(id: string, args: any[]): Promise<any>
+    async #_run(id: string, args: any[]): Promise<any>
     {
-        await this._initWorkers();
+        await this.#_initWorkers();
         // push into the queue...
 
         const promise = new Promise((resolve, reject) =>
         {
-            this._queue.push({ id, arguments: args, resolve, reject });
+            this.#_queue.push({ id, arguments: args, resolve, reject });
         });
 
-        this._next();
+        this.#_next();
 
         return promise;
     }
@@ -195,12 +195,12 @@ class WorkerManagerClass
      * This method is called after worker initialization and when workers
      * complete tasks to continue processing the queue.
      */
-    private _next(): void
+    #_next(): void
     {
         // nothing to do
-        if (!this._queue.length) return;
+        if (!this.#_queue.length) return;
 
-        const worker = this._getWorker();
+        const worker = this.#_getWorker();
 
         // no workers available...
         if (!worker)
@@ -208,11 +208,11 @@ class WorkerManagerClass
             return;
         }
 
-        const toDo = this._queue.pop();
+        const toDo = this.#_queue.pop();
 
         const id = toDo.id;
 
-        this._resolveHash[UUID] = { resolve: toDo.resolve, reject: toDo.reject };
+        this.#_resolveHash[UUID] = { resolve: toDo.resolve, reject: toDo.reject };
 
         worker.postMessage({
             data: toDo.arguments,
@@ -241,19 +241,19 @@ class WorkerManagerClass
     public reset(): void
     {
         // Terminate all workers
-        this._workerPool.forEach((worker) => worker.terminate());
-        this._workerPool.length = 0;
+        this.#_workerPool.forEach((worker) => worker.terminate());
+        this.#_workerPool.length = 0;
 
         // Reject pending promises
-        Object.values(this._resolveHash).forEach(({ reject }) =>
+        Object.values(this.#_resolveHash).forEach(({ reject }) =>
         {
             reject?.(new Error('WorkerManager destroyed'));
         });
-        this._resolveHash = {};
-        this._queue.length = 0;
+        this.#_resolveHash = {};
+        this.#_queue.length = 0;
 
-        this._initialized = false;
-        this._createdWorkers = 0;
+        this.#_initialized = false;
+        this.#_createdWorkers = 0;
     }
 }
 
