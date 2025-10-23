@@ -185,16 +185,16 @@ export class CanvasTextMetrics
     public static experimentalLetterSpacing = false;
 
     /** Cache of {@link TextMetrics.FontMetrics} objects. */
-    private static _fonts: Record<string, FontMetrics> = {};
+    static #_fonts: Record<string, FontMetrics> = {};
 
     /** Cache of new line chars. */
-    private static readonly _newlines: number[] = [
+    static readonly #_newlines: number[] = [
         0x000A, // line feed
         0x000D, // carriage return
     ];
 
     /** Cache of breaking spaces. */
-    private static readonly _breakingSpaces: number[] = [
+    static readonly #_breakingSpaces: number[] = [
         0x0009, // character tabulation
         0x0020, // space
         0x2000, // en quad
@@ -211,13 +211,11 @@ export class CanvasTextMetrics
         0x3000, // ideographic space
     ];
 
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    private static __canvas: ICanvas;
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    private static __context: ICanvasRenderingContext2D;
+    static #__canvas: ICanvas;
+    static #__context: ICanvasRenderingContext2D;
 
     /** Cache for measured text metrics */
-    private static readonly _measurementCache = lru<CanvasTextMetrics>(1000);
+    static readonly #_measurementCache = lru<CanvasTextMetrics>(1000);
 
     /**
      * @param text - the text that was measured
@@ -262,9 +260,9 @@ export class CanvasTextMetrics
         const textKey = `${text}-${style.styleKey}-wordWrap-${wordWrap}`;
 
         // check if we have already measured this text with the same style
-        if (CanvasTextMetrics._measurementCache.has(textKey))
+        if (CanvasTextMetrics.#_measurementCache.has(textKey))
         {
-            return CanvasTextMetrics._measurementCache.get(textKey);
+            return CanvasTextMetrics.#_measurementCache.get(textKey);
         }
 
         const font = fontStringFromTextStyle(style);
@@ -277,18 +275,18 @@ export class CanvasTextMetrics
             fontProperties.ascent = style.fontSize as number;
         }
 
-        const context = CanvasTextMetrics.__context; // canvas.getContext('2d', contextSettings);
+        const context = CanvasTextMetrics.#__context; // canvas.getContext('2d', contextSettings);
 
         context.font = font;
 
-        const outputText = wordWrap ? CanvasTextMetrics._wordWrap(text, style, canvas) : text;
+        const outputText = wordWrap ? CanvasTextMetrics.#_wordWrap(text, style, canvas) : text;
         const lines = outputText.split(/(?:\r\n|\r|\n)/);
         const lineWidths = new Array<number>(lines.length);
         let maxLineWidth = 0;
 
         for (let i = 0; i < lines.length; i++)
         {
-            const lineWidth = CanvasTextMetrics._measureText(lines[i], style.letterSpacing, context);
+            const lineWidth = CanvasTextMetrics.#_measureText(lines[i], style.letterSpacing, context);
 
             lineWidths[i] = lineWidth;
             maxLineWidth = Math.max(maxLineWidth, lineWidth);
@@ -326,12 +324,12 @@ export class CanvasTextMetrics
         );
 
         // cache the measurements
-        CanvasTextMetrics._measurementCache.set(textKey, measurements);
+        CanvasTextMetrics.#_measurementCache.set(textKey, measurements);
 
         return measurements;
     }
 
-    private static _measureText(
+    static #_measureText(
         text: string,
         letterSpacing: number,
         context: ICanvasRenderingContext2D
@@ -389,7 +387,7 @@ export class CanvasTextMetrics
      * @param canvas - optional specification of the canvas to use for measuring.
      * @returns New string with new lines applied where required
      */
-    private static _wordWrap(
+    static #_wordWrap(
         text: string,
         style: TextStyle,
         canvas: ICanvas = CanvasTextMetrics._canvas
@@ -405,8 +403,8 @@ export class CanvasTextMetrics
         const { letterSpacing, whiteSpace } = style;
 
         // How to handle whitespaces
-        const collapseSpaces = CanvasTextMetrics._collapseSpaces(whiteSpace);
-        const collapseNewlines = CanvasTextMetrics._collapseNewlines(whiteSpace);
+        const collapseSpaces = CanvasTextMetrics.#_collapseSpaces(whiteSpace);
+        const collapseNewlines = CanvasTextMetrics.#_collapseNewlines(whiteSpace);
 
         // whether or not spaces may be added to the beginning of lines
         let canPrependSpaces = !collapseSpaces;
@@ -420,7 +418,7 @@ export class CanvasTextMetrics
         const wordWrapWidth = style.wordWrapWidth + letterSpacing;
 
         // break text into words, spaces and newline chars
-        const tokens = CanvasTextMetrics._tokenize(text);
+        const tokens = CanvasTextMetrics.#_tokenize(text);
 
         for (let i = 0; i < tokens.length; i++)
         {
@@ -428,12 +426,12 @@ export class CanvasTextMetrics
             let token = tokens[i];
 
             // if word is a new line
-            if (CanvasTextMetrics._isNewline(token))
+            if (CanvasTextMetrics.#_isNewline(token))
             {
                 // keep the new line
                 if (!collapseNewlines)
                 {
-                    lines += CanvasTextMetrics._addLine(line);
+                    lines += CanvasTextMetrics.#_addLine(line);
                     canPrependSpaces = !collapseSpaces;
                     line = '';
                     width = 0;
@@ -459,7 +457,7 @@ export class CanvasTextMetrics
             }
 
             // get word width from cache if possible
-            const tokenWidth = CanvasTextMetrics._getFromCache(token, letterSpacing, cache, context);
+            const tokenWidth = CanvasTextMetrics.#_getFromCache(token, letterSpacing, cache, context);
 
             // word is longer than desired bounds
             if (tokenWidth > wordWrapWidth)
@@ -468,7 +466,7 @@ export class CanvasTextMetrics
                 if (line !== '')
                 {
                     // start newlines for overflow words
-                    lines += CanvasTextMetrics._addLine(line);
+                    lines += CanvasTextMetrics.#_addLine(line);
                     line = '';
                     width = 0;
                 }
@@ -509,11 +507,11 @@ export class CanvasTextMetrics
 
                         j += k - 1;
 
-                        const characterWidth = CanvasTextMetrics._getFromCache(char, letterSpacing, cache, context);
+                        const characterWidth = CanvasTextMetrics.#_getFromCache(char, letterSpacing, cache, context);
 
                         if (characterWidth + width > wordWrapWidth)
                         {
-                            lines += CanvasTextMetrics._addLine(line);
+                            lines += CanvasTextMetrics.#_addLine(line);
                             canPrependSpaces = false;
                             line = '';
                             width = 0;
@@ -531,7 +529,7 @@ export class CanvasTextMetrics
                     // finish that line and start a new one
                     if (line.length > 0)
                     {
-                        lines += CanvasTextMetrics._addLine(line);
+                        lines += CanvasTextMetrics.#_addLine(line);
                         line = '';
                         width = 0;
                     }
@@ -539,7 +537,7 @@ export class CanvasTextMetrics
                     const isLastToken = i === tokens.length - 1;
 
                     // give it its own line if it's not the end
-                    lines += CanvasTextMetrics._addLine(token, !isLastToken);
+                    lines += CanvasTextMetrics.#_addLine(token, !isLastToken);
                     canPrependSpaces = false;
                     line = '';
                     width = 0;
@@ -557,7 +555,7 @@ export class CanvasTextMetrics
                     canPrependSpaces = false;
 
                     // add a new line
-                    lines += CanvasTextMetrics._addLine(line);
+                    lines += CanvasTextMetrics.#_addLine(line);
 
                     // start a new line
                     line = '';
@@ -576,7 +574,7 @@ export class CanvasTextMetrics
             }
         }
 
-        lines += CanvasTextMetrics._addLine(line, false);
+        lines += CanvasTextMetrics.#_addLine(line, false);
 
         return lines;
     }
@@ -587,9 +585,9 @@ export class CanvasTextMetrics
      * @param newLine - Add new line character to end
      * @returns A formatted line
      */
-    private static _addLine(line: string, newLine = true): string
+    static #_addLine(line: string, newLine = true): string
     {
-        line = CanvasTextMetrics._trimRight(line);
+        line = CanvasTextMetrics.#_trimRight(line);
 
         line = (newLine) ? `${line}\n` : line;
 
@@ -604,14 +602,14 @@ export class CanvasTextMetrics
      * @param context        - The canvas context
      * @returns The from cache.
      */
-    private static _getFromCache(key: string, letterSpacing: number, cache: CharacterWidthCache,
+    static #_getFromCache(key: string, letterSpacing: number, cache: CharacterWidthCache,
         context: ICanvasRenderingContext2D): number
     {
         let width = cache[key];
 
         if (typeof width !== 'number')
         {
-            width = CanvasTextMetrics._measureText(key, letterSpacing, context) + letterSpacing;
+            width = CanvasTextMetrics.#_measureText(key, letterSpacing, context) + letterSpacing;
             cache[key] = width;
         }
 
@@ -623,7 +621,7 @@ export class CanvasTextMetrics
      * @param whiteSpace - The TextStyle property whiteSpace
      * @returns Should collapse
      */
-    private static _collapseSpaces(whiteSpace: TextStyleWhiteSpace): boolean
+    static #_collapseSpaces(whiteSpace: TextStyleWhiteSpace): boolean
     {
         return (whiteSpace === 'normal' || whiteSpace === 'pre-line');
     }
@@ -633,7 +631,7 @@ export class CanvasTextMetrics
      * @param whiteSpace - The white space
      * @returns should collapse
      */
-    private static _collapseNewlines(whiteSpace: TextStyleWhiteSpace): boolean
+    static #_collapseNewlines(whiteSpace: TextStyleWhiteSpace): boolean
     {
         return (whiteSpace === 'normal');
     }
@@ -643,7 +641,7 @@ export class CanvasTextMetrics
      * @param text - The text
      * @returns Trimmed string
      */
-    private static _trimRight(text: string): string
+    static #_trimRight(text: string): string
     {
         if (typeof text !== 'string')
         {
@@ -670,14 +668,14 @@ export class CanvasTextMetrics
      * @param char - The character
      * @returns True if newline, False otherwise.
      */
-    private static _isNewline(char: string): boolean
+    static #_isNewline(char: string): boolean
     {
         if (typeof char !== 'string')
         {
             return false;
         }
 
-        return CanvasTextMetrics._newlines.includes(char.charCodeAt(0));
+        return CanvasTextMetrics.#_newlines.includes(char.charCodeAt(0));
     }
 
     /**
@@ -697,7 +695,7 @@ export class CanvasTextMetrics
             return false;
         }
 
-        return CanvasTextMetrics._breakingSpaces.includes(char.charCodeAt(0));
+        return CanvasTextMetrics.#_breakingSpaces.includes(char.charCodeAt(0));
     }
 
     /**
@@ -705,7 +703,7 @@ export class CanvasTextMetrics
      * @param text - The text
      * @returns A tokenized array
      */
-    private static _tokenize(text: string): string[]
+    static #_tokenize(text: string): string[]
     {
         const tokens: string[] = [];
         let token = '';
@@ -720,7 +718,7 @@ export class CanvasTextMetrics
             const char = text[i];
             const nextChar = text[i + 1];
 
-            if (CanvasTextMetrics.isBreakingSpace(char, nextChar) || CanvasTextMetrics._isNewline(char))
+            if (CanvasTextMetrics.isBreakingSpace(char, nextChar) || CanvasTextMetrics.#_isNewline(char))
             {
                 if (token !== '')
                 {
@@ -811,9 +809,9 @@ export class CanvasTextMetrics
     public static measureFont(font: string): FontMetrics
     {
         // as this method is used for preparing assets, don't recalculate things if we don't need to
-        if (CanvasTextMetrics._fonts[font])
+        if (CanvasTextMetrics.#_fonts[font])
         {
-            return CanvasTextMetrics._fonts[font];
+            return CanvasTextMetrics.#_fonts[font];
         }
 
         const context = CanvasTextMetrics._context;
@@ -827,7 +825,7 @@ export class CanvasTextMetrics
             fontSize: metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
         };
 
-        CanvasTextMetrics._fonts[font] = properties;
+        CanvasTextMetrics.#_fonts[font] = properties;
 
         return properties;
     }
@@ -840,11 +838,11 @@ export class CanvasTextMetrics
     {
         if (font)
         {
-            delete CanvasTextMetrics._fonts[font];
+            delete CanvasTextMetrics.#_fonts[font];
         }
         else
         {
-            CanvasTextMetrics._fonts = {};
+            CanvasTextMetrics.#_fonts = {};
         }
     }
 
@@ -855,7 +853,7 @@ export class CanvasTextMetrics
      */
     public static get _canvas(): ICanvas
     {
-        if (!CanvasTextMetrics.__canvas)
+        if (!CanvasTextMetrics.#__canvas)
         {
             let canvas: ICanvas;
 
@@ -867,7 +865,7 @@ export class CanvasTextMetrics
 
                 if (context?.measureText)
                 {
-                    CanvasTextMetrics.__canvas = c as ICanvas;
+                    CanvasTextMetrics.#__canvas = c as ICanvas;
 
                     return c as ICanvas;
                 }
@@ -879,10 +877,10 @@ export class CanvasTextMetrics
                 canvas = DOMAdapter.get().createCanvas();
             }
             canvas.width = canvas.height = 10;
-            CanvasTextMetrics.__canvas = canvas;
+            CanvasTextMetrics.#__canvas = canvas;
         }
 
-        return CanvasTextMetrics.__canvas;
+        return CanvasTextMetrics.#__canvas;
     }
 
     /**
@@ -891,11 +889,11 @@ export class CanvasTextMetrics
      */
     public static get _context(): ICanvasRenderingContext2D
     {
-        if (!CanvasTextMetrics.__context)
+        if (!CanvasTextMetrics.#__context)
         {
-            CanvasTextMetrics.__context = CanvasTextMetrics._canvas.getContext('2d', contextSettings);
+            CanvasTextMetrics.#__context = CanvasTextMetrics._canvas.getContext('2d', contextSettings);
         }
 
-        return CanvasTextMetrics.__context;
+        return CanvasTextMetrics.#__context;
     }
 }

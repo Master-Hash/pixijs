@@ -26,14 +26,14 @@ export class MaskEffectManagerClass
 {
     /** @private */
     public readonly _effectClasses: EffectConstructor[] = [];
-    private readonly _tests: MaskConversionTest[] = [];
-    private _initialized = false;
+    readonly #_tests: MaskConversionTest[] = [];
+    #_initialized = false;
 
     public init()
     {
-        if (this._initialized) return;
+        if (this.#_initialized) return;
 
-        this._initialized = true;
+        this.#_initialized = true;
 
         this._effectClasses.forEach((test) =>
         {
@@ -46,16 +46,16 @@ export class MaskEffectManagerClass
 
     public add(test: MaskConversionTest)
     {
-        this._tests.push(test);
+        this.#_tests.push(test);
     }
 
     public getMaskEffect(item: any): MaskEffect
     {
-        if (!this._initialized) this.init();
+        if (!this.#_initialized) this.init();
 
-        for (let i = 0; i < this._tests.length; i++)
+        for (let i = 0; i < this.#_tests.length; i++)
         {
-            const test = this._tests[i];
+            const test = this.#_tests[i];
 
             if (test.test(item))
             {

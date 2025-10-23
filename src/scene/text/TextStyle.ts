@@ -769,35 +769,35 @@ export class TextStyle extends EventEmitter<{
     // colors!!
     /** @internal */
     public _fill: ConvertedFillStyle;
-    private _originalFill: FillInput;
+    #_originalFill: FillInput;
 
     /** @internal */
     public _stroke: ConvertedStrokeStyle;
-    private _originalStroke: StrokeInput;
+    #_originalStroke: StrokeInput;
 
-    private _dropShadow: TextDropShadow;
+    #_dropShadow: TextDropShadow;
 
-    private _fontFamily: string | string[];
-    private _fontSize: number;
-    private _fontStyle: TextStyleFontStyle;
-    private _fontVariant: TextStyleFontVariant;
-    private _fontWeight: TextStyleFontWeight;
+    #_fontFamily: string | string[];
+    #_fontSize: number;
+    #_fontStyle: TextStyleFontStyle;
+    #_fontVariant: TextStyleFontVariant;
+    #_fontWeight: TextStyleFontWeight;
 
-    private _breakWords: boolean;
-    private _align: TextStyleAlign;
-    private _leading: number;
-    private _letterSpacing: number;
-    private _lineHeight: number;
+    #_breakWords: boolean;
+    #_align: TextStyleAlign;
+    #_leading: number;
+    #_letterSpacing: number;
+    #_lineHeight: number;
 
-    private _textBaseline: TextStyleTextBaseline;
-    private _whiteSpace: TextStyleWhiteSpace;
-    private _wordWrap: boolean;
-    private _wordWrapWidth: number;
-    private _filters: readonly Filter[];
+    #_textBaseline: TextStyleTextBaseline;
+    #_whiteSpace: TextStyleWhiteSpace;
+    #_wordWrap: boolean;
+    #_wordWrapWidth: number;
+    #_filters: readonly Filter[];
 
-    private _padding: number;
+    #_padding: number;
 
-    private _trim: boolean;
+    #_trim: boolean;
 
     constructor(style: Partial<TextStyleOptions> = {})
     {
@@ -822,72 +822,72 @@ export class TextStyle extends EventEmitter<{
      * Alignment for multiline text, does not affect single line text.
      * @type {'left'|'center'|'right'|'justify'}
      */
-    get align(): TextStyleAlign { return this._align; }
+    get align(): TextStyleAlign { return this.#_align; }
 
     set align(value: TextStyleAlign)
     {
-        if (this._align === value) return;
+        if (this.#_align === value) return;
 
-        this._align = value;
+        this.#_align = value;
         this.update();
     }
 
     /** Indicates if lines can be wrapped within words, it needs wordWrap to be set to true. */
-    get breakWords(): boolean { return this._breakWords; }
+    get breakWords(): boolean { return this.#_breakWords; }
 
     set breakWords(value: boolean)
     {
-        if (this._breakWords === value) return;
+        if (this.#_breakWords === value) return;
 
-        this._breakWords = value;
+        this.#_breakWords = value;
         this.update();
     }
 
     /** Set a drop shadow for the text. */
-    get dropShadow(): TextDropShadow { return this._dropShadow; }
+    get dropShadow(): TextDropShadow { return this.#_dropShadow; }
 
     set dropShadow(value: boolean | TextDropShadow)
     {
-        if (this._dropShadow === value) return;
+        if (this.#_dropShadow === value) return;
 
         if (value !== null && typeof value === 'object')
         {
-            this._dropShadow = this._createProxy({ ...TextStyle.defaultDropShadow, ...value });
+            this.#_dropShadow = this.#_createProxy({ ...TextStyle.defaultDropShadow, ...value });
         }
         else
         {
-            this._dropShadow = value ? this._createProxy({ ...TextStyle.defaultDropShadow }) : null;
+            this.#_dropShadow = value ? this.#_createProxy({ ...TextStyle.defaultDropShadow }) : null;
         }
 
         this.update();
     }
 
     /** The font family, can be a single font name, or a list of names where the first is the preferred font. */
-    get fontFamily(): string | string[] { return this._fontFamily; }
+    get fontFamily(): string | string[] { return this.#_fontFamily; }
 
     set fontFamily(value: string | string[])
     {
-        if (this._fontFamily === value) return;
+        if (this.#_fontFamily === value) return;
 
-        this._fontFamily = value;
+        this.#_fontFamily = value;
         this.update();
     }
 
     /** The font size (as a number it converts to px, but as a string, equivalents are '26px','20pt','160%' or '1.6em') */
-    get fontSize(): number { return this._fontSize; }
+    get fontSize(): number { return this.#_fontSize; }
 
     set fontSize(value: string | number)
     {
-        if (this._fontSize === value) return;
+        if (this.#_fontSize === value) return;
 
         if (typeof value === 'string')
         {
             // eg '34px' to number
-            this._fontSize = parseInt(value as string, 10);
+            this.#_fontSize = parseInt(value as string, 10);
         }
         else
         {
-            this._fontSize = value as number;
+            this.#_fontSize = value as number;
         }
         this.update();
     }
@@ -896,13 +896,13 @@ export class TextStyle extends EventEmitter<{
      * The font style.
      * @type {'normal'|'italic'|'oblique'}
      */
-    get fontStyle(): TextStyleFontStyle { return this._fontStyle; }
+    get fontStyle(): TextStyleFontStyle { return this.#_fontStyle; }
 
     set fontStyle(value: TextStyleFontStyle)
     {
-        if (this._fontStyle === value) return;
+        if (this.#_fontStyle === value) return;
 
-        this._fontStyle = value.toLowerCase() as TextStyleFontStyle;
+        this.#_fontStyle = value.toLowerCase() as TextStyleFontStyle;
         this.update();
     }
 
@@ -910,13 +910,13 @@ export class TextStyle extends EventEmitter<{
      * The font variant.
      * @type {'normal'|'small-caps'}
      */
-    get fontVariant(): TextStyleFontVariant { return this._fontVariant; }
+    get fontVariant(): TextStyleFontVariant { return this.#_fontVariant; }
 
     set fontVariant(value: TextStyleFontVariant)
     {
-        if (this._fontVariant === value) return;
+        if (this.#_fontVariant === value) return;
 
-        this._fontVariant = value;
+        this.#_fontVariant = value;
         this.update();
     }
 
@@ -924,46 +924,46 @@ export class TextStyle extends EventEmitter<{
      * The font weight.
      * @type {'normal'|'bold'|'bolder'|'lighter'|'100'|'200'|'300'|'400'|'500'|'600'|'700'|'800'|'900'}
      */
-    get fontWeight(): TextStyleFontWeight { return this._fontWeight; }
+    get fontWeight(): TextStyleFontWeight { return this.#_fontWeight; }
 
     set fontWeight(value: TextStyleFontWeight)
     {
-        if (this._fontWeight === value) return;
+        if (this.#_fontWeight === value) return;
 
-        this._fontWeight = value;
+        this.#_fontWeight = value;
         this.update();
     }
 
     /** The space between lines. */
-    get leading(): number { return this._leading; }
+    get leading(): number { return this.#_leading; }
 
     set leading(value: number)
     {
-        if (this._leading === value) return;
+        if (this.#_leading === value) return;
 
-        this._leading = value;
+        this.#_leading = value;
         this.update();
     }
 
     /** The amount of spacing between letters, default is 0. */
-    get letterSpacing(): number { return this._letterSpacing; }
+    get letterSpacing(): number { return this.#_letterSpacing; }
 
     set letterSpacing(value: number)
     {
-        if (this._letterSpacing === value) return;
+        if (this.#_letterSpacing === value) return;
 
-        this._letterSpacing = value;
+        this.#_letterSpacing = value;
         this.update();
     }
 
     /** The line height, a number that represents the vertical space that a letter uses. */
-    get lineHeight(): number { return this._lineHeight; }
+    get lineHeight(): number { return this.#_lineHeight; }
 
     set lineHeight(value: number)
     {
-        if (this._lineHeight === value) return;
+        if (this.#_lineHeight === value) return;
 
-        this._lineHeight = value;
+        this.#_lineHeight = value;
         this.update();
     }
 
@@ -972,13 +972,13 @@ export class TextStyle extends EventEmitter<{
      * by adding padding to all sides of the text.
      * > [!NOTE] This will NOT affect the positioning or bounds of the text.
      */
-    get padding(): number { return this._padding; }
+    get padding(): number { return this.#_padding; }
 
     set padding(value: number)
     {
-        if (this._padding === value) return;
+        if (this.#_padding === value) return;
 
-        this._padding = value;
+        this.#_padding = value;
         this.update();
     }
 
@@ -988,13 +988,13 @@ export class TextStyle extends EventEmitter<{
      * compared to applying the filter directly to the text object (which would be applied at run time).
      * @default null
      */
-    get filters(): readonly Filter[] { return this._filters; }
+    get filters(): readonly Filter[] { return this.#_filters; }
 
     set filters(value: Filter[])
     {
-        if (this._filters === value) return;
+        if (this.#_filters === value) return;
 
-        this._filters = Object.freeze(value);
+        this.#_filters = Object.freeze(value);
         this.update();
     }
 
@@ -1004,13 +1004,13 @@ export class TextStyle extends EventEmitter<{
      * > This is a costly operation as it requires scanning pixel alpha values.
      * > Avoid using `trim: true` for dynamic text, as it could significantly impact performance.
      */
-    get trim(): boolean { return this._trim; }
+    get trim(): boolean { return this.#_trim; }
 
     set trim(value: boolean)
     {
-        if (this._trim === value) return;
+        if (this.#_trim === value) return;
 
-        this._trim = value;
+        this.#_trim = value;
         this.update();
     }
 
@@ -1018,13 +1018,13 @@ export class TextStyle extends EventEmitter<{
      * The baseline of the text that is rendered.
      * @type {'alphabetic'|'top'|'hanging'|'middle'|'ideographic'|'bottom'}
      */
-    get textBaseline(): TextStyleTextBaseline { return this._textBaseline; }
+    get textBaseline(): TextStyleTextBaseline { return this.#_textBaseline; }
 
     set textBaseline(value: TextStyleTextBaseline)
     {
-        if (this._textBaseline === value) return;
+        if (this.#_textBaseline === value) return;
 
-        this._textBaseline = value;
+        this.#_textBaseline = value;
         this.update();
     }
 
@@ -1039,35 +1039,35 @@ export class TextStyle extends EventEmitter<{
      * 'pre-line'   | Preserve      |   Collapse
      * @type {'normal'|'pre'|'pre-line'}
      */
-    get whiteSpace(): TextStyleWhiteSpace { return this._whiteSpace; }
+    get whiteSpace(): TextStyleWhiteSpace { return this.#_whiteSpace; }
 
     set whiteSpace(value: TextStyleWhiteSpace)
     {
-        if (this._whiteSpace === value) return;
+        if (this.#_whiteSpace === value) return;
 
-        this._whiteSpace = value;
+        this.#_whiteSpace = value;
         this.update();
     }
 
     /** Indicates if word wrap should be used. */
-    get wordWrap(): boolean { return this._wordWrap; }
+    get wordWrap(): boolean { return this.#_wordWrap; }
 
     set wordWrap(value: boolean)
     {
-        if (this._wordWrap === value) return;
+        if (this.#_wordWrap === value) return;
 
-        this._wordWrap = value;
+        this.#_wordWrap = value;
         this.update();
     }
 
     /** The width at which text will wrap, it needs wordWrap to be set to true. */
-    get wordWrapWidth(): number { return this._wordWrapWidth; }
+    get wordWrapWidth(): number { return this.#_wordWrapWidth; }
 
     set wordWrapWidth(value: number)
     {
-        if (this._wordWrapWidth === value) return;
+        if (this.#_wordWrapWidth === value) return;
 
-        this._wordWrapWidth = value;
+        this.#_wordWrapWidth = value;
         this.update();
     }
 
@@ -1098,21 +1098,21 @@ export class TextStyle extends EventEmitter<{
      */
     get fill(): FillInput
     {
-        return this._originalFill;
+        return this.#_originalFill;
     }
 
     set fill(value: FillInput)
     {
-        if (value === this._originalFill) return;
+        if (value === this.#_originalFill) return;
 
-        this._originalFill = value;
+        this.#_originalFill = value;
 
-        if (this._isFillStyle(value))
+        if (this.#_isFillStyle(value))
         {
-            this._originalFill = this._createProxy({ ...GraphicsContext.defaultFillStyle, ...value }, () =>
+            this.#_originalFill = this.#_createProxy({ ...GraphicsContext.defaultFillStyle, ...value }, () =>
             {
                 this._fill = toFillStyle(
-                    { ...this._originalFill as FillStyle },
+                    { ...this.#_originalFill as FillStyle },
                     GraphicsContext.defaultFillStyle
                 );
             });
@@ -1128,21 +1128,21 @@ export class TextStyle extends EventEmitter<{
     /** A fillstyle that will be used on the text stroke, e.g., 'blue', '#FCFF00'. */
     get stroke(): StrokeInput
     {
-        return this._originalStroke;
+        return this.#_originalStroke;
     }
 
     set stroke(value: StrokeInput)
     {
-        if (value === this._originalStroke) return;
+        if (value === this.#_originalStroke) return;
 
-        this._originalStroke = value;
+        this.#_originalStroke = value;
 
-        if (this._isFillStyle(value))
+        if (this.#_isFillStyle(value))
         {
-            this._originalStroke = this._createProxy({ ...GraphicsContext.defaultStrokeStyle, ...value }, () =>
+            this.#_originalStroke = this.#_createProxy({ ...GraphicsContext.defaultStrokeStyle, ...value }, () =>
             {
                 this._stroke = toStrokeStyle(
-                    { ...this._originalStroke as StrokeStyle },
+                    { ...this.#_originalStroke as StrokeStyle },
                     GraphicsContext.defaultStrokeStyle
                 );
             });
@@ -1188,7 +1188,7 @@ export class TextStyle extends EventEmitter<{
         return new TextStyle({
             align: this.align,
             breakWords: this.breakWords,
-            dropShadow: this._dropShadow ? { ...this._dropShadow } : null,
+            dropShadow: this.#_dropShadow ? { ...this.#_dropShadow } : null,
             fill: this._fill,
             fontFamily: this.fontFamily,
             fontSize: this.fontSize,
@@ -1204,7 +1204,7 @@ export class TextStyle extends EventEmitter<{
             whiteSpace: this.whiteSpace,
             wordWrap: this.wordWrap,
             wordWrapWidth: this.wordWrapWidth,
-            filters: this._filters ? [...this._filters] : undefined
+            filters: this.#_filters ? [...this.#_filters] : undefined
         });
     }
 
@@ -1218,15 +1218,15 @@ export class TextStyle extends EventEmitter<{
     {
         let filterPadding = 0;
 
-        if (this._filters)
+        if (this.#_filters)
         {
-            for (let i = 0; i < this._filters.length; i++)
+            for (let i = 0; i < this.#_filters.length; i++)
             {
-                filterPadding += this._filters[i].padding;
+                filterPadding += this.#_filters[i].padding;
             }
         }
 
-        return Math.max(this._padding, filterPadding);
+        return Math.max(this.#_padding, filterPadding);
     }
 
     /**
@@ -1253,9 +1253,9 @@ export class TextStyle extends EventEmitter<{
                 this._fill.texture.destroy(destroyTextureSource);
             }
 
-            if ((this._originalFill as FillStyle)?.texture)
+            if ((this.#_originalFill as FillStyle)?.texture)
             {
-                (this._originalFill as FillStyle).texture.destroy(destroyTextureSource);
+                (this.#_originalFill as FillStyle).texture.destroy(destroyTextureSource);
             }
 
             if (this._stroke?.texture)
@@ -1263,20 +1263,20 @@ export class TextStyle extends EventEmitter<{
                 this._stroke.texture.destroy(destroyTextureSource);
             }
 
-            if ((this._originalStroke as FillStyle)?.texture)
+            if ((this.#_originalStroke as FillStyle)?.texture)
             {
-                (this._originalStroke as FillStyle).texture.destroy(destroyTextureSource);
+                (this.#_originalStroke as FillStyle).texture.destroy(destroyTextureSource);
             }
         }
 
         this._fill = null;
         this._stroke = null;
         this.dropShadow = null;
-        this._originalStroke = null;
-        this._originalFill = null;
+        this.#_originalStroke = null;
+        this.#_originalFill = null;
     }
 
-    private _createProxy<T extends object>(value: T, cb?: (property: string, newValue: any) => void): T
+    #_createProxy<T extends object>(value: T, cb?: (property: string, newValue: any) => void): T
     {
         return new Proxy<T>(value, {
             set: (target, property, newValue) =>
@@ -1292,7 +1292,7 @@ export class TextStyle extends EventEmitter<{
         });
     }
 
-    private _isFillStyle(value: FillInput): value is FillStyle
+    #_isFillStyle(value: FillInput): value is FillStyle
     {
         return ((value ?? null) !== null
             && !(Color.isColorLike(value) || value instanceof FillGradient || value instanceof FillPattern));

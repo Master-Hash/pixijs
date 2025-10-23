@@ -328,10 +328,10 @@ export abstract class Batcher
     /** An array of all batches created during the current rendering process. */
     public batches: Batch[] = [];
 
-    private _elements: BatchableElement[] = [];
+    #_elements: BatchableElement[] = [];
 
-    private _batchIndexStart: number;
-    private _batchIndexSize: number;
+    #_batchIndexStart: number;
+    #_batchIndexSize: number;
 
     /** The maximum number of textures per batch. */
     public readonly maxTextures: number;
@@ -416,15 +416,15 @@ export abstract class Batcher
         }
 
         this.batchIndex = 0;
-        this._batchIndexStart = 0;
-        this._batchIndexSize = 0;
+        this.#_batchIndexStart = 0;
+        this.#_batchIndexSize = 0;
 
         this.dirty = true;
     }
 
     public add(batchableObject: BatchableElement)
     {
-        this._elements[this.elementSize++] = batchableObject;
+        this.#_elements[this.elementSize++] = batchableObject;
 
         batchableObject._indexStart = this.indexSize;
         batchableObject._attributeStart = this.attributeSize;
@@ -479,7 +479,7 @@ export abstract class Batcher
      */
     public break(instructionSet: InstructionSet)
     {
-        const elements = this._elements;
+        const elements = this.#_elements;
 
         // length 0??!! (we broke without adding anything)
         if (!elements[this.elementStart]) return;
@@ -495,20 +495,20 @@ export abstract class Batcher
 
         if (this.attributeSize * 4 > this.attributeBuffer.size)
         {
-            this._resizeAttributeBuffer(this.attributeSize * 4);
+            this.#_resizeAttributeBuffer(this.attributeSize * 4);
         }
 
         if (this.indexSize > this.indexBuffer.length)
         {
-            this._resizeIndexBuffer(this.indexSize);
+            this.#_resizeIndexBuffer(this.indexSize);
         }
 
         const f32 = this.attributeBuffer.float32View;
         const u32 = this.attributeBuffer.uint32View;
         const indexBuffer = this.indexBuffer;
 
-        let size = this._batchIndexSize;
-        let start = this._batchIndexStart;
+        let size = this.#_batchIndexSize;
+        let start = this.#_batchIndexStart;
 
         let action: BatchAction = 'startBatch';
 
@@ -571,7 +571,7 @@ export abstract class Batcher
 
             if (textureBatch.count >= maxTextures || breakRequired)
             {
-                this._finishBatch(
+                this.#_finishBatch(
                     batch,
                     start,
                     size - start,
@@ -633,7 +633,7 @@ export abstract class Batcher
 
         if (textureBatch.count > 0)
         {
-            this._finishBatch(
+            this.#_finishBatch(
                 batch,
                 start,
                 size - start,
@@ -649,11 +649,11 @@ export abstract class Batcher
         }
 
         this.elementStart = this.elementSize;
-        this._batchIndexStart = start;
-        this._batchIndexSize = size;
+        this.#_batchIndexStart = start;
+        this.#_batchIndexSize = size;
     }
 
-    private _finishBatch(
+    #_finishBatch(
         batch: Batch,
         indexStart: number,
         indexSize: number,
@@ -695,7 +695,7 @@ export abstract class Batcher
     {
         if (size * 4 <= this.attributeBuffer.size) return;
 
-        this._resizeAttributeBuffer(size * 4);
+        this.#_resizeAttributeBuffer(size * 4);
     }
 
     /**
@@ -706,10 +706,10 @@ export abstract class Batcher
     {
         if (size <= this.indexBuffer.length) return;
 
-        this._resizeIndexBuffer(size);
+        this.#_resizeIndexBuffer(size);
     }
 
-    private _resizeAttributeBuffer(size: number)
+    #_resizeAttributeBuffer(size: number)
     {
         const newSize = Math.max(size, this.attributeBuffer.size * 2);
 
@@ -720,7 +720,7 @@ export abstract class Batcher
         this.attributeBuffer = newArrayBuffer;
     }
 
-    private _resizeIndexBuffer(size: number)
+    #_resizeIndexBuffer(size: number)
     {
         const indexBuffer = this.indexBuffer;
 
@@ -785,12 +785,12 @@ export abstract class Batcher
 
         this.batches = null;
 
-        for (let i = 0; i < this._elements.length; i++)
+        for (let i = 0; i < this.#_elements.length; i++)
         {
-            if (this._elements[i]) this._elements[i]._batch = null;
+            if (this.#_elements[i]) this.#_elements[i]._batch = null;
         }
 
-        this._elements = null;
+        this.#_elements = null;
 
         this.indexBuffer = null;
 

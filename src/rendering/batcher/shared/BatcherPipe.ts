@@ -41,15 +41,15 @@ export class BatcherPipe implements InstructionPipe<Batch>, BatchPipe
     public state: State = State.for2d();
     public renderer: Renderer;
 
-    private readonly _batchersByInstructionSet: Record<number, Record<string, Batcher>> = Object.create(null);
+    readonly #_batchersByInstructionSet: Record<number, Record<string, Batcher>> = Object.create(null);
 
-    private _adaptor: BatcherAdaptor;
+    #_adaptor: BatcherAdaptor;
 
     /** A record of all active batchers, keyed by their names */
-    private _activeBatches: Record<string, Batcher> = Object.create(null);
+    #_activeBatches: Record<string, Batcher> = Object.create(null);
 
     /** The currently active batcher being used to batch elements */
-    private _activeBatch: Batcher;
+    #_activeBatch: Batcher;
 
     public static _availableBatchers: Record<string, new () => Batcher> = Object.create(null);
 
@@ -61,64 +61,64 @@ export class BatcherPipe implements InstructionPipe<Batch>, BatchPipe
     constructor(renderer: Renderer, adaptor: BatcherAdaptor)
     {
         this.renderer = renderer;
-        this._adaptor = adaptor;
+        this.#_adaptor = adaptor;
 
-        this._adaptor.init?.(this);
+        this.#_adaptor.init?.(this);
     }
 
     public buildStart(instructionSet: InstructionSet)
     {
-        let batchers = this._batchersByInstructionSet[instructionSet.uid];
+        let batchers = this.#_batchersByInstructionSet[instructionSet.uid];
 
         if (!batchers)
         {
-            batchers = this._batchersByInstructionSet[instructionSet.uid] = Object.create(null);
+            batchers = this.#_batchersByInstructionSet[instructionSet.uid] = Object.create(null);
             batchers.default ||= new DefaultBatcher({
                 maxTextures: this.renderer.limits.maxBatchableTextures,
             });
         }
 
-        this._activeBatches = batchers;
+        this.#_activeBatches = batchers;
 
-        this._activeBatch = this._activeBatches.default;
+        this.#_activeBatch = this.#_activeBatches.default;
 
-        for (const i in this._activeBatches)
+        for (const i in this.#_activeBatches)
         {
-            this._activeBatches[i].begin();
+            this.#_activeBatches[i].begin();
         }
     }
 
     public addToBatch(batchableObject: BatchableElement, instructionSet: InstructionSet)
     {
-        if (this._activeBatch.name !== batchableObject.batcherName)
+        if (this.#_activeBatch.name !== batchableObject.batcherName)
         {
-            this._activeBatch.break(instructionSet);
+            this.#_activeBatch.break(instructionSet);
 
-            let batch = this._activeBatches[batchableObject.batcherName];
+            let batch = this.#_activeBatches[batchableObject.batcherName];
 
             if (!batch)
             {
-                batch = this._activeBatches[batchableObject.batcherName]
+                batch = this.#_activeBatches[batchableObject.batcherName]
                     = BatcherPipe.getBatcher(batchableObject.batcherName);
                 batch.begin();
             }
 
-            this._activeBatch = batch;
+            this.#_activeBatch = batch;
         }
 
-        this._activeBatch.add(batchableObject);
+        this.#_activeBatch.add(batchableObject);
     }
 
     public break(instructionSet: InstructionSet)
     {
-        this._activeBatch.break(instructionSet);
+        this.#_activeBatch.break(instructionSet);
     }
 
     public buildEnd(instructionSet: InstructionSet)
     {
-        this._activeBatch.break(instructionSet);
+        this.#_activeBatch.break(instructionSet);
 
-        const batches = this._activeBatches;
+        const batches = this.#_activeBatches;
 
         for (const i in batches)
         {
@@ -133,7 +133,7 @@ export class BatcherPipe implements InstructionPipe<Batch>, BatchPipe
 
     public upload(instructionSet: InstructionSet)
     {
-        const batchers = this._batchersByInstructionSet[instructionSet.uid];
+        const batchers = this.#_batchersByInstructionSet[instructionSet.uid];
 
         for (const i in batchers)
         {
@@ -157,10 +157,10 @@ export class BatcherPipe implements InstructionPipe<Batch>, BatchPipe
             const geometry = batcher.geometry;
             const shader = batcher.shader;
 
-            this._adaptor.start(this, geometry, shader);
+            this.#_adaptor.start(this, geometry, shader);
         }
 
-        this._adaptor.execute(this, batch);
+        this.#_adaptor.execute(this, batch);
     }
 
     public destroy()
@@ -168,14 +168,14 @@ export class BatcherPipe implements InstructionPipe<Batch>, BatchPipe
         this.state = null;
         this.renderer = null;
 
-        this._adaptor = null;
+        this.#_adaptor = null;
 
-        for (const i in this._activeBatches)
+        for (const i in this.#_activeBatches)
         {
-            this._activeBatches[i].destroy();
+            this.#_activeBatches[i].destroy();
         }
 
-        this._activeBatches = null;
+        this.#_activeBatches = null;
     }
 }
 
