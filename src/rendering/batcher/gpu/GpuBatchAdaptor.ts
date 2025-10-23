@@ -26,8 +26,8 @@ export class GpuBatchAdaptor implements BatcherAdaptor
         name: 'batch',
     } as const;
 
-    private _shader: Shader;
-    private _geometry: Geometry;
+    #_shader: Shader;
+    #_geometry: Geometry;
 
     public start(batchPipe: BatcherPipe, geometry: Geometry, shader: Shader): void
     {
@@ -35,8 +35,8 @@ export class GpuBatchAdaptor implements BatcherAdaptor
         const encoder = renderer.encoder as GpuEncoderSystem;
         const program = shader.gpuProgram;
 
-        this._shader = shader;
-        this._geometry = geometry;
+        this.#_shader = shader;
+        this.#_geometry = geometry;
 
         encoder.setGeometry(geometry, program);
 
@@ -63,7 +63,7 @@ export class GpuBatchAdaptor implements BatcherAdaptor
 
     public execute(batchPipe: BatcherPipe, batch: Batch): void
     {
-        const program = this._shader.gpuProgram;
+        const program = this.#_shader.gpuProgram;
         const renderer = batchPipe.renderer as WebGPURenderer;
         const encoder = renderer.encoder as GpuEncoderSystem;
 
@@ -85,7 +85,7 @@ export class GpuBatchAdaptor implements BatcherAdaptor
         );
 
         const pipeline = renderer.pipeline.getPipeline(
-            this._geometry,
+            this.#_geometry,
             program,
             tempState,
             batch.topology

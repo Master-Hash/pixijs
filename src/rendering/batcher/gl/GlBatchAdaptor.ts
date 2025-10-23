@@ -22,7 +22,7 @@ export class GlBatchAdaptor implements BatcherAdaptor
         name: 'batch',
     } as const;
 
-    private readonly _tempState = State.for2d();
+    readonly #_tempState = State.for2d();
 
     /**
      * We only want to sync the a batched shaders uniforms once on first use
@@ -30,7 +30,7 @@ export class GlBatchAdaptor implements BatcherAdaptor
      * we set the value to true.  When the shader is bound again we check the value and
      * if it is true we know that the uniforms have already been synced and we skip it.
      */
-    private _didUploadHash: Record<string, boolean> = {};
+    #_didUploadHash: Record<string, boolean> = {};
     public init(batcherPipe: BatcherPipe): void
     {
         batcherPipe.renderer.runners.contextChange.add(this);
@@ -38,21 +38,21 @@ export class GlBatchAdaptor implements BatcherAdaptor
 
     public contextChange(): void
     {
-        this._didUploadHash = {};
+        this.#_didUploadHash = {};
     }
 
     public start(batchPipe: BatcherPipe, geometry: Geometry, shader: Shader): void
     {
         const renderer = batchPipe.renderer as WebGLRenderer;
 
-        const didUpload = this._didUploadHash[shader.uid];
+        const didUpload = this.#_didUploadHash[shader.uid];
 
         // only want to sync the shade ron its first bind!
         renderer.shader.bind(shader, didUpload);
 
         if (!didUpload)
         {
-            this._didUploadHash[shader.uid] = true;
+            this.#_didUploadHash[shader.uid] = true;
         }
 
         renderer.shader.updateUniformGroup(renderer.globalUniforms.uniformGroup);
@@ -64,9 +64,9 @@ export class GlBatchAdaptor implements BatcherAdaptor
     {
         const renderer = batchPipe.renderer as WebGLRenderer;
 
-        this._tempState.blendMode = batch.blendMode;
+        this.#_tempState.blendMode = batch.blendMode;
 
-        renderer.state.set(this._tempState);
+        renderer.state.set(this.#_tempState);
 
         const textures = batch.textures.textures;
 
