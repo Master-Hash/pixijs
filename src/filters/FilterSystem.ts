@@ -165,10 +165,10 @@ export class FilterSystem implements System
 
     public readonly renderer: Renderer;
 
-    private _filterStackIndex = 0;
-    private _filterStack: FilterData[] = [];
+    #_filterStackIndex = 0;
+    #_filterStack: FilterData[] = [];
 
-    private readonly _filterGlobalUniforms = new UniformGroup({
+    readonly #_filterGlobalUniforms = new UniformGroup({
         uInputSize: { value: new Float32Array(4), type: 'vec4<f32>' },
         uInputPixel: { value: new Float32Array(4), type: 'vec4<f32>' },
         uInputClamp: { value: new Float32Array(4), type: 'vec4<f32>' },
@@ -177,9 +177,9 @@ export class FilterSystem implements System
         uOutputTexture: { value: new Float32Array(4), type: 'vec4<f32>' },
     });
 
-    private readonly _globalFilterBindGroup: BindGroup = new BindGroup({});
-    private _activeFilterData: FilterData;
-    private _passthroughFilter: Filter;
+    readonly #_globalFilterBindGroup: BindGroup = new BindGroup({});
+    #_activeFilterData: FilterData;
+    #_passthroughFilter: Filter;
 
     constructor(renderer: Renderer)
     {
@@ -192,7 +192,7 @@ export class FilterSystem implements System
      */
     public get activeBackTexture(): Texture | undefined
     {
-        return this._activeFilterData?.backTexture;
+        return this.#_activeFilterData?.backTexture;
     }
 
     /**
@@ -208,7 +208,7 @@ export class FilterSystem implements System
 
         // get a filter data from the stack. They can be reused multiple times each frame,
         // so we don't need to worry about overwriting them in a single pass.
-        const filterData = this._pushFilterData();
+        const filterData = this.#_pushFilterData();
 
         filterData.skip = false;
 
@@ -231,18 +231,18 @@ export class FilterSystem implements System
 
         const bounds = filterData.bounds;
 
-        this._calculateFilterArea(instruction, bounds);
+        this.#_calculateFilterArea(instruction, bounds);
 
-        this._calculateFilterBounds(filterData, renderer.renderTarget.rootViewPort, rootAntialias, rootResolution, 1);
+        this.#_calculateFilterBounds(filterData, renderer.renderTarget.rootViewPort, rootAntialias, rootResolution, 1);
 
         if (filterData.skip)
         {
             return;
         }
 
-        const previousFilterData = this._getPreviousFilterData();
+        const previousFilterData = this.#_getPreviousFilterData();
 
-        const globalResolution = this._findFilterResolution(rootResolution);
+        const globalResolution = this.#_findFilterResolution(rootResolution);
         let offsetX = 0;
         let offsetY = 0;
 
@@ -252,7 +252,7 @@ export class FilterSystem implements System
             offsetY = previousFilterData.bounds.minY;
         }
 
-        this._calculateGlobalFrame(
+        this.#_calculateGlobalFrame(
             filterData,
             offsetX, offsetY,
             globalResolution,
@@ -262,7 +262,7 @@ export class FilterSystem implements System
 
         // set all the filter data
 
-        this._setupFilterTextures(filterData, bounds, renderer, previousFilterData);
+        this.#_setupFilterTextures(filterData, bounds, renderer, previousFilterData);
     }
 
     /**
@@ -296,9 +296,9 @@ export class FilterSystem implements System
     {
         // get a filter data from the stack. They can be reused multiple times each frame,
         // so we don't need to worry about overwriting them in a single pass.
-        const filterData = this._pushFilterData();
+        const filterData = this.#_pushFilterData();
 
-        this._activeFilterData = filterData;
+        this.#_activeFilterData = filterData;
         filterData.skip = false;
 
         filterData.filters = filters;
@@ -324,7 +324,7 @@ export class FilterSystem implements System
 
         bounds.addRect(texture.frame);
 
-        this._calculateFilterBounds(filterData, bounds.rectangle, rootAntialias, rootResolution, 0);
+        this.#_calculateFilterBounds(filterData, bounds.rectangle, rootAntialias, rootResolution, 0);
 
         if (filterData.skip)
         {
@@ -335,7 +335,7 @@ export class FilterSystem implements System
         const offsetX = 0;
         const offsetY = 0;
 
-        this._calculateGlobalFrame(
+        this.#_calculateGlobalFrame(
             filterData,
             offsetX, offsetY,
             globalResolution,
@@ -371,7 +371,7 @@ export class FilterSystem implements System
         // get a BufferResource from the uniformBatch.
         // this will batch the shader uniform data and give us a buffer resource we can
         // set on our globalUniform Bind Group
-        this._applyFiltersToTexture(filterData, true);
+        this.#_applyFiltersToTexture(filterData, true);
 
         const outputTexture = filterData.outputRenderSurface as Texture;
 
@@ -385,7 +385,7 @@ export class FilterSystem implements System
     {
         const renderer = this.renderer;
 
-        const filterData = this._popFilterData();
+        const filterData = this.#_popFilterData();
 
         // if we are skipping this filter then we just do nothing :D
         if (filterData.skip)
@@ -397,9 +397,9 @@ export class FilterSystem implements System
 
         renderer.renderTarget.finishRenderPass();
 
-        this._activeFilterData = filterData;
+        this.#_activeFilterData = filterData;
 
-        this._applyFiltersToTexture(filterData, false);
+        this.#_applyFiltersToTexture(filterData, false);
 
         // if we made a background texture, lets return that also
         if (filterData.blendRequired)
@@ -465,7 +465,7 @@ export class FilterSystem implements System
     {
         const renderer = this.renderer;
 
-        const filterData = this._activeFilterData;
+        const filterData = this.#_activeFilterData;
 
         const outputRenderSurface = filterData.outputRenderSurface;
 
@@ -473,7 +473,7 @@ export class FilterSystem implements System
 
         // Find the correct resolution by looking back through the filter stack
         const rootResolution = renderer.renderTarget.rootRenderTarget.colorTexture.source._resolution;
-        const resolution = this._findFilterResolution(rootResolution);
+        const resolution = this.#_findFilterResolution(rootResolution);
 
         // Calculate the offset for both outputFrame and globalFrame
         let offsetX = 0;
@@ -481,21 +481,21 @@ export class FilterSystem implements System
 
         if (isFinalTarget)
         {
-            const offset = this._findPreviousFilterOffset();
+            const offset = this.#_findPreviousFilterOffset();
 
             offsetX = offset.x;
             offsetY = offset.y;
         }
 
-        this._updateFilterUniforms(input, output, filterData, offsetX, offsetY, resolution, isFinalTarget, clear);
+        this.#_updateFilterUniforms(input, output, filterData, offsetX, offsetY, resolution, isFinalTarget, clear);
 
         // If the filter is disabled, we still need to write something into the output surface.
         // Render a pass-through (copy) so the pipeline remains intact.
         const filterToApply = filter.enabled
             ? filter
-            : this._getPassthroughFilter();
+            : this.#_getPassthroughFilter();
 
-        this._setupBindGroupsAndRender(filterToApply, input, renderer);
+        this.#_setupBindGroupsAndRender(filterToApply, input, renderer);
     }
 
     /**
@@ -508,7 +508,7 @@ export class FilterSystem implements System
      */
     public calculateSpriteMatrix(outputMatrix: Matrix, sprite: Sprite): Matrix
     {
-        const data = this._activeFilterData;
+        const data = this.#_activeFilterData;
 
         const mappedMatrix = outputMatrix.set(
             data.inputTexture._source.width,
@@ -541,15 +541,15 @@ export class FilterSystem implements System
 
     public destroy(): void
     {
-        this._passthroughFilter?.destroy(true);
-        (this._passthroughFilter as null) = null;
+        this.#_passthroughFilter?.destroy(true);
+        (this.#_passthroughFilter as null) = null;
     }
 
-    private _getPassthroughFilter(): Filter
+    #_getPassthroughFilter(): Filter
     {
-        this._passthroughFilter ??= new PassthroughFilter();
+        this.#_passthroughFilter ??= new PassthroughFilter();
 
-        return this._passthroughFilter;
+        return this.#_passthroughFilter;
     }
 
     /**
@@ -558,28 +558,28 @@ export class FilterSystem implements System
      * @param input - The input texture
      * @param renderer - The renderer instance
      */
-    private _setupBindGroupsAndRender(filter: Filter, input: Texture, renderer: Renderer): void
+    #_setupBindGroupsAndRender(filter: Filter, input: Texture, renderer: Renderer): void
     {
         // TODO - should prolly use a adaptor...
         if ((renderer as WebGPURenderer).renderPipes.uniformBatch)
         {
             const batchUniforms = (renderer as WebGPURenderer).renderPipes.uniformBatch
-                .getUboResource(this._filterGlobalUniforms);
+                .getUboResource(this.#_filterGlobalUniforms);
 
-            this._globalFilterBindGroup.setResource(batchUniforms, 0);
+            this.#_globalFilterBindGroup.setResource(batchUniforms, 0);
         }
         else
         {
-            this._globalFilterBindGroup.setResource(this._filterGlobalUniforms, 0);
+            this.#_globalFilterBindGroup.setResource(this.#_filterGlobalUniforms, 0);
         }
 
         // now lets update the output texture...
 
         // set bind group..
-        this._globalFilterBindGroup.setResource(input.source, 1);
-        this._globalFilterBindGroup.setResource(input.source.style, 2);
+        this.#_globalFilterBindGroup.setResource(input.source, 1);
+        this.#_globalFilterBindGroup.setResource(input.source.style, 2);
 
-        filter.groups[0] = this._globalFilterBindGroup;
+        filter.groups[0] = this.#_globalFilterBindGroup;
 
         renderer.encoder.draw({
             geometry: quadGeometry,
@@ -602,7 +602,7 @@ export class FilterSystem implements System
      * @param renderer - The renderer instance
      * @param previousFilterData - The previous filter data for back texture calculation
      */
-    private _setupFilterTextures(
+    #_setupFilterTextures(
         filterData: FilterData,
         bounds: Bounds,
         renderer: Renderer,
@@ -656,7 +656,7 @@ export class FilterSystem implements System
      * @param sourceWidth - The source texture width
      * @param sourceHeight - The source texture height
      */
-    private _calculateGlobalFrame(
+    #_calculateGlobalFrame(
         filterData: FilterData,
         offsetX: number,
         offsetY: number,
@@ -684,7 +684,7 @@ export class FilterSystem implements System
      * @param isFinalTarget - Whether this is the final render target
      * @param clear - Whether to clear the output surface
      */
-    private _updateFilterUniforms(
+    #_updateFilterUniforms(
         input: Texture,
         output: RenderSurface,
         filterData: FilterData,
@@ -695,7 +695,7 @@ export class FilterSystem implements System
         clear: boolean
     ): void
     {
-        const uniforms = this._filterGlobalUniforms.uniforms;
+        const uniforms = this.#_filterGlobalUniforms.uniforms;
         const outputFrame = uniforms.uOutputFrame;
         const inputSize = uniforms.uInputSize;
         const inputPixel = uniforms.uInputPixel;
@@ -762,7 +762,7 @@ export class FilterSystem implements System
 
         outputTexture[2] = renderTarget.isRoot ? -1 : 1;
 
-        this._filterGlobalUniforms.update();
+        this.#_filterGlobalUniforms.update();
     }
 
     /**
@@ -770,17 +770,17 @@ export class FilterSystem implements System
      * @param rootResolution - The fallback root resolution to use
      * @returns The resolution from the previous filter or root resolution
      */
-    private _findFilterResolution(rootResolution: number): number
+    #_findFilterResolution(rootResolution: number): number
     {
-        let currentIndex = this._filterStackIndex - 1;
+        let currentIndex = this.#_filterStackIndex - 1;
 
-        while (currentIndex > 0 && this._filterStack[currentIndex].skip)
+        while (currentIndex > 0 && this.#_filterStack[currentIndex].skip)
         {
             --currentIndex;
         }
 
-        return currentIndex > 0 && this._filterStack[currentIndex].inputTexture
-            ? this._filterStack[currentIndex].inputTexture.source._resolution
+        return currentIndex > 0 && this.#_filterStack[currentIndex].inputTexture
+            ? this.#_filterStack[currentIndex].inputTexture.source._resolution
             : rootResolution;
     }
 
@@ -788,16 +788,16 @@ export class FilterSystem implements System
      * Finds the offset from the previous non-skipped filter in the stack.
      * @returns The offset coordinates from the previous filter
      */
-    private _findPreviousFilterOffset(): { x: number, y: number }
+    #_findPreviousFilterOffset(): { x: number, y: number }
     {
         let offsetX = 0;
         let offsetY = 0;
-        let lastIndex = this._filterStackIndex;
+        let lastIndex = this.#_filterStackIndex;
 
         while (lastIndex > 0)
         {
             lastIndex--;
-            const prevFilterData = this._filterStack[lastIndex];
+            const prevFilterData = this.#_filterStack[lastIndex];
 
             if (!prevFilterData.skip)
             {
@@ -815,7 +815,7 @@ export class FilterSystem implements System
      * @param instruction - The filter instruction
      * @param bounds - The bounds object to populate
      */
-    private _calculateFilterArea(instruction: FilterInstruction, bounds: Bounds): void
+    #_calculateFilterArea(instruction: FilterInstruction, bounds: Bounds): void
     {
         // this path is used by the blend modes mostly!
         // they collect all renderables and push them into a list.
@@ -859,7 +859,7 @@ export class FilterSystem implements System
         }
     }
 
-    private _applyFiltersToTexture(filterData: FilterData, clear: boolean)
+    #_applyFiltersToTexture(filterData: FilterData, clear: boolean)
     {
         const inputTexture = filterData.inputTexture;
 
@@ -873,8 +873,8 @@ export class FilterSystem implements System
         // this will batch the shader uniform data and give us a buffer resource we can
         // set on our globalUniform Bind Group
         // update the resources on the bind group...
-        this._globalFilterBindGroup.setResource(inputTexture.source.style, 2);
-        this._globalFilterBindGroup.setResource(filterData.backTexture.source, 3);
+        this.#_globalFilterBindGroup.setResource(inputTexture.source.style, 2);
+        this.#_globalFilterBindGroup.setResource(filterData.backTexture.source, 3);
 
         if (firstEnabled === lastEnabled)
         {
@@ -916,7 +916,7 @@ export class FilterSystem implements System
         }
     }
 
-    private _calculateFilterBounds(
+    #_calculateFilterBounds(
         filterData: FilterData,
         viewPort: Rectangle,
         rootAntialias: boolean,
@@ -1049,23 +1049,23 @@ export class FilterSystem implements System
         filterData.lastEnabledIndex = lastEnabledIndex;
     }
 
-    private _popFilterData(): FilterData
+    #_popFilterData(): FilterData
     {
-        this._filterStackIndex--;
+        this.#_filterStackIndex--;
 
-        return this._filterStack[this._filterStackIndex];
+        return this.#_filterStack[this.#_filterStackIndex];
     }
 
-    private _getPreviousFilterData(): FilterData | null
+    #_getPreviousFilterData(): FilterData | null
     {
         let previousFilterData: FilterData;
 
-        let index = this._filterStackIndex - 1;
+        let index = this.#_filterStackIndex - 1;
 
         while (index > 0)
         {
             index--;
-            previousFilterData = this._filterStack[index];
+            previousFilterData = this.#_filterStack[index];
 
             if (!previousFilterData.skip)
             {
@@ -1076,16 +1076,16 @@ export class FilterSystem implements System
         return previousFilterData;
     }
 
-    private _pushFilterData(): FilterData
+    #_pushFilterData(): FilterData
     {
-        let filterData = this._filterStack[this._filterStackIndex];
+        let filterData = this.#_filterStack[this.#_filterStackIndex];
 
         if (!filterData)
         {
-            filterData = this._filterStack[this._filterStackIndex] = new FilterData();
+            filterData = this.#_filterStack[this.#_filterStackIndex] = new FilterData();
         }
 
-        this._filterStackIndex++;
+        this.#_filterStackIndex++;
 
         return filterData;
     }

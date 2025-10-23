@@ -12,8 +12,8 @@ import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
 
-const bundleTarget = 'es2017';
-const moduleTarget = 'es2020';
+const bundleTarget = 'es2022';
+const moduleTarget = 'es2022';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

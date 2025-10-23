@@ -138,11 +138,11 @@ export class EventBoundary
     protected eventPool: Map<typeof FederatedEvent, FederatedEvent[]> = new Map();
 
     /** Every interactive element gathered from the scene. Only used in `pointermove` */
-    private readonly _allInteractiveElements: Container[] = [];
+    readonly #_allInteractiveElements: Container[] = [];
     /** Every element that passed the hit test. Only used in `pointermove` */
-    private _hitElements: Container[] = [];
+    #_hitElements: Container[] = [];
     /** Whether or not to collect all the interactive elements from the scene. Enabled in `pointermove` */
-    private _isPointerMoveEvent = false;
+    #_isPointerMoveEvent = false;
 
     /**
      * @param rootTarget - The holder of the event boundary.
@@ -254,7 +254,7 @@ export class EventBoundary
     {
         EventsTicker.pauseUpdate = true;
         // if we are using global move events, we need to hit test the whole scene graph
-        const useMove = this._isPointerMoveEvent && this.enableGlobalMoveEvents;
+        const useMove = this.#_isPointerMoveEvent && this.enableGlobalMoveEvents;
         const fn = useMove ? 'hitTestMoveRecursive' : 'hitTestRecursive';
         const invertedPath = this[fn](
             this.rootTarget,
@@ -324,7 +324,7 @@ export class EventBoundary
      * @param type - The listeners to notify.
      * @param targets - The targets to notify.
      */
-    public all(e: FederatedEvent, type?: string | string[], targets = this._allInteractiveElements): void
+    public all(e: FederatedEvent, type?: string | string[], targets = this.#_allInteractiveElements): void
     {
         if (targets.length === 0) return;
 
@@ -382,7 +382,7 @@ export class EventBoundary
         let shouldReturn = false;
 
         // only bail out early if it is not interactive
-        if (this._interactivePrune(currentTarget)) return null;
+        if (this.#_interactivePrune(currentTarget)) return null;
 
         if (currentTarget.eventMode === 'dynamic' || eventMode === 'dynamic')
         {
@@ -399,7 +399,7 @@ export class EventBoundary
 
                 const nestedHit = this.hitTestMoveRecursive(
                     child,
-                    this._isInteractive(eventMode) ? eventMode : child.eventMode,
+                    this.#_isInteractive(eventMode) ? eventMode : child.eventMode,
                     location,
                     testFn,
                     pruneFn,
@@ -422,28 +422,28 @@ export class EventBoundary
 
                     if (nestedHit.length > 0 || isInteractive)
                     {
-                        if (isInteractive) this._allInteractiveElements.push(currentTarget);
+                        if (isInteractive) this.#_allInteractiveElements.push(currentTarget);
                         nestedHit.push(currentTarget);
                     }
 
                     // store all hit elements to be returned once we have traversed the whole tree
-                    if (this._hitElements.length === 0) this._hitElements = nestedHit;
+                    if (this.#_hitElements.length === 0) this.#_hitElements = nestedHit;
 
                     shouldReturn = true;
                 }
             }
         }
 
-        const isInteractiveMode = this._isInteractive(eventMode);
+        const isInteractiveMode = this.#_isInteractive(eventMode);
         const isInteractiveTarget = currentTarget.isInteractive();
 
-        if (isInteractiveTarget && isInteractiveTarget) this._allInteractiveElements.push(currentTarget);
+        if (isInteractiveTarget && isInteractiveTarget) this.#_allInteractiveElements.push(currentTarget);
 
         // we don't carry on hit testing something once we have found a hit,
         // now only care about gathering the interactive elements
-        if (ignore || this._hitElements.length > 0) return null;
+        if (ignore || this.#_hitElements.length > 0) return null;
 
-        if (shouldReturn) return this._hitElements as Container[];
+        if (shouldReturn) return this.#_hitElements as Container[];
 
         // Finally, hit test this Container itself.
         if (isInteractiveMode && (!pruneFn(currentTarget, location) && testFn(currentTarget, location)))
@@ -479,7 +479,7 @@ export class EventBoundary
     ): Container[]
     {
         // Attempt to prune this Container and its subtree as an optimization.
-        if (this._interactivePrune(currentTarget) || pruneFn(currentTarget, location))
+        if (this.#_interactivePrune(currentTarget) || pruneFn(currentTarget, location))
         {
             return null;
         }
@@ -500,7 +500,7 @@ export class EventBoundary
 
                 const nestedHit = this.hitTestRecursive(
                     child,
-                    this._isInteractive(eventMode) ? eventMode : child.eventMode,
+                    this.#_isInteractive(eventMode) ? eventMode : child.eventMode,
                     relativeLocation,
                     testFn,
                     pruneFn
@@ -527,7 +527,7 @@ export class EventBoundary
             }
         }
 
-        const isInteractiveMode = this._isInteractive(eventMode);
+        const isInteractiveMode = this.#_isInteractive(eventMode);
         const isInteractiveTarget = currentTarget.isInteractive();
 
         // Finally, hit test this Container itself.
@@ -541,12 +541,12 @@ export class EventBoundary
         return null;
     }
 
-    private _isInteractive(int: EventMode): int is 'static' | 'dynamic'
+    #_isInteractive(int: EventMode): int is 'static' | 'dynamic'
     {
         return int === 'static' || int === 'dynamic';
     }
 
-    private _interactivePrune(container: Container): boolean
+    #_interactivePrune(container: Container): boolean
     {
         // If container is a mask, invisible, or not renderable then it cannot be hit directly.
         if (!container || !container.visible || !container.renderable || !container.measurable)
@@ -660,11 +660,11 @@ export class EventBoundary
 
         const key = e.eventPhase === e.CAPTURING_PHASE || e.eventPhase === e.AT_TARGET ? `${type}capture` : type;
 
-        this._notifyListeners(e, key);
+        this.#_notifyListeners(e, key);
 
         if (e.eventPhase === e.AT_TARGET)
         {
-            this._notifyListeners(e, type);
+            this.#_notifyListeners(e, type);
         }
     }
 
@@ -725,12 +725,12 @@ export class EventBoundary
             return;
         }
 
-        this._allInteractiveElements.length = 0;
-        this._hitElements.length = 0;
-        this._isPointerMoveEvent = true;
+        this.#_allInteractiveElements.length = 0;
+        this.#_hitElements.length = 0;
+        this.#_isPointerMoveEvent = true;
         const e = this.createPointerEvent(from);
 
-        this._isPointerMoveEvent = false;
+        this.#_isPointerMoveEvent = false;
         const isMouse = e.pointerType === 'mouse' || e.pointerType === 'pen';
         const trackingData = this.trackingData(from.pointerId);
         const outTarget = this.findMountedTarget(trackingData.overTargets);
@@ -841,8 +841,8 @@ export class EventBoundary
         {
             this.all(e, allMethods);
         }
-        this._allInteractiveElements.length = 0;
-        this._hitElements.length = 0;
+        this.#_allInteractiveElements.length = 0;
+        this.#_hitElements.length = 0;
 
         trackingData.overTargets = e.composedPath();
 
@@ -1211,7 +1211,7 @@ export class EventBoundary
         event.originalEvent = from;
         event.target = target
             ?? this.hitTest(event.global.x, event.global.y) as Container
-            ?? this._hitElements[0];
+            ?? this.#_hitElements[0];
 
         if (typeof type === 'string')
         {
@@ -1460,7 +1460,7 @@ export class EventBoundary
      * @param e - The event to call each listener with.
      * @param type - The event key.
      */
-    private _notifyListeners(e: FederatedEvent, type: string): void
+    #_notifyListeners(e: FederatedEvent, type: string): void
     {
         const listeners = ((e.currentTarget as any)._events as EmitterListeners)[type];
 

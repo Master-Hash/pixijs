@@ -206,34 +206,33 @@ export class Color
      * As to not conflict with Color.shared.
      * @ignore
      */
-    private static readonly _temp = new Color();
+    static readonly #_temp = new Color();
 
     /** Pattern for hex strings */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    private static readonly HEX_PATTERN = /^(#|0x)?(([a-f0-9]{3}){1,2}([a-f0-9]{2})?)$/i;
+    static readonly #HEX_PATTERN = /^(#|0x)?(([a-f0-9]{3}){1,2}([a-f0-9]{2})?)$/i;
 
     /** Internal color source, from constructor or set value */
-    private _value: Exclude<ColorSource, Color> | null;
+    #_value: Exclude<ColorSource, Color> | null;
 
     /** Normalized rgba component, floats from 0-1 */
-    private _components: Float32Array;
+    #_components: Float32Array;
 
     /** Cache color as number */
-    private _int: number;
+    #_int: number;
 
     /** An array of the current Color. Only populated when `toArray` functions are called */
-    private _arrayRgba: number[] | null;
-    private _arrayRgb: number[] | null;
+    #_arrayRgba: number[] | null;
+    #_arrayRgb: number[] | null;
 
     /**
      * @param {ColorSource} value - Optional value to use, if not provided, white is used.
      */
     constructor(value: ColorSource = 0xffffff)
     {
-        this._value = null;
-        this._components = new Float32Array(4);
-        this._components.fill(1);
-        this._int = 0xffffff;
+        this.#_value = null;
+        this.#_components = new Float32Array(4);
+        this.#_components.fill(1);
+        this.#_int = 0xffffff;
         this.value = value;
     }
 
@@ -250,7 +249,7 @@ export class Color
      */
     get red(): number
     {
-        return this._components[0];
+        return this.#_components[0];
     }
 
     /**
@@ -266,7 +265,7 @@ export class Color
      */
     get green(): number
     {
-        return this._components[1];
+        return this.#_components[1];
     }
 
     /**
@@ -282,7 +281,7 @@ export class Color
      */
     get blue(): number
     {
-        return this._components[2];
+        return this.#_components[2];
     }
 
     /**
@@ -298,7 +297,7 @@ export class Color
      */
     get alpha(): number
     {
-        return this._components[3];
+        return this.#_components[3];
     }
 
     /**
@@ -383,30 +382,30 @@ export class Color
         // Support copying from other Color objects
         if (value instanceof Color)
         {
-            this._value = this._cloneSource(value._value);
-            this._int = value._int;
-            this._components.set(value._components);
+            this.#_value = this.#_cloneSource(value.#_value);
+            this.#_int = value.#_int;
+            this.#_components.set(value.#_components);
         }
         else if (value === null)
         {
             throw new Error('Cannot set Color#value to null');
         }
-        else if (this._value === null || !this._isSourceEqual(this._value, value))
+        else if (this.#_value === null || !this.#_isSourceEqual(this.#_value, value))
         {
-            this._value = this._cloneSource(value);
-            this._normalize(this._value);
+            this.#_value = this.#_cloneSource(value);
+            this.#_normalize(this.#_value);
         }
     }
     get value(): Exclude<ColorSource, Color> | null
     {
-        return this._value;
+        return this.#_value;
     }
 
     /**
      * Copy a color source internally.
      * @param value - Color source
      */
-    private _cloneSource(value: Exclude<ColorSource, Color> | null): Exclude<ColorSource, Color> | null
+    #_cloneSource(value: Exclude<ColorSource, Color> | null): Exclude<ColorSource, Color> | null
     {
         if (typeof value === 'string' || typeof value === 'number' || value instanceof Number || value === null)
         {
@@ -430,7 +429,7 @@ export class Color
      * @param value2 - Second color source
      * @returns `true` if the color sources are equal, `false` otherwise.
      */
-    private _isSourceEqual(value1: Exclude<ColorSource, Color>, value2: Exclude<ColorSource, Color>): boolean
+    #_isSourceEqual(value1: Exclude<ColorSource, Color>, value2: Exclude<ColorSource, Color>): boolean
     {
         const type1 = typeof value1;
         const type2 = typeof value2;
@@ -493,7 +492,7 @@ export class Color
      */
     public toRgba(): RgbaColor
     {
-        const [r, g, b, a] = this._components;
+        const [r, g, b, a] = this.#_components;
 
         return { r, g, b, a };
     }
@@ -517,7 +516,7 @@ export class Color
      */
     public toRgb(): RgbColor
     {
-        const [r, g, b] = this._components;
+        const [r, g, b] = this.#_components;
 
         return { r, g, b };
     }
@@ -572,14 +571,14 @@ export class Color
      */
     public toUint8RgbArray<T extends number[] | Uint8Array | Uint8ClampedArray = number[]>(out?: T): T
     {
-        const [r, g, b] = this._components;
+        const [r, g, b] = this.#_components;
 
-        if (!this._arrayRgb)
+        if (!this.#_arrayRgb)
         {
-            this._arrayRgb = [];
+            this.#_arrayRgb = [];
         }
 
-        out ||= this._arrayRgb as T;
+        out ||= this.#_arrayRgb as T;
 
         out[0] = Math.round(r * 255);
         out[1] = Math.round(g * 255);
@@ -613,13 +612,13 @@ export class Color
      */
     public toArray<T extends number[] | Float32Array = number[]>(out?: T): T
     {
-        if (!this._arrayRgba)
+        if (!this.#_arrayRgba)
         {
-            this._arrayRgba = [];
+            this.#_arrayRgba = [];
         }
 
-        out ||= this._arrayRgba as T;
-        const [r, g, b, a] = this._components;
+        out ||= this.#_arrayRgba as T;
+        const [r, g, b, a] = this.#_components;
 
         out[0] = r;
         out[1] = g;
@@ -651,13 +650,13 @@ export class Color
      */
     public toRgbArray<T extends number[] | Float32Array = number[]>(out?: T): T
     {
-        if (!this._arrayRgb)
+        if (!this.#_arrayRgb)
         {
-            this._arrayRgb = [];
+            this.#_arrayRgb = [];
         }
 
-        out ||= this._arrayRgb as T;
-        const [r, g, b] = this._components;
+        out ||= this.#_arrayRgb as T;
+        const [r, g, b] = this.#_components;
 
         out[0] = r;
         out[1] = g;
@@ -682,7 +681,7 @@ export class Color
      */
     public toNumber(): number
     {
-        return this._int;
+        return this.#_int;
     }
 
     /**
@@ -742,7 +741,7 @@ export class Color
      */
     public toLittleEndianNumber(): number
     {
-        const value = this._int;
+        const value = this.#_int;
 
         return (value >> 16) + (value & 0xff00) + ((value & 0xff) << 16);
     }
@@ -779,15 +778,15 @@ export class Color
      */
     public multiply(value: ColorSource): this
     {
-        const [r, g, b, a] = Color._temp.setValue(value)._components;
+        const [r, g, b, a] = Color.#_temp.setValue(value).#_components;
 
-        this._components[0] *= r;
-        this._components[1] *= g;
-        this._components[2] *= b;
-        this._components[3] *= a;
+        this.#_components[0] *= r;
+        this.#_components[1] *= g;
+        this.#_components[2] *= b;
+        this.#_components[3] *= a;
 
-        this._refreshInt();
-        this._value = null;
+        this.#_refreshInt();
+        this.#_value = null;
 
         return this;
     }
@@ -825,14 +824,14 @@ export class Color
     {
         if (applyToRGB)
         {
-            this._components[0] *= alpha;
-            this._components[1] *= alpha;
-            this._components[2] *= alpha;
+            this.#_components[0] *= alpha;
+            this.#_components[1] *= alpha;
+            this.#_components[2] *= alpha;
         }
-        this._components[3] = alpha;
+        this.#_components[3] = alpha;
 
-        this._refreshInt();
-        this._value = null;
+        this.#_refreshInt();
+        this.#_value = null;
 
         return this;
     }
@@ -867,15 +866,15 @@ export class Color
     {
         if (alpha === 1.0)
         {
-            return (0xff << 24) + this._int;
+            return (0xff << 24) + this.#_int;
         }
         if (alpha === 0.0)
         {
-            return applyToRGB ? 0 : this._int;
+            return applyToRGB ? 0 : this.#_int;
         }
-        let r = (this._int >> 16) & 0xff;
-        let g = (this._int >> 8) & 0xff;
-        let b = this._int & 0xff;
+        let r = (this.#_int >> 16) & 0xff;
+        let g = (this.#_int >> 8) & 0xff;
+        let b = this.#_int & 0xff;
 
         if (applyToRGB)
         {
@@ -912,7 +911,7 @@ export class Color
      */
     public toHex(): string
     {
-        const hexString = this._int.toString(16);
+        const hexString = this.#_int.toString(16);
 
         return `#${'000000'.substring(0, 6 - hexString.length) + hexString}`;
     }
@@ -940,7 +939,7 @@ export class Color
      */
     public toHexa(): string
     {
-        const alphaValue = Math.round(this._components[3] * 255);
+        const alphaValue = Math.round(this.#_components[3] * 255);
         const alphaString = alphaValue.toString(16);
 
         return this.toHex() + '00'.substring(0, 2 - alphaString.length) + alphaString;
@@ -973,7 +972,7 @@ export class Color
      */
     public setAlpha(alpha: number): this
     {
-        this._components[3] = this._clamp(alpha);
+        this.#_components[3] = this.#_clamp(alpha);
 
         return this;
     }
@@ -982,7 +981,7 @@ export class Color
      * Normalize the input value into rgba
      * @param value - Input value
      */
-    private _normalize(value: Exclude<ColorSource, Color>): void
+    #_normalize(value: Exclude<ColorSource, Color>): void
     {
         let r: number | undefined;
         let g: number | undefined;
@@ -1013,7 +1012,7 @@ export class Color
         )
         {
             // make sure all values are 0 - 1
-            value = this._clamp(value);
+            value = this.#_clamp(value);
             [r, g, b, a = 1.0] = value;
         }
         else if (
@@ -1024,7 +1023,7 @@ export class Color
         )
         {
             // make sure all values are 0 - 255
-            value = this._clamp(value, 0, 255);
+            value = this.#_clamp(value, 0, 255);
             [r, g, b, a = 255] = value;
             r /= 255;
             g /= 255;
@@ -1035,7 +1034,7 @@ export class Color
         {
             if (typeof value === 'string')
             {
-                const match = Color.HEX_PATTERN.exec(value);
+                const match = Color.#HEX_PATTERN.exec(value);
 
                 if (match)
                 {
@@ -1058,11 +1057,11 @@ export class Color
         // Cache normalized values for rgba and hex integer
         if (r !== undefined)
         {
-            this._components[0] = r as number;
-            this._components[1] = g as number;
-            this._components[2] = b as number;
-            this._components[3] = a as number;
-            this._refreshInt();
+            this.#_components[0] = r as number;
+            this.#_components[1] = g as number;
+            this.#_components[2] = b as number;
+            this.#_components[3] = a as number;
+            this.#_refreshInt();
         }
         else
         {
@@ -1071,14 +1070,14 @@ export class Color
     }
 
     /** Refresh the internal color rgb number */
-    private _refreshInt(): void
+    #_refreshInt(): void
     {
         // Clamp values to 0 - 1
-        this._clamp(this._components);
+        this.#_clamp(this.#_components);
 
-        const [r, g, b] = this._components;
+        const [r, g, b] = this.#_components;
 
-        this._int = ((r * 255) << 16) + ((g * 255) << 8) + ((b * 255) | 0);
+        this.#_int = ((r * 255) << 16) + ((g * 255) << 8) + ((b * 255) | 0);
     }
 
     /**
@@ -1087,7 +1086,7 @@ export class Color
      * @param min - Minimum value
      * @param max - Maximum value
      */
-    private _clamp<T extends number | number[] | ColorSourceTypedArray>(value: T, min = 0, max = 1): T
+    #_clamp<T extends number | number[] | ColorSourceTypedArray>(value: T, min = 0, max = 1): T
     {
         if (typeof value === 'number')
         {
