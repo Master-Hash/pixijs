@@ -13,10 +13,10 @@ class EventsTickerClass
     /** The frequency that fake events will be fired. */
     public interactionFrequency = 10;
 
-    private _deltaTime = 0;
-    private _didMove = false;
-    private _tickerAdded = false;
-    private _pauseUpdate = true;
+    #_deltaTime = 0;
+    #_didMove = false;
+    #_tickerAdded = false;
+    #_pauseUpdate = true;
 
     /**
      * Initializes the event ticker.
@@ -27,73 +27,72 @@ class EventsTickerClass
         this.removeTickerListener();
         this.events = events;
         this.interactionFrequency = 10;
-        this._deltaTime = 0;
-        this._didMove = false;
-        this._tickerAdded = false;
-        this._pauseUpdate = true;
+        this.#_deltaTime = 0;
+        this.#_didMove = false;
+        this.#_tickerAdded = false;
+        this.#_pauseUpdate = true;
     }
 
     /** Whether to pause the update checks or not. */
     get pauseUpdate(): boolean
     {
-        return this._pauseUpdate;
+        return this.#_pauseUpdate;
     }
 
     set pauseUpdate(paused: boolean)
     {
-        this._pauseUpdate = paused;
+        this.#_pauseUpdate = paused;
     }
 
     /** Adds the ticker listener. */
     public addTickerListener(): void
     {
-        if (this._tickerAdded || !this.domElement)
+        if (this.#_tickerAdded || !this.domElement)
         {
             return;
         }
 
-        Ticker.system.add(this._tickerUpdate, this, UPDATE_PRIORITY.INTERACTION);
+        Ticker.system.add(this.#_tickerUpdate, this, UPDATE_PRIORITY.INTERACTION);
 
-        this._tickerAdded = true;
+        this.#_tickerAdded = true;
     }
 
     /** Removes the ticker listener. */
     public removeTickerListener(): void
     {
-        if (!this._tickerAdded)
+        if (!this.#_tickerAdded)
         {
             return;
         }
 
-        Ticker.system.remove(this._tickerUpdate, this);
+        Ticker.system.remove(this.#_tickerUpdate, this);
 
-        this._tickerAdded = false;
+        this.#_tickerAdded = false;
     }
 
     /** Sets flag to not fire extra events when the user has already moved there mouse */
     public pointerMoved(): void
     {
-        this._didMove = true;
+        this.#_didMove = true;
     }
 
     /** Updates the state of interactive objects. */
-    private _update(): void
+    #_update(): void
     {
-        if (!this.domElement || this._pauseUpdate)
+        if (!this.domElement || this.#_pauseUpdate)
         {
             return;
         }
 
         // if the user move the mouse this check has already been done using the mouse move!
-        if (this._didMove)
+        if (this.#_didMove)
         {
-            this._didMove = false;
+            this.#_didMove = false;
 
             return;
         }
 
-        // eslint-disable-next-line dot-notation
-        const rootPointerEvent = this.events['_rootPointerEvent'];
+        const rootPointerEvent = this.events._rootPointerEvent;
 
         if (this.events.supportsTouchEvents && (rootPointerEvent as PointerEvent).pointerType === 'touch')
         {
@@ -118,18 +117,18 @@ class EventsTickerClass
      * Invoked by a throttled ticker update from {@link Ticker.system}.
      * @param ticker - The throttled ticker.
      */
-    private _tickerUpdate(ticker: Ticker): void
+    #_tickerUpdate(ticker: Ticker): void
     {
-        this._deltaTime += ticker.deltaTime;
+        this.#_deltaTime += ticker.deltaTime;
 
-        if (this._deltaTime < this.interactionFrequency)
+        if (this.#_deltaTime < this.interactionFrequency)
         {
             return;
         }
 
-        this._deltaTime = 0;
+        this.#_deltaTime = 0;
 
-        this._update();
+        this.#_update();
     }
 
     /** Destroys the event ticker. */
@@ -138,10 +137,10 @@ class EventsTickerClass
         this.removeTickerListener();
         this.events = null;
         this.domElement = null;
-        this._deltaTime = 0;
-        this._didMove = false;
-        this._tickerAdded = false;
-        this._pauseUpdate = true;
+        this.#_deltaTime = 0;
+        this.#_didMove = false;
+        this.#_tickerAdded = false;
+        this.#_pauseUpdate = true;
     }
 }
 

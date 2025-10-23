@@ -52,8 +52,8 @@ export class BlurFilterPass extends Filter
     /** The strength of the blur filter. */
     public strength!: number;
 
-    private _quality: number;
-    private readonly _uniforms: any;
+    #_quality: number;
+    readonly #_uniforms: any;
 
     /**
      * @param options
@@ -82,13 +82,13 @@ export class BlurFilterPass extends Filter
 
         this.horizontal = options.horizontal;
 
-        this._quality = 0;
+        this.#_quality = 0;
 
         this.quality = options.quality;
 
         this.blur = options.strength;
 
-        this._uniforms = this.resources.blurUniforms.uniforms;
+        this.#_uniforms = this.resources.blurUniforms.uniforms;
     }
 
     /**
@@ -105,7 +105,7 @@ export class BlurFilterPass extends Filter
         clearMode: boolean
     ): void
     {
-        this._uniforms.uStrength = this.strength / this.passes;
+        this.#_uniforms.uStrength = this.strength / this.passes;
 
         if (this.passes === 1)
         {
@@ -160,12 +160,12 @@ export class BlurFilterPass extends Filter
      */
     get quality(): number
     {
-        return this._quality;
+        return this.#_quality;
     }
 
     set quality(value: number)
     {
-        this._quality = value;
+        this.#_quality = value;
         this.passes = value;
     }
 }

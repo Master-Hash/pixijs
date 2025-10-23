@@ -100,7 +100,7 @@ export class DOMContainer extends ViewContainer<never>
     public readonly _anchor: Point;
 
     /** The DOM element that this container is using. */
-    private _element: HTMLElement;
+    #_element: HTMLElement;
 
     /**
      * @param options - The options for creating the DOM container.
@@ -173,9 +173,9 @@ export class DOMContainer extends ViewContainer<never>
      */
     set element(value: HTMLElement)
     {
-        if (this._element === value) return;
+        if (this.#_element === value) return;
 
-        this._element = value;
+        this.#_element = value;
         this.onViewUpdate();
     }
 
@@ -190,14 +190,14 @@ export class DOMContainer extends ViewContainer<never>
      */
     get element(): HTMLElement
     {
-        return this._element;
+        return this.#_element;
     }
 
     /** @private */
     protected updateBounds()
     {
         const bounds = this._bounds;
-        const element = this._element;
+        const element = this.#_element;
 
         if (!element)
         {
@@ -229,8 +229,8 @@ export class DOMContainer extends ViewContainer<never>
     {
         super.destroy(options);
 
-        this._element?.parentNode?.removeChild(this._element);
-        this._element = null;
+        this.#_element?.parentNode?.removeChild(this.#_element);
+        this.#_element = null;
         (this._anchor as null) = null;
     }
 }

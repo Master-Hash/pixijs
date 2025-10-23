@@ -111,14 +111,14 @@ export class ColorMatrixFilter extends Filter
      * @param multiply - if true, current matrix and matrix are multiplied. If false,
      *  just set the current matrix with matrix
      */
-    private _loadMatrix(matrix: ColorMatrix, multiply = false): void
+    #_loadMatrix(matrix: ColorMatrix, multiply = false): void
     {
         let newMatrix = matrix;
 
         if (multiply)
         {
             this._multiply(newMatrix, this.matrix, matrix);
-            newMatrix = this._colorMatrix(newMatrix) as any;
+            newMatrix = this.#_colorMatrix(newMatrix) as any;
         }
 
         // set the new matrix
@@ -173,7 +173,7 @@ export class ColorMatrixFilter extends Filter
      * @param {number[]} matrix - 5x4 matrix
      * @returns {number[]} 5x4 matrix with all values between 0-1
      */
-    private _colorMatrix(matrix: ColorMatrix): ColorMatrix
+    #_colorMatrix(matrix: ColorMatrix): ColorMatrix
     {
         // Create a Float32 Array and normalize the offset component to 0-1
         const m = new Float32Array(matrix);
@@ -218,7 +218,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -256,7 +256,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -292,7 +292,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -354,7 +354,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -427,7 +427,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -468,7 +468,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -509,7 +509,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -565,7 +565,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -598,7 +598,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -632,7 +632,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -666,7 +666,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -699,7 +699,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -733,7 +733,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -766,7 +766,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -799,7 +799,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -853,7 +853,7 @@ export class ColorMatrixFilter extends Filter
             lR - dR, lG - dG, lB - dB, 0, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -893,7 +893,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -942,7 +942,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -976,7 +976,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, multiply);
+        this.#_loadMatrix(matrix, multiply);
     }
 
     /**
@@ -1006,7 +1006,7 @@ export class ColorMatrixFilter extends Filter
             0, 0, 0, 1, 0,
         ];
 
-        this._loadMatrix(matrix, false);
+        this.#_loadMatrix(matrix, false);
     }
 
     /**
