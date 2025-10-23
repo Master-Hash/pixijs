@@ -362,7 +362,7 @@ class GifSprite extends Sprite
     public readonly autoPlay: boolean = true;
 
     /** Collection of frame to render. */
-    private _source: GifSource;
+    #_source: GifSource;
 
     /**
      * Dirty means the image needs to be redrawn. Set to `true` to force redraw.
@@ -371,19 +371,19 @@ class GifSprite extends Sprite
     public dirty = false;
 
     /** The current frame number (zero-based index). */
-    private _currentFrame = 0;
+    #_currentFrame = 0;
 
     /** `true` uses {@link Ticker.shared} to auto update animation time.*/
-    private _autoUpdate = false;
+    #_autoUpdate = false;
 
     /** `true` if the instance is currently connected to {@link Ticker.shared} to auto update animation time. */
-    private _isConnectedToTicker = false;
+    #_isConnectedToTicker = false;
 
     /** If animation is currently playing. */
-    private _playing = false;
+    #_playing = false;
 
     /** Current playback position in milliseconds. */
-    private _currentTime = 0;
+    #_currentTime = 0;
 
     /**
      * @param source - Source, default options will be used.
@@ -419,15 +419,15 @@ class GifSprite extends Sprite
         super({ texture: Texture.EMPTY, ...rest });
 
         // Handle rerenders
-        this.onRender = () => this._updateFrame();
+        this.onRender = () => this.#_updateFrame();
 
         this.texture = source.textures[0];
 
         this.duration = source.frames[source.frames.length - 1].end;
-        this._source = source;
-        this._playing = false;
-        this._currentTime = 0;
-        this._isConnectedToTicker = false;
+        this.#_source = source;
+        this.#_playing = false;
+        this.#_currentTime = 0;
+        this.#_isConnectedToTicker = false;
         Object.assign(this, {
             fps,
             loop,
@@ -474,16 +474,16 @@ class GifSprite extends Sprite
      */
     public stop(): void
     {
-        if (!this._playing)
+        if (!this.#_playing)
         {
             return;
         }
 
-        this._playing = false;
-        if (this._autoUpdate && this._isConnectedToTicker)
+        this.#_playing = false;
+        if (this.#_autoUpdate && this.#_isConnectedToTicker)
         {
             Ticker.shared.remove(this.update, this);
-            this._isConnectedToTicker = false;
+            this.#_isConnectedToTicker = false;
         }
     }
 
@@ -522,22 +522,22 @@ class GifSprite extends Sprite
      */
     public play(): void
     {
-        if (this._playing)
+        if (this.#_playing)
         {
             return;
         }
 
-        this._playing = true;
-        if (this._autoUpdate && !this._isConnectedToTicker)
+        this.#_playing = true;
+        if (this.#_autoUpdate && !this.#_isConnectedToTicker)
         {
             Ticker.shared.add(this.update, this, UPDATE_PRIORITY.HIGH);
-            this._isConnectedToTicker = true;
+            this.#_isConnectedToTicker = true;
         }
 
         // If we're on the last frame and stopped, play should resume from beginning
-        if (!this.loop && this.currentFrame === this._source.frames.length - 1)
+        if (!this.loop && this.currentFrame === this.#_source.frames.length - 1)
         {
-            this._currentTime = 0;
+            this.#_currentTime = 0;
         }
     }
 
@@ -570,13 +570,13 @@ class GifSprite extends Sprite
      */
     public get progress(): number
     {
-        return this._currentTime / this.duration;
+        return this.#_currentTime / this.duration;
     }
 
     /** `true` if the current animation is playing */
     public get playing(): boolean
     {
-        return this._playing;
+        return this.#_playing;
     }
 
     /**
@@ -610,43 +610,43 @@ class GifSprite extends Sprite
      */
     public update(ticker: Ticker): void
     {
-        if (!this._playing)
+        if (!this.#_playing)
         {
             return;
         }
 
         const elapsed = this.animationSpeed * ticker.deltaTime / Ticker.targetFPMS;
-        const currentTime = this._currentTime + elapsed;
+        const currentTime = this.#_currentTime + elapsed;
         const localTime = currentTime % this.duration;
 
-        const localFrame = this._source.frames.findIndex((frame) =>
+        const localFrame = this.#_source.frames.findIndex((frame) =>
             frame.start <= localTime && frame.end > localTime);
 
         if (currentTime >= this.duration)
         {
             if (this.loop)
             {
-                this._currentTime = localTime;
-                this._updateFrameIndex(localFrame);
+                this.#_currentTime = localTime;
+                this.#_updateFrameIndex(localFrame);
                 this.onLoop?.();
             }
             else
             {
-                this._currentTime = this.duration;
-                this._updateFrameIndex(this.totalFrames - 1);
+                this.#_currentTime = this.duration;
+                this.#_updateFrameIndex(this.totalFrames - 1);
                 this.onComplete?.();
                 this.stop();
             }
         }
         else
         {
-            this._currentTime = localTime;
-            this._updateFrameIndex(localFrame);
+            this.#_currentTime = localTime;
+            this.#_updateFrameIndex(localFrame);
         }
     }
 
     /** Redraw the current frame, is necessary for the animation to work when */
-    private _updateFrame(): void
+    #_updateFrame(): void
     {
         if (!this.dirty)
         {
@@ -654,7 +654,7 @@ class GifSprite extends Sprite
         }
 
         // Update the current frame
-        this.texture = this._source.frames[this._currentFrame].texture;
+        this.texture = this.#_source.frames[this.#_currentFrame].texture;
 
         // Mark as clean
         this.dirty = false;
@@ -692,24 +692,24 @@ class GifSprite extends Sprite
      */
     get autoUpdate(): boolean
     {
-        return this._autoUpdate;
+        return this.#_autoUpdate;
     }
 
     set autoUpdate(value: boolean)
     {
-        if (value !== this._autoUpdate)
+        if (value !== this.#_autoUpdate)
         {
-            this._autoUpdate = value;
+            this.#_autoUpdate = value;
 
-            if (!this._autoUpdate && this._isConnectedToTicker)
+            if (!this.#_autoUpdate && this.#_isConnectedToTicker)
             {
                 Ticker.shared.remove(this.update, this);
-                this._isConnectedToTicker = false;
+                this.#_isConnectedToTicker = false;
             }
-            else if (this._autoUpdate && !this._isConnectedToTicker && this._playing)
+            else if (this.#_autoUpdate && !this.#_isConnectedToTicker && this.#_playing)
             {
                 Ticker.shared.add(this.update, this);
-                this._isConnectedToTicker = true;
+                this.#_isConnectedToTicker = true;
             }
         }
     }
@@ -744,12 +744,12 @@ class GifSprite extends Sprite
      */
     get currentFrame(): number
     {
-        return this._currentFrame;
+        return this.#_currentFrame;
     }
     set currentFrame(value: number)
     {
-        this._updateFrameIndex(value);
-        this._currentTime = this._source.frames[value].start;
+        this.#_updateFrameIndex(value);
+        this.#_currentTime = this.#_source.frames[value].start;
     }
 
     /**
@@ -783,22 +783,22 @@ class GifSprite extends Sprite
      */
     get source(): GifSource
     {
-        return this._source;
+        return this.#_source;
     }
 
     /**
      * Internally handle updating the frame index
      * @param value
      */
-    private _updateFrameIndex(value: number): void
+    #_updateFrameIndex(value: number): void
     {
         if (value < 0 || value >= this.totalFrames)
         {
             throw new Error(`Frame index out of range, expecting 0 to ${this.totalFrames}, got ${value}`);
         }
-        if (this._currentFrame !== value)
+        if (this.#_currentFrame !== value)
         {
-            this._currentFrame = value;
+            this.#_currentFrame = value;
             this.dirty = true;
             this.onFrameChange?.(value);
         }
@@ -818,7 +818,7 @@ class GifSprite extends Sprite
      */
     get totalFrames(): number
     {
-        return this._source.totalFrames;
+        return this.#_source.totalFrames;
     }
 
     /**
@@ -841,12 +841,12 @@ class GifSprite extends Sprite
 
         if (destroyData)
         {
-            this._source.destroy();
+            this.#_source.destroy();
         }
 
         const forceClear = null as any;
 
-        this._source = forceClear;
+        this.#_source = forceClear;
         this.onComplete = forceClear;
         this.onFrameChange = forceClear;
         this.onLoop = forceClear;
@@ -880,8 +880,8 @@ class GifSprite extends Sprite
     public clone(): GifSprite
     {
         const clone = new GifSprite({
-            source: this._source,
-            autoUpdate: this._autoUpdate,
+            source: this.#_source,
+            autoUpdate: this.#_autoUpdate,
             loop: this.loop,
             autoPlay: this.autoPlay,
             animationSpeed: this.animationSpeed,
