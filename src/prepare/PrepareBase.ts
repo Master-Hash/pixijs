@@ -131,7 +131,7 @@ export abstract class PrepareBase
                 this.dedupeQueue();
 
                 // launch first tick
-                Ticker.system.addOnce(this.#_tick, this, UPDATE_PRIORITY.UTILITY);
+                Ticker.system.addOnce(this._tick, this, UPDATE_PRIORITY.UTILITY);
             }
             else
             {
@@ -168,7 +168,7 @@ export abstract class PrepareBase
     }
 
     /** called per frame by the ticker, defer processing to next tick */
-    readonly #_tick = () =>
+    private readonly _tick = () =>
     {
         if (this.#_destroyed) return;
 
@@ -196,7 +196,7 @@ export abstract class PrepareBase
         if (queue.length)
         {
             // queue is not empty, continue processing on next frame
-            Ticker.system.addOnce(this.#_tick, this, UPDATE_PRIORITY.UTILITY);
+            Ticker.system.addOnce(this._tick, this, UPDATE_PRIORITY.UTILITY);
         }
         else
         {
