@@ -80,7 +80,7 @@ class CanvasTextGeneratorClass
 
         const canvasAndContext = CanvasPool.getOptimalCanvasAndContext(width, height);
 
-        this._renderTextToCanvas(text, style, padding, resolution, canvasAndContext);
+        this.#_renderTextToCanvas(text, style, padding, resolution, canvasAndContext);
 
         const frame = style.trim
             ? getCanvasBoundingBox({ canvas: canvasAndContext.canvas, width, height, resolution: 1, output: tempRect })
@@ -112,7 +112,7 @@ class CanvasTextGeneratorClass
      * @param resolution - The resolution of the text
      * @param canvasAndContext - The canvas and context to render the text to
      */
-    private _renderTextToCanvas(
+    #_renderTextToCanvas(
         text: string,
         style: TextStyle,
         padding: number,

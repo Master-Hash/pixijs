@@ -89,7 +89,7 @@ export class RopeGeometry extends MeshGeometry
         this._width = width;
         this.textureScale = textureScale;
 
-        this._build();
+        this.#_build();
     }
 
     /**
@@ -102,7 +102,7 @@ export class RopeGeometry extends MeshGeometry
     }
 
     /** Refreshes Rope indices and uvs */
-    private _build(): void
+    #_build(): void
     {
         const points = this.points;
 
@@ -264,7 +264,7 @@ export class RopeGeometry extends MeshGeometry
     {
         if (this.textureScale > 0)
         {
-            this._build(); // we need to update UVs
+            this.#_build(); // we need to update UVs
         }
         else
         {

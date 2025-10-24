@@ -36,8 +36,8 @@ export class BatchableMesh implements DefaultBatchableMeshElement
     public _textureId: number;
     public _textureMatrixUpdateId: number = -1;
 
-    private _transformedUvs: Float32Array;
-    private _uvUpdateId: number = -1;
+    #_transformedUvs: Float32Array;
+    #_uvUpdateId: number = -1;
 
     get blendMode() { return this.renderable.groupBlendMode; }
 
@@ -51,7 +51,7 @@ export class BatchableMesh implements DefaultBatchableMeshElement
         this._batcher = null;
         this._batch = null;
         this.geometry = null;
-        this._uvUpdateId = -1;
+        this.#_uvUpdateId = -1;
         this._textureMatrixUpdateId = -1;
     }
 
@@ -82,17 +82,17 @@ export class BatchableMesh implements DefaultBatchableMeshElement
 
         if (!textureMatrix.isSimple)
         {
-            transformedUvs = this._transformedUvs;
+            transformedUvs = this.#_transformedUvs;
 
-            if (this._textureMatrixUpdateId !== textureMatrix._updateID || this._uvUpdateId !== uvBuffer._updateID)
+            if (this._textureMatrixUpdateId !== textureMatrix._updateID || this.#_uvUpdateId !== uvBuffer._updateID)
             {
                 if (!transformedUvs || transformedUvs.length < uvs.length)
                 {
-                    transformedUvs = this._transformedUvs = new Float32Array(uvs.length);
+                    transformedUvs = this.#_transformedUvs = new Float32Array(uvs.length);
                 }
 
                 this._textureMatrixUpdateId = textureMatrix._updateID;
-                this._uvUpdateId = uvBuffer._updateID;
+                this.#_uvUpdateId = uvBuffer._updateID;
 
                 textureMatrix.multiplyUvs(uvs as Float32Array, transformedUvs);
             }

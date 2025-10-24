@@ -189,7 +189,7 @@ export class MeshSimple extends Mesh
         }));
 
         this.autoUpdate = true;
-        this.onRender = this._render;
+        this.onRender = this.#_render;
     }
 
     /**
@@ -228,7 +228,7 @@ export class MeshSimple extends Mesh
         this.geometry.getBuffer('aPosition').data = value;
     }
 
-    private _render(): void
+    #_render(): void
     {
         if (this.autoUpdate)
         {

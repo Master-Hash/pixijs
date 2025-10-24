@@ -176,10 +176,10 @@ export class Sprite extends ViewContainer<BatchableSprite>
     /** @internal */
     public _texture: Texture;
 
-    private readonly _visualBounds: BoundsData = { minX: 0, maxX: 1, minY: 0, maxY: 0 };
+    readonly #_visualBounds: BoundsData = { minX: 0, maxX: 1, minY: 0, maxY: 0 };
 
-    private _width: number;
-    private _height: number;
+    #_width: number;
+    #_height: number;
 
     /**
      * @param options - The options for creating the sprite.
@@ -240,14 +240,14 @@ export class Sprite extends ViewContainer<BatchableSprite>
 
         this._texture = value;
 
-        if (this._width)
+        if (this.#_width)
         {
-            this._setWidth(this._width, this._texture.orig.width);
+            this._setWidth(this.#_width, this._texture.orig.width);
         }
 
-        if (this._height)
+        if (this.#_height)
         {
-            this._setHeight(this._height, this._texture.orig.height);
+            this._setHeight(this.#_height, this._texture.orig.height);
         }
 
         this.onViewUpdate();
@@ -298,9 +298,9 @@ export class Sprite extends ViewContainer<BatchableSprite>
      */
     get visualBounds()
     {
-        updateQuadBounds(this._visualBounds, this._anchor, this._texture);
+        updateQuadBounds(this.#_visualBounds, this._anchor, this._texture);
 
-        return this._visualBounds;
+        return this.#_visualBounds;
     }
 
     /**
@@ -356,7 +356,7 @@ export class Sprite extends ViewContainer<BatchableSprite>
         }
 
         this._texture = null;
-        (this._visualBounds as null) = null;
+        (this.#_visualBounds as null) = null;
         (this._bounds as null) = null;
         (this._anchor as null) = null;
         this._gpuData = null;
@@ -433,7 +433,7 @@ export class Sprite extends ViewContainer<BatchableSprite>
     override set width(value: number)
     {
         this._setWidth(value, this._texture.orig.width);
-        this._width = value;
+        this.#_width = value;
     }
 
     /**
@@ -464,7 +464,7 @@ export class Sprite extends ViewContainer<BatchableSprite>
     override set height(value: number)
     {
         this._setHeight(value, this._texture.orig.height);
-        this._height = value;
+        this.#_height = value;
     }
 
     /**

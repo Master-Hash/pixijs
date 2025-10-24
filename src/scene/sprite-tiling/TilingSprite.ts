@@ -327,8 +327,8 @@ export class TilingSprite extends ViewContainer<TilingSpriteGpuData> implements 
     /** @internal */
     public _texture: Texture;
 
-    private _width: number;
-    private _height: number;
+    #_width: number;
+    #_height: number;
 
     /**
      * @param {Texture | TilingSpriteOptions} options - The options for creating the tiling sprite.
@@ -390,8 +390,8 @@ export class TilingSprite extends ViewContainer<TilingSpriteGpuData> implements 
         this.applyAnchorToTexture = applyAnchorToTexture;
 
         this.texture = texture;
-        this._width = width ?? texture.width;
-        this._height = height ?? texture.height;
+        this.#_width = width ?? texture.width;
+        this.#_height = height ?? texture.height;
 
         this._tileTransform = new Transform({
             observer: {
@@ -616,18 +616,18 @@ export class TilingSprite extends ViewContainer<TilingSpriteGpuData> implements 
      */
     override set width(value: number)
     {
-        this._width = value;
+        this.#_width = value;
         this.onViewUpdate();
     }
 
     override get width()
     {
-        return this._width;
+        return this.#_width;
     }
 
     override set height(value: number)
     {
-        this._height = value;
+        this.#_height = value;
         this.onViewUpdate();
     }
 
@@ -655,7 +655,7 @@ export class TilingSprite extends ViewContainer<TilingSpriteGpuData> implements 
      */
     override get height()
     {
-        return this._height;
+        return this.#_height;
     }
 
     /**
@@ -688,8 +688,8 @@ export class TilingSprite extends ViewContainer<TilingSpriteGpuData> implements 
             value = value.width;
         }
 
-        this._width = value;
-        this._height = height ?? value;
+        this.#_width = value;
+        this.#_height = height ?? value;
 
         this.onViewUpdate();
     }
@@ -716,8 +716,8 @@ export class TilingSprite extends ViewContainer<TilingSpriteGpuData> implements 
     public override getSize(out?: Size): Size
     {
         out ||= {} as Size;
-        out.width = this._width;
-        out.height = this._height;
+        out.width = this.#_width;
+        out.height = this.#_height;
 
         return out;
     }
@@ -729,8 +729,8 @@ export class TilingSprite extends ViewContainer<TilingSpriteGpuData> implements 
 
         const anchor = this._anchor;
 
-        const width = this._width;
-        const height = this._height;
+        const width = this.#_width;
+        const height = this.#_height;
 
         bounds.minX = -anchor._x * width;
         bounds.maxX = bounds.minX + width;
@@ -767,8 +767,8 @@ export class TilingSprite extends ViewContainer<TilingSpriteGpuData> implements 
      */
     public override containsPoint(point: PointData)
     {
-        const width = this._width;
-        const height = this._height;
+        const width = this.#_width;
+        const height = this.#_height;
         const x1 = -width * this._anchor._x;
         let y1 = 0;
 

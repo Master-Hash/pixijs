@@ -86,19 +86,19 @@ export class MeshPipe implements RenderPipe<Mesh>, InstructionPipe<Mesh>
 
     public renderer: Renderer;
 
-    private _adaptor: MeshAdaptor;
+    #_adaptor: MeshAdaptor;
 
     constructor(renderer: Renderer, adaptor: MeshAdaptor)
     {
         this.renderer = renderer;
-        this._adaptor = adaptor;
+        this.#_adaptor = adaptor;
 
-        this._adaptor.init();
+        this.#_adaptor.init();
     }
 
     public validateRenderable(mesh: Mesh): boolean
     {
-        const meshData = this._getMeshData(mesh);
+        const meshData = this.#_getMeshData(mesh);
 
         const wasBatched = meshData.batched;
 
@@ -124,7 +124,7 @@ export class MeshPipe implements RenderPipe<Mesh>, InstructionPipe<Mesh>
                 return true;
             }
 
-            const batchableMesh = this._getBatchableMesh(mesh);
+            const batchableMesh = this.#_getBatchableMesh(mesh);
 
             if (batchableMesh.texture.uid !== mesh._texture.uid)
             {
@@ -144,7 +144,7 @@ export class MeshPipe implements RenderPipe<Mesh>, InstructionPipe<Mesh>
     {
         const batcher = this.renderer.renderPipes.batch;
 
-        const meshData = this._getMeshData(mesh);
+        const meshData = this.#_getMeshData(mesh);
 
         if (mesh.didViewUpdate)
         {
@@ -154,7 +154,7 @@ export class MeshPipe implements RenderPipe<Mesh>, InstructionPipe<Mesh>
 
         if (meshData.batched)
         {
-            const gpuBatchableMesh = this._getBatchableMesh(mesh);
+            const gpuBatchableMesh = this.#_getBatchableMesh(mesh);
 
             gpuBatchableMesh.setTexture(mesh._texture);
             gpuBatchableMesh.geometry = mesh._geometry;
@@ -173,7 +173,7 @@ export class MeshPipe implements RenderPipe<Mesh>, InstructionPipe<Mesh>
     {
         if (mesh.batched)
         {
-            const gpuBatchableMesh = this._getBatchableMesh(mesh);
+            const gpuBatchableMesh = this.#_getBatchableMesh(mesh);
 
             gpuBatchableMesh.setTexture(mesh._texture);
 
@@ -201,17 +201,17 @@ export class MeshPipe implements RenderPipe<Mesh>, InstructionPipe<Mesh>
             0
         );
 
-        this._adaptor.execute(this, mesh);
+        this.#_adaptor.execute(this, mesh);
     }
 
-    private _getMeshData(mesh: Mesh): MeshData
+    #_getMeshData(mesh: Mesh): MeshData
     {
         mesh._gpuData[this.renderer.uid] ||= new MeshGpuData();
 
-        return mesh._gpuData[this.renderer.uid].meshData || this._initMeshData(mesh);
+        return mesh._gpuData[this.renderer.uid].meshData || this.#_initMeshData(mesh);
     }
 
-    private _initMeshData(mesh: Mesh): MeshData
+    #_initMeshData(mesh: Mesh): MeshData
     {
         mesh._gpuData[this.renderer.uid].meshData = {
             batched: mesh.batched,
@@ -222,14 +222,14 @@ export class MeshPipe implements RenderPipe<Mesh>, InstructionPipe<Mesh>
         return mesh._gpuData[this.renderer.uid].meshData;
     }
 
-    private _getBatchableMesh(mesh: Mesh): BatchableMesh
+    #_getBatchableMesh(mesh: Mesh): BatchableMesh
     {
         mesh._gpuData[this.renderer.uid] ||= new MeshGpuData();
 
-        return mesh._gpuData[this.renderer.uid].batchableMesh || this._initBatchableMesh(mesh);
+        return mesh._gpuData[this.renderer.uid].batchableMesh || this.#_initBatchableMesh(mesh);
     }
 
-    private _initBatchableMesh(mesh: Mesh): BatchableMesh
+    #_initBatchableMesh(mesh: Mesh): BatchableMesh
     {
         // TODO - make this batchable graphics??
         const gpuMesh: BatchableMesh = new BatchableMesh();
@@ -249,8 +249,8 @@ export class MeshPipe implements RenderPipe<Mesh>, InstructionPipe<Mesh>
         this.localUniforms = null;
         this.localUniformsBindGroup = null;
 
-        this._adaptor.destroy();
-        this._adaptor = null;
+        this.#_adaptor.destroy();
+        this.#_adaptor = null;
 
         this.renderer = null;
     }

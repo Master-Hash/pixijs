@@ -49,7 +49,7 @@ export class CanvasTextPipe implements RenderPipe<Text>
             if (batchableText.currentKey !== text.styleKey || text.resolution !== resolution)
             {
                 // If the text has changed, we need to update the GPU text
-                this._updateGpuText(text);
+                this.#_updateGpuText(text);
             }
 
             text._didTextUpdate = false;
@@ -67,7 +67,7 @@ export class CanvasTextPipe implements RenderPipe<Text>
         batchableText._batcher.updateElement(batchableText);
     }
 
-    private _updateGpuText(text: Text)
+    #_updateGpuText(text: Text)
     {
         const batchableText = this.#_getGpuText(text);
 

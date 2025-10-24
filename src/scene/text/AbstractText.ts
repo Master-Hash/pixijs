@@ -262,7 +262,7 @@ export abstract class AbstractText<
     public _didTextUpdate = true;
 
     protected _text: string;
-    private readonly _styleClass: new (options: TEXT_STYLE_OPTIONS) => TEXT_STYLE;
+    readonly #_styleClass: new (options: TEXT_STYLE_OPTIONS) => TEXT_STYLE;
 
     constructor(
         options: TEXT_OPTIONS,
@@ -275,7 +275,7 @@ export abstract class AbstractText<
             ...rest
         });
 
-        this._styleClass = styleClass;
+        this.#_styleClass = styleClass;
 
         this.text = text ?? '';
 
@@ -465,13 +465,13 @@ export abstract class AbstractText<
 
         this._style?.off('update', this.onViewUpdate, this);
 
-        if (style instanceof this._styleClass)
+        if (style instanceof this.#_styleClass)
         {
             this._style = style as TEXT_STYLE;
         }
         else
         {
-            this._style = new this._styleClass(style as TEXT_STYLE_OPTIONS);
+            this._style = new this.#_styleClass(style as TEXT_STYLE_OPTIONS);
         }
 
         this._style.on('update', this.onViewUpdate, this);

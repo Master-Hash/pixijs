@@ -19,35 +19,35 @@ export class SpritePipe implements RenderPipe<Sprite>
         name: 'sprite',
     } as const;
 
-    private _renderer: Renderer;
+    #_renderer: Renderer;
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public addRenderable(sprite: Sprite, instructionSet: InstructionSet)
     {
-        const gpuSprite = this._getGpuSprite(sprite);
+        const gpuSprite = this.#_getGpuSprite(sprite);
 
-        if (sprite.didViewUpdate) this._updateBatchableSprite(sprite, gpuSprite);
+        if (sprite.didViewUpdate) this.#_updateBatchableSprite(sprite, gpuSprite);
 
         // TODO visibility
-        this._renderer.renderPipes.batch.addToBatch(gpuSprite, instructionSet);
+        this.#_renderer.renderPipes.batch.addToBatch(gpuSprite, instructionSet);
     }
 
     public updateRenderable(sprite: Sprite)
     {
-        const gpuSprite = this._getGpuSprite(sprite);
+        const gpuSprite = this.#_getGpuSprite(sprite);
 
-        if (sprite.didViewUpdate) this._updateBatchableSprite(sprite, gpuSprite);
+        if (sprite.didViewUpdate) this.#_updateBatchableSprite(sprite, gpuSprite);
 
         gpuSprite._batcher.updateElement(gpuSprite);
     }
 
     public validateRenderable(sprite: Sprite): boolean
     {
-        const gpuSprite = this._getGpuSprite(sprite);
+        const gpuSprite = this.#_getGpuSprite(sprite);
 
         return !gpuSprite._batcher.checkAndUpdateTexture(
             gpuSprite,
@@ -55,18 +55,18 @@ export class SpritePipe implements RenderPipe<Sprite>
         ;
     }
 
-    private _updateBatchableSprite(sprite: Sprite, batchableSprite: BatchableSprite)
+    #_updateBatchableSprite(sprite: Sprite, batchableSprite: BatchableSprite)
     {
         batchableSprite.bounds = sprite.visualBounds;
         batchableSprite.texture = sprite._texture;
     }
 
-    private _getGpuSprite(sprite: Sprite): BatchableSprite
+    #_getGpuSprite(sprite: Sprite): BatchableSprite
     {
-        return sprite._gpuData[this._renderer.uid] || this._initGPUSprite(sprite);
+        return sprite._gpuData[this.#_renderer.uid] || this.#_initGPUSprite(sprite);
     }
 
-    private _initGPUSprite(sprite: Sprite): BatchableSprite
+    #_initGPUSprite(sprite: Sprite): BatchableSprite
     {
         const batchableSprite = new BatchableSprite();
 
@@ -75,15 +75,15 @@ export class SpritePipe implements RenderPipe<Sprite>
         batchableSprite.transform = sprite.groupTransform;
         batchableSprite.texture = sprite._texture;
         batchableSprite.bounds = sprite.visualBounds;
-        batchableSprite.roundPixels = (this._renderer._roundPixels | sprite._roundPixels) as 0 | 1;
+        batchableSprite.roundPixels = (this.#_renderer._roundPixels | sprite._roundPixels) as 0 | 1;
 
-        sprite._gpuData[this._renderer.uid] = batchableSprite;
+        sprite._gpuData[this.#_renderer.uid] = batchableSprite;
 
         return batchableSprite;
     }
 
     public destroy()
     {
-        this._renderer = null;
+        this.#_renderer = null;
     }
 }

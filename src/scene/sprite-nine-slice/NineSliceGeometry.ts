@@ -67,10 +67,10 @@ export class NineSliceGeometry extends PlaneGeometry
     /** @internal */
     public _bottomHeight: number;
 
-    private _originalWidth: number;
-    private _originalHeight: number;
-    private _anchorX: any;
-    private _anchorY: number;
+    #_originalWidth: number;
+    #_originalHeight: number;
+    #_anchorX: any;
+    #_anchorY: number;
 
     constructor(options: NineSliceGeometryOptions = {})
     {
@@ -94,15 +94,15 @@ export class NineSliceGeometry extends PlaneGeometry
     {
         this.width = options.width ?? this.width;
         this.height = options.height ?? this.height;
-        this._originalWidth = options.originalWidth ?? this._originalWidth;
-        this._originalHeight = options.originalHeight ?? this._originalHeight;
+        this.#_originalWidth = options.originalWidth ?? this.#_originalWidth;
+        this.#_originalHeight = options.originalHeight ?? this.#_originalHeight;
         this._leftWidth = options.leftWidth ?? this._leftWidth;
         this._rightWidth = options.rightWidth ?? this._rightWidth;
         this._topHeight = options.topHeight ?? this._topHeight;
         this._bottomHeight = options.bottomHeight ?? this._bottomHeight;
 
-        this._anchorX = options.anchor?.x;
-        this._anchorY = options.anchor?.y;
+        this.#_anchorX = options.anchor?.x;
+        this.#_anchorY = options.anchor?.y;
 
         this.updateUvs();
         this.updatePositions();
@@ -119,8 +119,8 @@ export class NineSliceGeometry extends PlaneGeometry
             _rightWidth,
             _topHeight,
             _bottomHeight,
-            _anchorX,
-            _anchorY,
+            #_anchorX: _anchorX,
+            #_anchorY: _anchorY,
         } = this;
 
         const w = _leftWidth + _rightWidth;
@@ -158,8 +158,8 @@ export class NineSliceGeometry extends PlaneGeometry
         uvs[6] = uvs[14] = uvs[22] = uvs[30] = 1;
         uvs[25] = uvs[27] = uvs[29] = uvs[31] = 1;
 
-        const _uvw = 1.0 / this._originalWidth;
-        const _uvh = 1.0 / this._originalHeight;
+        const _uvw = 1.0 / this.#_originalWidth;
+        const _uvh = 1.0 / this.#_originalHeight;
 
         uvs[2] = uvs[10] = uvs[18] = uvs[26] = _uvw * this._leftWidth;
         uvs[9] = uvs[11] = uvs[13] = uvs[15] = _uvh * this._topHeight;

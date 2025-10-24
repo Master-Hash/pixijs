@@ -290,8 +290,8 @@ export class Particle implements IParticle
      */
     public texture: Texture;
 
-    private _alpha: number;
-    private _tint: number;
+    #_alpha: number;
+    #_tint: number;
 
     constructor(options: Texture | ParticleOptions)
     {
@@ -341,14 +341,14 @@ export class Particle implements IParticle
      */
     get alpha(): number
     {
-        return this._alpha;
+        return this.#_alpha;
     }
 
     set alpha(value: number)
     {
-        this._alpha = Math.min(Math.max(value, 0), 1);
+        this.#_alpha = Math.min(Math.max(value, 0), 1);
 
-        this._updateColor();
+        this.#_updateColor();
     }
 
     /**
@@ -386,19 +386,19 @@ export class Particle implements IParticle
      */
     get tint(): number
     {
-        return bgr2rgb(this._tint);
+        return bgr2rgb(this.#_tint);
     }
 
     set tint(value: ColorSource)
     {
-        this._tint = Color.shared.setValue(value ?? 0xFFFFFF).toBgrNumber();
+        this.#_tint = Color.shared.setValue(value ?? 0xFFFFFF).toBgrNumber();
 
-        this._updateColor();
+        this.#_updateColor();
     }
 
-    private _updateColor()
+    #_updateColor()
     {
         // combine alpha and tint
-        this.color = this._tint + (((this._alpha * 255) | 0) << 24);
+        this.color = this.#_tint + (((this.#_alpha * 255) | 0) << 24);
     }
 }

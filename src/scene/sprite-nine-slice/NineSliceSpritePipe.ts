@@ -41,34 +41,34 @@ export class NineSliceSpritePipe implements RenderPipe<NineSliceSprite>
         name: 'nineSliceSprite',
     } as const;
 
-    private readonly _renderer: Renderer;
+    readonly #_renderer: Renderer;
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public addRenderable(sprite: NineSliceSprite, instructionSet: InstructionSet)
     {
-        const gpuSprite = this._getGpuSprite(sprite);
+        const gpuSprite = this.#_getGpuSprite(sprite);
 
-        if (sprite.didViewUpdate) this._updateBatchableSprite(sprite, gpuSprite);
+        if (sprite.didViewUpdate) this.#_updateBatchableSprite(sprite, gpuSprite);
 
-        this._renderer.renderPipes.batch.addToBatch(gpuSprite, instructionSet);
+        this.#_renderer.renderPipes.batch.addToBatch(gpuSprite, instructionSet);
     }
 
     public updateRenderable(sprite: NineSliceSprite)
     {
-        const gpuSprite = this._getGpuSprite(sprite);
+        const gpuSprite = this.#_getGpuSprite(sprite);
 
-        if (sprite.didViewUpdate) this._updateBatchableSprite(sprite, gpuSprite);
+        if (sprite.didViewUpdate) this.#_updateBatchableSprite(sprite, gpuSprite);
 
         gpuSprite._batcher.updateElement(gpuSprite);
     }
 
     public validateRenderable(sprite: NineSliceSprite): boolean
     {
-        const gpuSprite = this._getGpuSprite(sprite);
+        const gpuSprite = this.#_getGpuSprite(sprite);
 
         return !gpuSprite._batcher.checkAndUpdateTexture(
             gpuSprite,
@@ -76,7 +76,7 @@ export class NineSliceSpritePipe implements RenderPipe<NineSliceSprite>
         );
     }
 
-    private _updateBatchableSprite(sprite: NineSliceSprite, batchableSprite: BatchableMesh)
+    #_updateBatchableSprite(sprite: NineSliceSprite, batchableSprite: BatchableMesh)
     {
         (batchableSprite.geometry as NineSliceGeometry)
             .update(sprite);
@@ -85,26 +85,26 @@ export class NineSliceSpritePipe implements RenderPipe<NineSliceSprite>
         batchableSprite.setTexture(sprite._texture);
     }
 
-    private _getGpuSprite(sprite: NineSliceSprite): NineSliceSpriteGpuData
+    #_getGpuSprite(sprite: NineSliceSprite): NineSliceSpriteGpuData
     {
-        return sprite._gpuData[this._renderer.uid] || this._initGPUSprite(sprite);
+        return sprite._gpuData[this.#_renderer.uid] || this.#_initGPUSprite(sprite);
     }
 
-    private _initGPUSprite(sprite: NineSliceSprite): NineSliceSpriteGpuData
+    #_initGPUSprite(sprite: NineSliceSprite): NineSliceSpriteGpuData
     {
-        const gpuData = sprite._gpuData[this._renderer.uid] = new NineSliceSpriteGpuData();
+        const gpuData = sprite._gpuData[this.#_renderer.uid] = new NineSliceSpriteGpuData();
 
         const batchableMesh = gpuData;
 
         batchableMesh.renderable = sprite;
         batchableMesh.transform = sprite.groupTransform;
         batchableMesh.texture = sprite._texture;
-        batchableMesh.roundPixels = (this._renderer._roundPixels | sprite._roundPixels) as 0 | 1;
+        batchableMesh.roundPixels = (this.#_renderer._roundPixels | sprite._roundPixels) as 0 | 1;
 
         // if the sprite has not been updated by the view, we need to update the batchable mesh now.
         if (!sprite.didViewUpdate)
         {
-            this._updateBatchableSprite(sprite, batchableMesh);
+            this.#_updateBatchableSprite(sprite, batchableMesh);
         }
 
         return gpuData;
@@ -112,6 +112,6 @@ export class NineSliceSpritePipe implements RenderPipe<NineSliceSprite>
 
     public destroy()
     {
-        (this._renderer as null) = null;
+        (this.#_renderer as null) = null;
     }
 }

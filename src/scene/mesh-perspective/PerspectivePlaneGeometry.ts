@@ -40,7 +40,7 @@ export class PerspectivePlaneGeometry extends PlaneGeometry
 {
     /** The corner points of the quad you can modify these directly, if you do make sure to call `updateProjection` */
     public corners: [number, number, number, number, number, number, number, number];
-    private readonly _projectionMatrix: ArrayFixed<number, 9> = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    readonly #_projectionMatrix: ArrayFixed<number, 9> = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     /**
      * @param options - Options to be applied to MeshPlane
@@ -93,7 +93,7 @@ export class PerspectivePlaneGeometry extends PlaneGeometry
         const corners = this.corners;
 
         const projectionMatrix = compute2DProjection(
-            this._projectionMatrix,
+            this.#_projectionMatrix,
             0, 0, // top-left source
             corners[0], corners[1], // top-left dest
             width, 0, // top-right source

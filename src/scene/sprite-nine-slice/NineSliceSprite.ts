@@ -243,12 +243,12 @@ export class NineSliceSprite extends ViewContainer<NineSliceSpriteGpuData> imple
     public _anchor: ObservablePoint;
     /** @internal */
     public batched = true;
-    private _leftWidth: number;
-    private _topHeight: number;
-    private _rightWidth: number;
-    private _bottomHeight: number;
-    private _width: number;
-    private _height: number;
+    #_leftWidth: number;
+    #_topHeight: number;
+    #_rightWidth: number;
+    #_bottomHeight: number;
+    #_width: number;
+    #_height: number;
 
     constructor(options: NineSliceSpriteOptions | Texture)
     {
@@ -275,15 +275,15 @@ export class NineSliceSprite extends ViewContainer<NineSliceSpriteGpuData> imple
             ...rest
         });
 
-        this._leftWidth = leftWidth ?? texture?.defaultBorders?.left ?? NineSliceGeometry.defaultOptions.leftWidth;
-        this._topHeight = topHeight ?? texture?.defaultBorders?.top ?? NineSliceGeometry.defaultOptions.topHeight;
-        this._rightWidth = rightWidth ?? texture?.defaultBorders?.right ?? NineSliceGeometry.defaultOptions.rightWidth;
-        this._bottomHeight = bottomHeight
+        this.#_leftWidth = leftWidth ?? texture?.defaultBorders?.left ?? NineSliceGeometry.defaultOptions.leftWidth;
+        this.#_topHeight = topHeight ?? texture?.defaultBorders?.top ?? NineSliceGeometry.defaultOptions.topHeight;
+        this.#_rightWidth = rightWidth ?? texture?.defaultBorders?.right ?? NineSliceGeometry.defaultOptions.rightWidth;
+        this.#_bottomHeight = bottomHeight
                             ?? texture?.defaultBorders?.bottom
                             ?? NineSliceGeometry.defaultOptions.bottomHeight;
 
-        this._width = width ?? texture.width ?? NineSliceGeometry.defaultOptions.width;
-        this._height = height ?? texture.height ?? NineSliceGeometry.defaultOptions.height;
+        this.#_width = width ?? texture.width ?? NineSliceGeometry.defaultOptions.width;
+        this.#_height = height ?? texture.height ?? NineSliceGeometry.defaultOptions.height;
 
         this.allowChildren = false;
         this.texture = texture ?? NineSliceSprite.defaultOptions.texture;
@@ -370,12 +370,12 @@ export class NineSliceSprite extends ViewContainer<NineSliceSpriteGpuData> imple
      */
     override get width(): number
     {
-        return this._width;
+        return this.#_width;
     }
 
     override set width(value: number)
     {
-        this._width = value;
+        this.#_width = value;
         this.onViewUpdate();
     }
 
@@ -406,12 +406,12 @@ export class NineSliceSprite extends ViewContainer<NineSliceSpriteGpuData> imple
      */
     override get height(): number
     {
-        return this._height;
+        return this.#_height;
     }
 
     override set height(value: number)
     {
-        this._height = value;
+        this.#_height = value;
         this.onViewUpdate();
     }
 
@@ -447,8 +447,8 @@ export class NineSliceSprite extends ViewContainer<NineSliceSpriteGpuData> imple
             value = value.width;
         }
 
-        this._width = value;
-        this._height = height ?? value;
+        this.#_width = value;
+        this.#_height = height ?? value;
 
         this.onViewUpdate();
     }
@@ -475,8 +475,8 @@ export class NineSliceSprite extends ViewContainer<NineSliceSpriteGpuData> imple
     public override getSize(out?: Size): Size
     {
         out ||= {} as Size;
-        out.width = this._width;
-        out.height = this._height;
+        out.width = this.#_width;
+        out.height = this.#_height;
 
         return out;
     }
@@ -493,12 +493,12 @@ export class NineSliceSprite extends ViewContainer<NineSliceSpriteGpuData> imple
      */
     get leftWidth(): number
     {
-        return this._leftWidth;
+        return this.#_leftWidth;
     }
 
     set leftWidth(value: number)
     {
-        this._leftWidth = value;
+        this.#_leftWidth = value;
 
         this.onViewUpdate();
     }
@@ -515,12 +515,12 @@ export class NineSliceSprite extends ViewContainer<NineSliceSpriteGpuData> imple
      */
     get topHeight(): number
     {
-        return this._topHeight;
+        return this.#_topHeight;
     }
 
     set topHeight(value: number)
     {
-        this._topHeight = value;
+        this.#_topHeight = value;
         this.onViewUpdate();
     }
 
@@ -536,12 +536,12 @@ export class NineSliceSprite extends ViewContainer<NineSliceSpriteGpuData> imple
      */
     get rightWidth(): number
     {
-        return this._rightWidth;
+        return this.#_rightWidth;
     }
 
     set rightWidth(value: number)
     {
-        this._rightWidth = value;
+        this.#_rightWidth = value;
         this.onViewUpdate();
     }
 
@@ -557,12 +557,12 @@ export class NineSliceSprite extends ViewContainer<NineSliceSpriteGpuData> imple
      */
     get bottomHeight(): number
     {
-        return this._bottomHeight;
+        return this.#_bottomHeight;
     }
 
     set bottomHeight(value: number)
     {
-        this._bottomHeight = value;
+        this.#_bottomHeight = value;
         this.onViewUpdate();
     }
 
@@ -679,8 +679,8 @@ export class NineSliceSprite extends ViewContainer<NineSliceSpriteGpuData> imple
 
         const anchor = this._anchor;
 
-        const width = this._width;
-        const height = this._height;
+        const width = this.#_width;
+        const height = this.#_height;
 
         bounds.minX = -anchor._x * width;
         bounds.maxX = bounds.minX + width;

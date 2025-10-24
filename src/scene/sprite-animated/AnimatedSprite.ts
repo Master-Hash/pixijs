@@ -370,27 +370,27 @@ export class AnimatedSprite extends Sprite
      */
     public onLoop?: () => void;
 
-    private _playing: boolean;
-    private _textures: Texture[];
-    private _durations: number[];
+    #_playing: boolean;
+    #_textures: Texture[];
+    #_durations: number[];
 
     /**
      * `true` uses Ticker.shared to auto update animation time.
      * @default true
      */
-    private _autoUpdate: boolean;
+    #_autoUpdate: boolean;
 
     /**
      * `true` if the instance is currently connected to Ticker.shared to auto update animation time.
      * @default false
      */
-    private _isConnectedToTicker: boolean;
+    #_isConnectedToTicker: boolean;
 
     /** Elapsed time since animation has been started, used internally to display current texture. */
-    private _currentTime: number;
+    #_currentTime: number;
 
     /** The texture index that was displayed last time. */
-    private _previousFrame: number;
+    #_previousFrame: number;
 
     /**
      * @param frames - Collection of textures or frames to use.
@@ -433,10 +433,10 @@ export class AnimatedSprite extends Sprite
             texture: firstFrame instanceof Texture ? firstFrame : firstFrame.texture,
         });
 
-        this._textures = null;
-        this._durations = null;
-        this._autoUpdate = autoUpdate;
-        this._isConnectedToTicker = false;
+        this.#_textures = null;
+        this.#_durations = null;
+        this.#_autoUpdate = autoUpdate;
+        this.#_isConnectedToTicker = false;
 
         this.animationSpeed = animationSpeed;
         this.loop = loop;
@@ -445,10 +445,10 @@ export class AnimatedSprite extends Sprite
         this.onFrameChange = onFrameChange;
         this.onLoop = onLoop;
 
-        this._currentTime = 0;
+        this.#_currentTime = 0;
 
-        this._playing = false;
-        this._previousFrame = null;
+        this.#_playing = false;
+        this.#_previousFrame = null;
 
         this.textures = textures;
 
@@ -495,16 +495,16 @@ export class AnimatedSprite extends Sprite
      */
     public stop(): void
     {
-        if (!this._playing)
+        if (!this.#_playing)
         {
             return;
         }
 
-        this._playing = false;
-        if (this._autoUpdate && this._isConnectedToTicker)
+        this.#_playing = false;
+        if (this.#_autoUpdate && this.#_isConnectedToTicker)
         {
             Ticker.shared.remove(this.update, this);
-            this._isConnectedToTicker = false;
+            this.#_isConnectedToTicker = false;
         }
     }
 
@@ -541,16 +541,16 @@ export class AnimatedSprite extends Sprite
      */
     public play(): void
     {
-        if (this._playing)
+        if (this.#_playing)
         {
             return;
         }
 
-        this._playing = true;
-        if (this._autoUpdate && !this._isConnectedToTicker)
+        this.#_playing = true;
+        if (this.#_autoUpdate && !this.#_isConnectedToTicker)
         {
             Ticker.shared.add(this.update, this, UPDATE_PRIORITY.HIGH);
-            this._isConnectedToTicker = true;
+            this.#_isConnectedToTicker = true;
         }
     }
 
@@ -634,7 +634,7 @@ export class AnimatedSprite extends Sprite
     public update(ticker: Ticker): void
     {
         // If the animation isn't playing, no update is needed.
-        if (!this._playing)
+        if (!this.#_playing)
         {
             return;
         }
@@ -645,10 +645,10 @@ export class AnimatedSprite extends Sprite
         const previousFrame = this.currentFrame;
 
         // If there are specific durations set for each frame:
-        if (this._durations !== null)
+        if (this.#_durations !== null)
         {
             // Calculate the lag for the current frame based on the current time.
-            let lag = this._currentTime % 1 * this._durations[this.currentFrame];
+            let lag = this.#_currentTime % 1 * this.#_durations[this.currentFrame];
 
             // Adjust the lag based on elapsed time.
             lag += elapsed / 60 * 1000;
@@ -656,33 +656,33 @@ export class AnimatedSprite extends Sprite
             // If the lag is negative, adjust the current time and the lag.
             while (lag < 0)
             {
-                this._currentTime--;
-                lag += this._durations[this.currentFrame];
+                this.#_currentTime--;
+                lag += this.#_durations[this.currentFrame];
             }
 
             const sign = Math.sign(this.animationSpeed * deltaTime);
 
             // Floor the current time to get a whole number frame.
-            this._currentTime = Math.floor(this._currentTime);
+            this.#_currentTime = Math.floor(this.#_currentTime);
 
             // Adjust the current time and the lag until the lag is less than the current frame's duration.
-            while (lag >= this._durations[this.currentFrame])
+            while (lag >= this.#_durations[this.currentFrame])
             {
-                lag -= this._durations[this.currentFrame] * sign;
-                this._currentTime += sign;
+                lag -= this.#_durations[this.currentFrame] * sign;
+                this.#_currentTime += sign;
             }
 
             // Adjust the current time based on the lag and current frame's duration.
-            this._currentTime += lag / this._durations[this.currentFrame];
+            this.#_currentTime += lag / this.#_durations[this.currentFrame];
         }
         else
         {
             // If no specific durations set, simply adjust the current time by elapsed time.
-            this._currentTime += elapsed;
+            this.#_currentTime += elapsed;
         }
 
         // Handle scenarios when animation reaches the start or the end.
-        if (this._currentTime < 0 && !this.loop)
+        if (this.#_currentTime < 0 && !this.loop)
         {
             // If the animation shouldn't loop and it reaches the start, go to the first frame.
             this.gotoAndStop(0);
@@ -693,10 +693,10 @@ export class AnimatedSprite extends Sprite
                 this.onComplete();
             }
         }
-        else if (this._currentTime >= this._textures.length && !this.loop)
+        else if (this.#_currentTime >= this.#_textures.length && !this.loop)
         {
             // If the animation shouldn't loop and it reaches the end, go to the last frame.
-            this.gotoAndStop(this._textures.length - 1);
+            this.gotoAndStop(this.#_textures.length - 1);
 
             // If there's an onComplete callback, call it.
             if (this.onComplete)
@@ -718,23 +718,23 @@ export class AnimatedSprite extends Sprite
             }
 
             // Update the texture for the current frame.
-            this._updateTexture();
+            this.#_updateTexture();
         }
     }
 
     /** Updates the displayed texture to match the current frame index. */
-    private _updateTexture(): void
+    #_updateTexture(): void
     {
         const currentFrame = this.currentFrame;
 
-        if (this._previousFrame === currentFrame)
+        if (this.#_previousFrame === currentFrame)
         {
             return;
         }
 
-        this._previousFrame = currentFrame;
+        this.#_previousFrame = currentFrame;
 
-        this.texture = this._textures[currentFrame];
+        this.texture = this.#_textures[currentFrame];
 
         if (this.updateAnchor && this.texture.defaultAnchor)
         {
@@ -768,7 +768,7 @@ export class AnimatedSprite extends Sprite
         {
             const destroyTextureSource = typeof options === 'boolean' ? options : options?.textureSource;
 
-            this._textures.forEach((texture) =>
+            this.#_textures.forEach((texture) =>
             {
                 // the current texture will be destroyed by the base sprite class
                 if (this.texture !== texture)
@@ -777,8 +777,8 @@ export class AnimatedSprite extends Sprite
                 }
             });
         }
-        this._textures = [];
-        this._durations = null;
+        this.#_textures = [];
+        this.#_durations = null;
 
         this.stop();
         super.destroy(options);
@@ -879,7 +879,7 @@ export class AnimatedSprite extends Sprite
      */
     get totalFrames(): number
     {
-        return this._textures.length;
+        return this.#_textures.length;
     }
 
     /**
@@ -910,30 +910,30 @@ export class AnimatedSprite extends Sprite
      */
     get textures(): AnimatedSpriteFrames
     {
-        return this._textures;
+        return this.#_textures;
     }
 
     set textures(value: AnimatedSpriteFrames)
     {
         if (value[0] instanceof Texture)
         {
-            this._textures = value as Texture[];
-            this._durations = null;
+            this.#_textures = value as Texture[];
+            this.#_durations = null;
         }
         else
         {
-            this._textures = [];
-            this._durations = [];
+            this.#_textures = [];
+            this.#_durations = [];
 
             for (let i = 0; i < value.length; i++)
             {
-                this._textures.push((value[i] as FrameObject).texture);
-                this._durations.push((value[i] as FrameObject).time);
+                this.#_textures.push((value[i] as FrameObject).texture);
+                this.#_durations.push((value[i] as FrameObject).time);
             }
         }
-        this._previousFrame = null;
+        this.#_previousFrame = null;
         this.gotoAndStop(0);
-        this._updateTexture();
+        this.#_updateTexture();
     }
 
     /**
@@ -969,11 +969,11 @@ export class AnimatedSprite extends Sprite
      */
     get currentFrame(): number
     {
-        let currentFrame = Math.floor(this._currentTime) % this._textures.length;
+        let currentFrame = Math.floor(this.#_currentTime) % this.#_textures.length;
 
         if (currentFrame < 0)
         {
-            currentFrame += this._textures.length;
+            currentFrame += this.#_textures.length;
         }
 
         return currentFrame;
@@ -989,11 +989,11 @@ export class AnimatedSprite extends Sprite
 
         const previousFrame = this.currentFrame;
 
-        this._currentTime = value;
+        this.#_currentTime = value;
 
         if (previousFrame !== this.currentFrame)
         {
-            this._updateTexture();
+            this.#_updateTexture();
         }
     }
 
@@ -1018,7 +1018,7 @@ export class AnimatedSprite extends Sprite
      */
     get playing(): boolean
     {
-        return this._playing;
+        return this.#_playing;
     }
 
     /**
@@ -1047,24 +1047,24 @@ export class AnimatedSprite extends Sprite
      */
     get autoUpdate(): boolean
     {
-        return this._autoUpdate;
+        return this.#_autoUpdate;
     }
 
     set autoUpdate(value: boolean)
     {
-        if (value !== this._autoUpdate)
+        if (value !== this.#_autoUpdate)
         {
-            this._autoUpdate = value;
+            this.#_autoUpdate = value;
 
-            if (!this._autoUpdate && this._isConnectedToTicker)
+            if (!this.#_autoUpdate && this.#_isConnectedToTicker)
             {
                 Ticker.shared.remove(this.update, this);
-                this._isConnectedToTicker = false;
+                this.#_isConnectedToTicker = false;
             }
-            else if (this._autoUpdate && !this._isConnectedToTicker && this._playing)
+            else if (this.#_autoUpdate && !this.#_isConnectedToTicker && this.#_playing)
             {
                 Ticker.shared.add(this.update, this);
-                this._isConnectedToTicker = true;
+                this.#_isConnectedToTicker = true;
             }
         }
     }

@@ -184,10 +184,10 @@ export class MeshRope extends Mesh
 
         this.autoUpdate = true;
 
-        this.onRender = this._render;
+        this.onRender = this.#_render;
     }
 
-    private _render(): void
+    #_render(): void
     {
         const geometry: RopeGeometry = this.geometry as any;
 
