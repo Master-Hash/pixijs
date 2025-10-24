@@ -34,7 +34,7 @@ export class GpuGraphicsAdaptor implements GraphicsAdaptor
 
     public shader: Shader;
 
-    private _maxTextures = 0;
+    #_maxTextures = 0;
 
     public contextChange(renderer: Renderer): void
     {
@@ -44,13 +44,13 @@ export class GpuGraphicsAdaptor implements GraphicsAdaptor
             uRound: { value: 0, type: 'f32' },
         });
 
-        this._maxTextures = renderer.limits.maxBatchableTextures;
+        this.#_maxTextures = renderer.limits.maxBatchableTextures;
 
         const gpuProgram = compileHighShaderGpuProgram({
             name: 'graphics',
             bits: [
                 colorBit,
-                generateTextureBatchBit(this._maxTextures),
+                generateTextureBatchBit(this.#_maxTextures),
 
                 localUniformBitGroup2,
                 roundPixelsBit
@@ -122,7 +122,7 @@ export class GpuGraphicsAdaptor implements GraphicsAdaptor
                 batch.bindGroup = getTextureBatchBindGroup(
                     textureBatch.textures,
                     textureBatch.count,
-                    this._maxTextures
+                    this.#_maxTextures
                 );
 
                 batch.gpuBindGroup = renderer.bindGroup.getBindGroup(

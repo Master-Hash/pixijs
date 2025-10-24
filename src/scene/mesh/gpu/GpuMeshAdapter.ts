@@ -27,7 +27,7 @@ export class GpuMeshAdapter implements MeshAdaptor
         name: 'mesh',
     } as const;
 
-    private _shader: Shader;
+    #_shader: Shader;
 
     public init(): void
     {
@@ -40,7 +40,7 @@ export class GpuMeshAdapter implements MeshAdaptor
             ]
         });
 
-        this._shader = new Shader({
+        this.#_shader = new Shader({
             gpuProgram,
             resources: {
                 uTexture: Texture.EMPTY._source,
@@ -60,7 +60,7 @@ export class GpuMeshAdapter implements MeshAdaptor
 
         if (!shader)
         {
-            shader = this._shader;
+            shader = this.#_shader;
 
             shader.groups[2] = renderer.texture.getTextureBindGroup(mesh.texture);
         }
@@ -98,7 +98,7 @@ export class GpuMeshAdapter implements MeshAdaptor
 
     public destroy(): void
     {
-        this._shader.destroy(true);
-        this._shader = null;
+        this.#_shader.destroy(true);
+        this.#_shader = null;
     }
 }

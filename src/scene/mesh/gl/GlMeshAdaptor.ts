@@ -25,7 +25,7 @@ export class GlMeshAdaptor implements MeshAdaptor
         name: 'mesh',
     } as const;
 
-    private _shader: Shader;
+    #_shader: Shader;
 
     public init(): void
     {
@@ -38,7 +38,7 @@ export class GlMeshAdaptor implements MeshAdaptor
             ]
         });
 
-        this._shader = new Shader({
+        this.#_shader = new Shader({
             glProgram,
             resources: {
                 uTexture: Texture.EMPTY.source,
@@ -57,7 +57,7 @@ export class GlMeshAdaptor implements MeshAdaptor
 
         if (!shader)
         {
-            shader = this._shader;
+            shader = this.#_shader;
 
             const texture = mesh.texture;
             const source = texture.source;
@@ -89,7 +89,7 @@ export class GlMeshAdaptor implements MeshAdaptor
 
     public destroy(): void
     {
-        this._shader.destroy(true);
-        this._shader = null;
+        this.#_shader.destroy(true);
+        this.#_shader = null;
     }
 }

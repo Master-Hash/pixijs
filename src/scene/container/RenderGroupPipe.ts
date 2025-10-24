@@ -26,22 +26,22 @@ export class RenderGroupPipe implements InstructionPipe<RenderGroup>
         name: 'renderGroup',
     } as const;
 
-    private _renderer: Renderer;
+    #_renderer: Renderer;
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public addRenderGroup(renderGroup: RenderGroup, instructionSet: InstructionSet): void
     {
         if (renderGroup.isCachedAsTexture)
         {
-            this._addRenderableCacheAsTexture(renderGroup, instructionSet);
+            this.#_addRenderableCacheAsTexture(renderGroup, instructionSet);
         }
         else
         {
-            this._addRenderableDirect(renderGroup, instructionSet);
+            this.#_addRenderableDirect(renderGroup, instructionSet);
         }
     }
 
@@ -51,22 +51,22 @@ export class RenderGroupPipe implements InstructionPipe<RenderGroup>
 
         if (renderGroup.isCachedAsTexture)
         {
-            this._executeCacheAsTexture(renderGroup);
+            this.#_executeCacheAsTexture(renderGroup);
         }
         else
         {
-            this._executeDirect(renderGroup);
+            this.#_executeDirect(renderGroup);
         }
     }
 
     public destroy(): void
     {
-        this._renderer = null;
+        this.#_renderer = null;
     }
 
-    private _addRenderableDirect(renderGroup: RenderGroup, instructionSet: InstructionSet): void
+    #_addRenderableDirect(renderGroup: RenderGroup, instructionSet: InstructionSet): void
     {
-        this._renderer.renderPipes.batch.break(instructionSet);
+        this.#_renderer.renderPipes.batch.break(instructionSet);
 
         if (renderGroup._batchableRenderGroup)
         {
@@ -77,7 +77,7 @@ export class RenderGroupPipe implements InstructionPipe<RenderGroup>
         instructionSet.add(renderGroup);
     }
 
-    private _addRenderableCacheAsTexture(renderGroup: RenderGroup, instructionSet: InstructionSet): void
+    #_addRenderableCacheAsTexture(renderGroup: RenderGroup, instructionSet: InstructionSet): void
     {
         const batchableRenderGroup = renderGroup._batchableRenderGroup ??= BigPool.get(BatchableSprite);
 
@@ -88,12 +88,12 @@ export class RenderGroupPipe implements InstructionPipe<RenderGroup>
 
         instructionSet.add(renderGroup);
 
-        this._renderer.renderPipes.blendMode.pushBlendMode(renderGroup, renderGroup.root.groupBlendMode, instructionSet);
-        this._renderer.renderPipes.batch.addToBatch(batchableRenderGroup, instructionSet);
-        this._renderer.renderPipes.blendMode.popBlendMode(instructionSet);
+        this.#_renderer.renderPipes.blendMode.pushBlendMode(renderGroup, renderGroup.root.groupBlendMode, instructionSet);
+        this.#_renderer.renderPipes.batch.addToBatch(batchableRenderGroup, instructionSet);
+        this.#_renderer.renderPipes.blendMode.popBlendMode(instructionSet);
     }
 
-    private _executeCacheAsTexture(renderGroup: RenderGroup): void
+    #_executeCacheAsTexture(renderGroup: RenderGroup): void
     {
         if (renderGroup.textureNeedsUpdate)
         {
@@ -106,35 +106,35 @@ export class RenderGroupPipe implements InstructionPipe<RenderGroup>
                     -renderGroup._textureBounds.y
                 );
 
-            this._renderer.renderTarget.push(renderGroup.texture, true, null, renderGroup.texture.frame);
+            this.#_renderer.renderTarget.push(renderGroup.texture, true, null, renderGroup.texture.frame);
 
-            this._renderer.globalUniforms.push({
+            this.#_renderer.globalUniforms.push({
                 worldTransformMatrix,
                 worldColor: 0xFFFFFFFF,
                 offset: { x: 0, y: 0 },
             });
 
-            executeInstructions(renderGroup, this._renderer.renderPipes);
+            executeInstructions(renderGroup, this.#_renderer.renderPipes);
 
-            this._renderer.renderTarget.finishRenderPass();
+            this.#_renderer.renderTarget.finishRenderPass();
 
-            this._renderer.renderTarget.pop();
-            this._renderer.globalUniforms.pop();
+            this.#_renderer.renderTarget.pop();
+            this.#_renderer.globalUniforms.pop();
         }
 
         renderGroup._batchableRenderGroup._batcher.updateElement(renderGroup._batchableRenderGroup);
         renderGroup._batchableRenderGroup._batcher.geometry.buffers[0].update();
     }
 
-    private _executeDirect(renderGroup: RenderGroup): void
+    #_executeDirect(renderGroup: RenderGroup): void
     {
-        this._renderer.globalUniforms.push({
+        this.#_renderer.globalUniforms.push({
             worldTransformMatrix: renderGroup.inverseParentTextureTransform,
             worldColor: renderGroup.worldColorAlpha,
         });
 
-        executeInstructions(renderGroup, this._renderer.renderPipes);
+        executeInstructions(renderGroup, this.#_renderer.renderPipes);
 
-        this._renderer.globalUniforms.pop();
+        this.#_renderer.globalUniforms.pop();
     }
 }

@@ -69,8 +69,8 @@ export class NineSliceGeometry extends PlaneGeometry
 
     #_originalWidth: number;
     #_originalHeight: number;
-    #_anchorX: any;
-    #_anchorY: number;
+    private _anchorX: any;
+    private _anchorY: number;
 
     constructor(options: NineSliceGeometryOptions = {})
     {
@@ -101,8 +101,8 @@ export class NineSliceGeometry extends PlaneGeometry
         this._topHeight = options.topHeight ?? this._topHeight;
         this._bottomHeight = options.bottomHeight ?? this._bottomHeight;
 
-        this.#_anchorX = options.anchor?.x;
-        this.#_anchorY = options.anchor?.y;
+        this._anchorX = options.anchor?.x;
+        this._anchorY = options.anchor?.y;
 
         this.updateUvs();
         this.updatePositions();
@@ -119,8 +119,8 @@ export class NineSliceGeometry extends PlaneGeometry
             _rightWidth,
             _topHeight,
             _bottomHeight,
-            #_anchorX: _anchorX,
-            #_anchorY: _anchorY,
+            _anchorX,
+            _anchorY,
         } = this;
 
         const w = _leftWidth + _rightWidth;

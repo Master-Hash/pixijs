@@ -147,17 +147,17 @@ export class GraphicsContext extends EventEmitter<{
      */
     public customShader?: Shader;
 
-    private _activePath: GraphicsPath = new GraphicsPath();
-    private _transform: Matrix = new Matrix();
+    #_activePath: GraphicsPath = new GraphicsPath();
+    #_transform: Matrix = new Matrix();
 
-    private _fillStyle: ConvertedFillStyle = { ...GraphicsContext.defaultFillStyle };
-    private _strokeStyle: ConvertedStrokeStyle = { ...GraphicsContext.defaultStrokeStyle };
-    private _stateStack: { fillStyle: ConvertedFillStyle; strokeStyle: ConvertedStrokeStyle, transform: Matrix }[] = [];
+    #_fillStyle: ConvertedFillStyle = { ...GraphicsContext.defaultFillStyle };
+    #_strokeStyle: ConvertedStrokeStyle = { ...GraphicsContext.defaultStrokeStyle };
+    #_stateStack: { fillStyle: ConvertedFillStyle; strokeStyle: ConvertedStrokeStyle, transform: Matrix }[] = [];
 
-    private _tick = 0;
+    #_tick = 0;
 
-    private _bounds = new Bounds();
-    private _boundsDirty = true;
+    #_bounds = new Bounds();
+    #_boundsDirty = true;
 
     /**
      * Creates a new GraphicsContext object that is a clone of this instance, copying all properties,
@@ -170,13 +170,13 @@ export class GraphicsContext extends EventEmitter<{
 
         clone.batchMode = this.batchMode;
         clone.instructions = this.instructions.slice();
-        clone._activePath = this._activePath.clone();
-        clone._transform = this._transform.clone();
-        clone._fillStyle = { ...this._fillStyle };
-        clone._strokeStyle = { ...this._strokeStyle };
-        clone._stateStack = this._stateStack.slice();
-        clone._bounds = this._bounds.clone();
-        clone._boundsDirty = true;
+        clone.#_activePath = this.#_activePath.clone();
+        clone.#_transform = this.#_transform.clone();
+        clone.#_fillStyle = { ...this.#_fillStyle };
+        clone.#_strokeStyle = { ...this.#_strokeStyle };
+        clone.#_stateStack = this.#_stateStack.slice();
+        clone.#_bounds = this.#_bounds.clone();
+        clone.#_boundsDirty = true;
 
         return clone;
     }
@@ -186,12 +186,12 @@ export class GraphicsContext extends EventEmitter<{
      */
     get fillStyle(): ConvertedFillStyle
     {
-        return this._fillStyle;
+        return this.#_fillStyle;
     }
 
     set fillStyle(value: FillInput)
     {
-        this._fillStyle = toFillStyle(value, GraphicsContext.defaultFillStyle);
+        this.#_fillStyle = toFillStyle(value, GraphicsContext.defaultFillStyle);
     }
 
     /**
@@ -199,12 +199,12 @@ export class GraphicsContext extends EventEmitter<{
      */
     get strokeStyle(): ConvertedStrokeStyle
     {
-        return this._strokeStyle;
+        return this.#_strokeStyle;
     }
 
     set strokeStyle(value: FillInput)
     {
-        this._strokeStyle = toStrokeStyle(value, GraphicsContext.defaultStrokeStyle);
+        this.#_strokeStyle = toStrokeStyle(value, GraphicsContext.defaultStrokeStyle);
     }
 
     /**
@@ -216,7 +216,7 @@ export class GraphicsContext extends EventEmitter<{
      */
     public setFillStyle(style: FillInput): this
     {
-        this._fillStyle = toFillStyle(style, GraphicsContext.defaultFillStyle);
+        this.#_fillStyle = toFillStyle(style, GraphicsContext.defaultFillStyle);
 
         return this;
     }
@@ -230,7 +230,7 @@ export class GraphicsContext extends EventEmitter<{
      */
     public setStrokeStyle(style: StrokeInput): this
     {
-        this._strokeStyle = toFillStyle(style, GraphicsContext.defaultStrokeStyle) as ConvertedStrokeStyle;
+        this.#_strokeStyle = toFillStyle(style, GraphicsContext.defaultStrokeStyle) as ConvertedStrokeStyle;
 
         return this;
     }
@@ -272,8 +272,8 @@ export class GraphicsContext extends EventEmitter<{
                 dw: dw || texture.frame.width,
                 dh: dh || texture.frame.height,
 
-                transform: this._transform.clone(),
-                alpha: this._fillStyle.alpha,
+                transform: this.#_transform.clone(),
+                alpha: this.#_fillStyle.alpha,
                 style: tint ? Color.shared.setValue(tint).toNumber() : 0xFFFFFF,
             }
         });
@@ -290,7 +290,7 @@ export class GraphicsContext extends EventEmitter<{
      */
     public beginPath(): this
     {
-        this._activePath = new GraphicsPath();
+        this.#_activePath = new GraphicsPath();
 
         return this;
     }
@@ -310,13 +310,13 @@ export class GraphicsContext extends EventEmitter<{
 
         const lastInstruction = this.instructions[this.instructions.length - 1];
 
-        if (this._tick === 0 && lastInstruction && lastInstruction.action === 'stroke')
+        if (this.#_tick === 0 && lastInstruction && lastInstruction.action === 'stroke')
         {
             path = lastInstruction.data.path;
         }
         else
         {
-            path = this._activePath.clone();
+            path = this.#_activePath.clone();
         }
 
         if (!path) return this;
@@ -332,7 +332,7 @@ export class GraphicsContext extends EventEmitter<{
 
                 style = { color: style, alpha };
             }
-            this._fillStyle = toFillStyle(style, GraphicsContext.defaultFillStyle);
+            this.#_fillStyle = toFillStyle(style, GraphicsContext.defaultFillStyle);
         }
 
         // TODO not a fan of the clone!!
@@ -344,19 +344,19 @@ export class GraphicsContext extends EventEmitter<{
 
         this.onUpdate();
 
-        this._initNextPathLocation();
-        this._tick = 0;
+        this.#_initNextPathLocation();
+        this.#_tick = 0;
 
         return this;
     }
 
-    private _initNextPathLocation()
+    #_initNextPathLocation()
     {
         // Reset the _activePath with the last point of the current path
-        const { x, y } = this._activePath.getLastPoint(Point.shared);
+        const { x, y } = this.#_activePath.getLastPoint(Point.shared);
 
-        this._activePath.clear();
-        this._activePath.moveTo(x, y);
+        this.#_activePath.clear();
+        this.#_activePath.moveTo(x, y);
     }
 
     /**
@@ -371,13 +371,13 @@ export class GraphicsContext extends EventEmitter<{
 
         const lastInstruction = this.instructions[this.instructions.length - 1];
 
-        if (this._tick === 0 && lastInstruction && lastInstruction.action === 'fill')
+        if (this.#_tick === 0 && lastInstruction && lastInstruction.action === 'fill')
         {
             path = lastInstruction.data.path;
         }
         else
         {
-            path = this._activePath.clone();
+            path = this.#_activePath.clone();
         }
 
         if (!path) return this;
@@ -385,7 +385,7 @@ export class GraphicsContext extends EventEmitter<{
         // eslint-disable-next-line no-eq-null, eqeqeq
         if (style != null)
         {
-            this._strokeStyle = toStrokeStyle(style, GraphicsContext.defaultStrokeStyle);
+            this.#_strokeStyle = toStrokeStyle(style, GraphicsContext.defaultStrokeStyle);
         }
 
         // TODO not a fan of the clone!!
@@ -397,8 +397,8 @@ export class GraphicsContext extends EventEmitter<{
 
         this.onUpdate();
 
-        this._initNextPathLocation();
-        this._tick = 0;
+        this.#_initNextPathLocation();
+        this.#_tick = 0;
 
         return this;
     }
@@ -415,7 +415,7 @@ export class GraphicsContext extends EventEmitter<{
         {
             const lastInstruction = this.instructions[this.instructions.length - 1 - i];
 
-            const holePath = this._activePath.clone();
+            const holePath = this.#_activePath.clone();
 
             if (lastInstruction)
             {
@@ -434,7 +434,7 @@ export class GraphicsContext extends EventEmitter<{
             }
         }
 
-        this._initNextPathLocation();
+        this.#_initNextPathLocation();
 
         return this;
     }
@@ -452,11 +452,11 @@ export class GraphicsContext extends EventEmitter<{
      */
     public arc(x: number, y: number, radius: number, startAngle: number, endAngle: number, counterclockwise?: boolean): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        const t = this._transform;
+        const t = this.#_transform;
 
-        this._activePath.arc(
+        this.#_activePath.arc(
             (t.a * x) + (t.c * y) + t.tx,
             (t.b * x) + (t.d * y) + t.ty,
             radius,
@@ -480,11 +480,11 @@ export class GraphicsContext extends EventEmitter<{
      */
     public arcTo(x1: number, y1: number, x2: number, y2: number, radius: number): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        const t = this._transform;
+        const t = this.#_transform;
 
-        this._activePath.arcTo(
+        this.#_activePath.arcTo(
             (t.a * x1) + (t.c * y1) + t.tx,
             (t.b * x1) + (t.d * y1) + t.ty,
             (t.a * x2) + (t.c * y2) + t.tx,
@@ -515,11 +515,11 @@ export class GraphicsContext extends EventEmitter<{
         x: number, y: number
     ): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        const t = this._transform;
+        const t = this.#_transform;
 
-        this._activePath.arcToSvg(
+        this.#_activePath.arcToSvg(
             rx, ry,
             xAxisRotation, // should we rotate this with transform??
             largeArcFlag,
@@ -546,12 +546,12 @@ export class GraphicsContext extends EventEmitter<{
      */
     public bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number, smoothness?: number): this
     {
-        this._tick++;
+        this.#_tick++;
 
         // TODO optimize for no transform
-        const t = this._transform;
+        const t = this.#_transform;
 
-        this._activePath.bezierCurveTo(
+        this.#_activePath.bezierCurveTo(
             (t.a * cp1x) + (t.c * cp1y) + t.tx,
             (t.b * cp1x) + (t.d * cp1y) + t.ty,
             (t.a * cp2x) + (t.c * cp2y) + t.tx,
@@ -571,9 +571,9 @@ export class GraphicsContext extends EventEmitter<{
      */
     public closePath(): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        this._activePath?.closePath();
+        this.#_activePath?.closePath();
 
         return this;
     }
@@ -589,9 +589,9 @@ export class GraphicsContext extends EventEmitter<{
      */
     public ellipse(x: number, y: number, radiusX: number, radiusY: number): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        this._activePath.ellipse(x, y, radiusX, radiusY, this._transform.clone());
+        this.#_activePath.ellipse(x, y, radiusX, radiusY, this.#_transform.clone());
 
         return this;
     }
@@ -605,9 +605,9 @@ export class GraphicsContext extends EventEmitter<{
      */
     public circle(x: number, y: number, radius: number): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        this._activePath.circle(x, y, radius, this._transform.clone());
+        this.#_activePath.circle(x, y, radius, this.#_transform.clone());
 
         return this;
     }
@@ -619,9 +619,9 @@ export class GraphicsContext extends EventEmitter<{
      */
     public path(path: GraphicsPath): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        this._activePath.addPath(path, this._transform.clone());
+        this.#_activePath.addPath(path, this.#_transform.clone());
 
         return this;
     }
@@ -634,11 +634,11 @@ export class GraphicsContext extends EventEmitter<{
      */
     public lineTo(x: number, y: number): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        const t = this._transform;
+        const t = this.#_transform;
 
-        this._activePath.lineTo(
+        this.#_activePath.lineTo(
             (t.a * x) + (t.c * y) + t.tx,
             (t.b * x) + (t.d * y) + t.ty
         );
@@ -654,11 +654,11 @@ export class GraphicsContext extends EventEmitter<{
      */
     public moveTo(x: number, y: number): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        const t = this._transform;
+        const t = this.#_transform;
 
-        const instructions = this._activePath.instructions;
+        const instructions = this.#_activePath.instructions;
 
         const transformedX = (t.a * x) + (t.c * y) + t.tx;
         const transformedY = (t.b * x) + (t.d * y) + t.ty;
@@ -670,7 +670,7 @@ export class GraphicsContext extends EventEmitter<{
 
             return this;
         }
-        this._activePath.moveTo(
+        this.#_activePath.moveTo(
             transformedX,
             transformedY
         );
@@ -690,11 +690,11 @@ export class GraphicsContext extends EventEmitter<{
      */
     public quadraticCurveTo(cpx: number, cpy: number, x: number, y: number, smoothness?: number): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        const t = this._transform;
+        const t = this.#_transform;
 
-        this._activePath.quadraticCurveTo(
+        this.#_activePath.quadraticCurveTo(
             (t.a * cpx) + (t.c * cpy) + t.tx,
             (t.b * cpx) + (t.d * cpy) + t.ty,
             (t.a * x) + (t.c * y) + t.tx,
@@ -715,9 +715,9 @@ export class GraphicsContext extends EventEmitter<{
      */
     public rect(x: number, y: number, w: number, h: number): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        this._activePath.rect(x, y, w, h, this._transform.clone());
+        this.#_activePath.rect(x, y, w, h, this.#_transform.clone());
 
         return this;
     }
@@ -735,9 +735,9 @@ export class GraphicsContext extends EventEmitter<{
      */
     public roundRect(x: number, y: number, w: number, h: number, radius?: number): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        this._activePath.roundRect(x, y, w, h, radius, this._transform.clone());
+        this.#_activePath.roundRect(x, y, w, h, radius, this.#_transform.clone());
 
         return this;
     }
@@ -752,9 +752,9 @@ export class GraphicsContext extends EventEmitter<{
      */
     public poly(points: number[] | PointData[], close?: boolean): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        this._activePath.poly(points, close, this._transform.clone());
+        this.#_activePath.poly(points, close, this.#_transform.clone());
 
         return this;
     }
@@ -771,8 +771,8 @@ export class GraphicsContext extends EventEmitter<{
      */
     public regularPoly(x: number, y: number, radius: number, sides: number, rotation = 0, transform?: Matrix): this
     {
-        this._tick++;
-        this._activePath.regularPoly(x, y, radius, sides, rotation, transform);
+        this.#_tick++;
+        this.#_activePath.regularPoly(x, y, radius, sides, rotation, transform);
 
         return this;
     }
@@ -790,8 +790,8 @@ export class GraphicsContext extends EventEmitter<{
      */
     public roundPoly(x: number, y: number, radius: number, sides: number, corner: number, rotation?: number): this
     {
-        this._tick++;
-        this._activePath.roundPoly(x, y, radius, sides, corner, rotation);
+        this.#_tick++;
+        this.#_activePath.roundPoly(x, y, radius, sides, corner, rotation);
 
         return this;
     }
@@ -811,8 +811,8 @@ export class GraphicsContext extends EventEmitter<{
      */
     public roundShape(points: RoundedPoint[], radius: number, useQuadratic?: boolean, smoothness?: number): this
     {
-        this._tick++;
-        this._activePath.roundShape(points, radius, useQuadratic, smoothness);
+        this.#_tick++;
+        this.#_activePath.roundShape(points, radius, useQuadratic, smoothness);
 
         return this;
     }
@@ -828,8 +828,8 @@ export class GraphicsContext extends EventEmitter<{
      */
     public filletRect(x: number, y: number, width: number, height: number, fillet: number): this
     {
-        this._tick++;
-        this._activePath.filletRect(x, y, width, height, fillet);
+        this.#_tick++;
+        this.#_activePath.filletRect(x, y, width, height, fillet);
 
         return this;
     }
@@ -845,8 +845,8 @@ export class GraphicsContext extends EventEmitter<{
      */
     public chamferRect(x: number, y: number, width: number, height: number, chamfer: number, transform?: Matrix): this
     {
-        this._tick++;
-        this._activePath.chamferRect(x, y, width, height, chamfer, transform);
+        this.#_tick++;
+        this.#_activePath.chamferRect(x, y, width, height, chamfer, transform);
 
         return this;
     }
@@ -869,9 +869,9 @@ export class GraphicsContext extends EventEmitter<{
      */
     public star(x: number, y: number, points: number, radius: number, innerRadius = 0, rotation = 0): this
     {
-        this._tick++;
+        this.#_tick++;
 
-        this._activePath.star(x, y, points, radius, innerRadius, rotation, this._transform.clone());
+        this.#_activePath.star(x, y, points, radius, innerRadius, rotation, this.#_transform.clone());
 
         return this;
     }
@@ -883,7 +883,7 @@ export class GraphicsContext extends EventEmitter<{
      */
     public svg(svg: string): this
     {
-        this._tick++;
+        this.#_tick++;
 
         SVGParser(svg, this);
 
@@ -896,13 +896,13 @@ export class GraphicsContext extends EventEmitter<{
      */
     public restore(): this
     {
-        const state = this._stateStack.pop();
+        const state = this.#_stateStack.pop();
 
         if (state)
         {
-            this._transform = state.transform;
-            this._fillStyle = state.fillStyle;
-            this._strokeStyle = state.strokeStyle;
+            this.#_transform = state.transform;
+            this.#_fillStyle = state.fillStyle;
+            this.#_strokeStyle = state.strokeStyle;
         }
 
         return this;
@@ -911,10 +911,10 @@ export class GraphicsContext extends EventEmitter<{
     /** Saves the current graphics state, including transformations, fill styles, and stroke styles, onto a stack. */
     public save(): this
     {
-        this._stateStack.push({
-            transform: this._transform.clone(),
-            fillStyle: { ...this._fillStyle },
-            strokeStyle: { ...this._strokeStyle },
+        this.#_stateStack.push({
+            transform: this.#_transform.clone(),
+            fillStyle: { ...this.#_fillStyle },
+            strokeStyle: { ...this.#_strokeStyle },
         });
 
         return this;
@@ -926,7 +926,7 @@ export class GraphicsContext extends EventEmitter<{
      */
     public getTransform(): Matrix
     {
-        return this._transform;
+        return this.#_transform;
     }
 
     /**
@@ -935,7 +935,7 @@ export class GraphicsContext extends EventEmitter<{
      */
     public resetTransform(): this
     {
-        this._transform.identity();
+        this.#_transform.identity();
 
         return this;
     }
@@ -947,7 +947,7 @@ export class GraphicsContext extends EventEmitter<{
      */
     public rotate(angle: number): this
     {
-        this._transform.rotate(angle);
+        this.#_transform.rotate(angle);
 
         return this;
     }
@@ -960,7 +960,7 @@ export class GraphicsContext extends EventEmitter<{
      */
     public scale(x: number, y: number = x): this
     {
-        this._transform.scale(x, y);
+        this.#_transform.scale(x, y);
 
         return this;
     }
@@ -988,12 +988,12 @@ export class GraphicsContext extends EventEmitter<{
     {
         if (a instanceof Matrix)
         {
-            this._transform.set(a.a, a.b, a.c, a.d, a.tx, a.ty);
+            this.#_transform.set(a.a, a.b, a.c, a.d, a.tx, a.ty);
 
             return this;
         }
 
-        this._transform.set(a, b, c, d, dx, dy);
+        this.#_transform.set(a, b, c, d, dx, dy);
 
         return this;
     }
@@ -1021,13 +1021,13 @@ export class GraphicsContext extends EventEmitter<{
     {
         if (a instanceof Matrix)
         {
-            this._transform.append(a);
+            this.#_transform.append(a);
 
             return this;
         }
 
         tempMatrix.set(a, b, c, d, dx, dy);
-        this._transform.append(tempMatrix);
+        this.#_transform.append(tempMatrix);
 
         return this;
     }
@@ -1040,7 +1040,7 @@ export class GraphicsContext extends EventEmitter<{
      */
     public translate(x: number, y: number = x): this
     {
-        this._transform.translate(x, y);
+        this.#_transform.translate(x, y);
 
         return this;
     }
@@ -1052,7 +1052,7 @@ export class GraphicsContext extends EventEmitter<{
      */
     public clear(): this
     {
-        this._activePath.clear();
+        this.#_activePath.clear();
         this.instructions.length = 0;
         this.resetTransform();
 
@@ -1065,7 +1065,7 @@ export class GraphicsContext extends EventEmitter<{
     {
         // Every time the content is updated - we must invalidate bounds, regardless rendering `dirty` state.
         // Bounds can be read multiple times per frame.
-        this._boundsDirty = true;
+        this.#_boundsDirty = true;
 
         // Visual updates happen only once per frame.
         // There is no need to dispatch an `update` in if it was already dispatched this frame.
@@ -1077,12 +1077,12 @@ export class GraphicsContext extends EventEmitter<{
     /** The bounds of the graphic shape. */
     get bounds(): Bounds
     {
-        if (!this._boundsDirty) return this._bounds;
+        if (!this.#_boundsDirty) return this.#_bounds;
 
-        this._boundsDirty = false;
+        this.#_boundsDirty = false;
 
         // TODO switch to idy dirty with tick..
-        const bounds = this._bounds;
+        const bounds = this.#_bounds;
 
         bounds.clear();
 
@@ -1210,8 +1210,8 @@ export class GraphicsContext extends EventEmitter<{
      */
     public destroy(options: TypeOrBool<TextureDestroyOptions> = false): void
     {
-        this._stateStack.length = 0;
-        this._transform = null;
+        this.#_stateStack.length = 0;
+        this.#_transform = null;
 
         this.emit('destroy', this);
         this.removeAllListeners();
@@ -1222,29 +1222,29 @@ export class GraphicsContext extends EventEmitter<{
         {
             const destroyTextureSource = typeof options === 'boolean' ? options : options?.textureSource;
 
-            if (this._fillStyle.texture)
+            if (this.#_fillStyle.texture)
             {
-                this._fillStyle.fill && 'uid' in this._fillStyle.fill
-                    ? this._fillStyle.fill.destroy()
-                    : this._fillStyle.texture.destroy(destroyTextureSource);
+                this.#_fillStyle.fill && 'uid' in this.#_fillStyle.fill
+                    ? this.#_fillStyle.fill.destroy()
+                    : this.#_fillStyle.texture.destroy(destroyTextureSource);
             }
 
-            if (this._strokeStyle.texture)
+            if (this.#_strokeStyle.texture)
             {
-                this._strokeStyle.fill && 'uid' in this._strokeStyle.fill
-                    ? this._strokeStyle.fill.destroy()
-                    : this._strokeStyle.texture.destroy(destroyTextureSource);
+                this.#_strokeStyle.fill && 'uid' in this.#_strokeStyle.fill
+                    ? this.#_strokeStyle.fill.destroy()
+                    : this.#_strokeStyle.texture.destroy(destroyTextureSource);
             }
         }
 
-        this._fillStyle = null;
-        this._strokeStyle = null;
+        this.#_fillStyle = null;
+        this.#_strokeStyle = null;
 
         this.instructions = null;
-        this._activePath = null;
-        this._bounds = null;
-        this._stateStack = null;
+        this.#_activePath = null;
+        this.#_bounds = null;
+        this.#_stateStack = null;
         this.customShader = null;
-        this._transform = null;
+        this.#_transform = null;
     }
 }

@@ -53,20 +53,20 @@ export class GraphicsPipe implements RenderPipe<Graphics>
     public renderer: Renderer;
     public state: State = State.for2d();
 
-    private _adaptor: GraphicsAdaptor;
+    #_adaptor: GraphicsAdaptor;
 
     constructor(renderer: Renderer, adaptor: GraphicsAdaptor)
     {
         this.renderer = renderer;
 
-        this._adaptor = adaptor;
+        this.#_adaptor = adaptor;
 
         this.renderer.runners.contextChange.add(this);
     }
 
     public contextChange(): void
     {
-        this._adaptor.contextChange(this.renderer);
+        this.#_adaptor.contextChange(this.renderer);
     }
 
     public validateRenderable(graphics: Graphics): boolean
@@ -95,12 +95,12 @@ export class GraphicsPipe implements RenderPipe<Graphics>
         // this also overrides the current batches..
         if (graphics.didViewUpdate)
         {
-            this._rebuild(graphics);
+            this.#_rebuild(graphics);
         }
 
         if (gpuContext.isBatchable)
         {
-            this._addToBatcher(graphics, instructionSet);
+            this.#_addToBatcher(graphics, instructionSet);
         }
         else
         {
@@ -111,7 +111,7 @@ export class GraphicsPipe implements RenderPipe<Graphics>
 
     public updateRenderable(graphics: Graphics)
     {
-        const gpuData = this._getGpuDataForRenderable(graphics);
+        const gpuData = this.#_getGpuDataForRenderable(graphics);
 
         const batches = gpuData.batches;
 
@@ -135,7 +135,7 @@ export class GraphicsPipe implements RenderPipe<Graphics>
         if (!contextSystem.getGpuContext(context).batches.length)
         { return; }
 
-        const shader = context.customShader || this._adaptor.shader;
+        const shader = context.customShader || this.#_adaptor.shader;
 
         this.state.blendMode = graphics.groupBlendMode;
 
@@ -150,12 +150,12 @@ export class GraphicsPipe implements RenderPipe<Graphics>
             0,
         );
 
-        this._adaptor.execute(this, graphics);
+        this.#_adaptor.execute(this, graphics);
     }
 
-    private _rebuild(graphics: Graphics)
+    #_rebuild(graphics: Graphics)
     {
-        const gpuData = this._getGpuDataForRenderable(graphics);
+        const gpuData = this.#_getGpuDataForRenderable(graphics);
 
         const gpuContext = this.renderer.graphicsContext.updateGpuContext(graphics.context);
 
@@ -164,15 +164,15 @@ export class GraphicsPipe implements RenderPipe<Graphics>
 
         if (gpuContext.isBatchable)
         {
-            this._updateBatchesForRenderable(graphics, gpuData);
+            this.#_updateBatchesForRenderable(graphics, gpuData);
         }
     }
 
-    private _addToBatcher(graphics: Graphics, instructionSet: InstructionSet)
+    #_addToBatcher(graphics: Graphics, instructionSet: InstructionSet)
     {
         const batchPipe = this.renderer.renderPipes.batch;
 
-        const batches = this._getGpuDataForRenderable(graphics).batches;
+        const batches = this.#_getGpuDataForRenderable(graphics).batches;
 
         for (let i = 0; i < batches.length; i++)
         {
@@ -182,12 +182,12 @@ export class GraphicsPipe implements RenderPipe<Graphics>
         }
     }
 
-    private _getGpuDataForRenderable(graphics: Graphics): GraphicsGpuData
+    #_getGpuDataForRenderable(graphics: Graphics): GraphicsGpuData
     {
-        return graphics._gpuData[this.renderer.uid] || this._initGpuDataForRenderable(graphics);
+        return graphics._gpuData[this.renderer.uid] || this.#_initGpuDataForRenderable(graphics);
     }
 
-    private _initGpuDataForRenderable(graphics: Graphics): GraphicsGpuData
+    #_initGpuDataForRenderable(graphics: Graphics): GraphicsGpuData
     {
         const gpuData = new GraphicsGpuData();
 
@@ -196,7 +196,7 @@ export class GraphicsPipe implements RenderPipe<Graphics>
         return gpuData;
     }
 
-    private _updateBatchesForRenderable(graphics: Graphics, gpuData: GraphicsGpuData)
+    #_updateBatchesForRenderable(graphics: Graphics, gpuData: GraphicsGpuData)
     {
         const context = graphics.context;
 
@@ -222,8 +222,8 @@ export class GraphicsPipe implements RenderPipe<Graphics>
     {
         this.renderer = null;
 
-        this._adaptor.destroy();
-        this._adaptor = null;
+        this.#_adaptor.destroy();
+        this.#_adaptor = null;
         this.state = null;
     }
 }

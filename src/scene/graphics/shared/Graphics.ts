@@ -98,8 +98,8 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     /** @internal */
     public batched: boolean;
 
-    private _context: GraphicsContext;
-    private readonly _ownedContext: GraphicsContext;
+    #_context: GraphicsContext;
+    readonly #_ownedContext: GraphicsContext;
 
     /**
      * Creates a new Graphics object.
@@ -121,14 +121,14 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
 
         if (!context)
         {
-            this._context = this._ownedContext = new GraphicsContext();
+            this.#_context = this.#_ownedContext = new GraphicsContext();
         }
         else
         {
-            this._context = context;
+            this.#_context = context;
         }
 
-        this._context.on('update', this.onViewUpdate, this);
+        this.#_context.on('update', this.onViewUpdate, this);
 
         this.didViewUpdate = true;
 
@@ -138,14 +138,14 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
 
     set context(context: GraphicsContext)
     {
-        if (context === this._context) return;
+        if (context === this.#_context) return;
 
-        this._context.off('update', this.onViewUpdate, this);
+        this.#_context.off('update', this.onViewUpdate, this);
 
-        this._context = context;
+        this.#_context = context;
 
         // TODO store this bound function somewhere else..
-        this._context.on('update', this.onViewUpdate, this);
+        this.#_context.on('update', this.onViewUpdate, this);
 
         this.onViewUpdate();
     }
@@ -176,7 +176,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     get context(): GraphicsContext
     {
-        return this._context;
+        return this.#_context;
     }
 
     /**
@@ -202,7 +202,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     override get bounds(): Bounds
     {
-        return this._context.bounds;
+        return this.#_context.bounds;
     }
 
     /**
@@ -235,7 +235,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     public override containsPoint(point: PointData)
     {
-        return this._context.containsPoint(point);
+        return this.#_context.containsPoint(point);
     }
 
     /**
@@ -259,22 +259,22 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     public override destroy(options?: DestroyOptions): void
     {
-        if (this._ownedContext && !options)
+        if (this.#_ownedContext && !options)
         {
-            this._ownedContext.destroy(options);
+            this.#_ownedContext.destroy(options);
         }
         else if (options === true || (options as ContextDestroyOptions)?.context === true)
         {
-            this._context.destroy(options);
+            this.#_context.destroy(options);
         }
 
-        (this._ownedContext as null) = null;
-        this._context = null;
+        (this.#_ownedContext as null) = null;
+        this.#_context = null;
 
         super.destroy(options);
     }
 
-    private _callContextMethod(method: keyof GraphicsContext, args: any[]): this
+    #_callContextMethod(method: keyof GraphicsContext, args: any[]): this
     {
         (this.context as any)[method](...args);
 
@@ -328,7 +328,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     public setFillStyle(...args: Parameters<GraphicsContext['setFillStyle']>): this
     {
-        return this._callContextMethod('setFillStyle', args);
+        return this.#_callContextMethod('setFillStyle', args);
     }
 
     /**
@@ -386,7 +386,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     public setStrokeStyle(...args: Parameters<GraphicsContext['setStrokeStyle']>): this
     {
-        return this._callContextMethod('setStrokeStyle', args);
+        return this.#_callContextMethod('setStrokeStyle', args);
     }
 
     /**
@@ -445,7 +445,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public fill(color: ColorSource, alpha?: number): this;
     public fill(...args: [FillStyle | ColorSource, number?]): this
     {
-        return this._callContextMethod('fill', args);
+        return this.#_callContextMethod('fill', args);
     }
     /**
      * Strokes the current path with the current stroke style or specified style.
@@ -498,7 +498,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     public stroke(...args: Parameters<GraphicsContext['stroke']>): this
     {
-        return this._callContextMethod('stroke', args);
+        return this.#_callContextMethod('stroke', args);
     }
     /**
      * Adds a texture to the graphics context. This method supports multiple ways to draw textures
@@ -541,7 +541,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public texture(texture: Texture, tint?: ColorSource, dx?: number, dy?: number, dw?: number, dh?: number): this;
     public texture(...args: [Texture, number?, number?, number?, number?, number?]): this
     {
-        return this._callContextMethod('texture', args);
+        return this.#_callContextMethod('texture', args);
     }
     /**
      * Resets the current path. Any previous path and its commands are discarded and a new path is
@@ -562,7 +562,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     public beginPath(): this
     {
-        return this._callContextMethod('beginPath', []);
+        return this.#_callContextMethod('beginPath', []);
     }
     /**
      * Applies a cutout to the last drawn shape. This is used to create holes or complex shapes by
@@ -583,7 +583,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     public cut(): this
     {
-        return this._callContextMethod('cut', []);
+        return this.#_callContextMethod('cut', []);
     }
     /**
      * Adds an arc to the current path, which is centered at (x, y) with the specified radius,
@@ -621,7 +621,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public arc(x: number, y: number, radius: number, startAngle: number, endAngle: number, counterclockwise?: boolean): this;
     public arc(...args: Parameters<GraphicsContext['arc']>): this
     {
-        return this._callContextMethod('arc', args);
+        return this.#_callContextMethod('arc', args);
     }
     /**
      * Adds an arc to the current path that connects two points using a radius.
@@ -658,7 +658,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public arcTo(x1: number, y1: number, x2: number, y2: number, radius: number): this;
     public arcTo(...args: Parameters<GraphicsContext['arcTo']>): this
     {
-        return this._callContextMethod('arcTo', args);
+        return this.#_callContextMethod('arcTo', args);
     }
     /**
      * Adds an SVG-style arc to the path, allowing for elliptical arcs based on the SVG spec.
@@ -711,7 +711,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     ): this;
     public arcToSvg(...args: Parameters<GraphicsContext['arcToSvg']>): this
     {
-        return this._callContextMethod('arcToSvg', args);
+        return this.#_callContextMethod('arcToSvg', args);
     }
     /**
      * Adds a cubic Bézier curve to the path, from the current point to the specified end point.
@@ -757,7 +757,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     ): this;
     public bezierCurveTo(...args: Parameters<GraphicsContext['bezierCurveTo']>): this
     {
-        return this._callContextMethod('bezierCurveTo', args);
+        return this.#_callContextMethod('bezierCurveTo', args);
     }
     /**
      * Closes the current path by drawing a straight line back to the start point.
@@ -780,7 +780,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     public closePath(): this
     {
-        return this._callContextMethod('closePath', []);
+        return this.#_callContextMethod('closePath', []);
     }
     /**
      * Draws an ellipse at the specified location and with the given x and y radii.
@@ -810,7 +810,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public ellipse(x: number, y: number, radiusX: number, radiusY: number): this;
     public ellipse(...args: Parameters<GraphicsContext['ellipse']>): this
     {
-        return this._callContextMethod('ellipse', args);
+        return this.#_callContextMethod('ellipse', args);
     }
     /**
      * Draws a circle shape at the specified location with the given radius.
@@ -847,7 +847,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public circle(x: number, y: number, radius: number): this;
     public circle(...args: Parameters<GraphicsContext['circle']>): this
     {
-        return this._callContextMethod('circle', args);
+        return this.#_callContextMethod('circle', args);
     }
     /**
      * Adds another `GraphicsPath` to this path, optionally applying a transformation.
@@ -878,7 +878,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public path(path: GraphicsPath): this;
     public path(...args: Parameters<GraphicsContext['path']>): this
     {
-        return this._callContextMethod('path', args);
+        return this.#_callContextMethod('path', args);
     }
     /**
      * Connects the current point to a new point with a straight line.
@@ -910,7 +910,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public lineTo(x: number, y: number): this;
     public lineTo(...args: Parameters<GraphicsContext['lineTo']>): this
     {
-        return this._callContextMethod('lineTo', args);
+        return this.#_callContextMethod('lineTo', args);
     }
     /**
      * Sets the starting point for a new sub-path.
@@ -957,7 +957,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public moveTo(x: number, y: number): this;
     public moveTo(...args: Parameters<GraphicsContext['moveTo']>): this
     {
-        return this._callContextMethod('moveTo', args);
+        return this.#_callContextMethod('moveTo', args);
     }
     /**
      * Adds a quadratic curve to the path. It requires two points: the control point and the end point.
@@ -999,7 +999,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public quadraticCurveTo(cpx: number, cpy: number, x: number, y: number, smoothness?: number): this;
     public quadraticCurveTo(...args: Parameters<GraphicsContext['quadraticCurveTo']>): this
     {
-        return this._callContextMethod('quadraticCurveTo', args);
+        return this.#_callContextMethod('quadraticCurveTo', args);
     }
     /**
      * Draws a rectangle shape.
@@ -1032,7 +1032,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public rect(x: number, y: number, w: number, h: number): this;
     public rect(...args: Parameters<GraphicsContext['rect']>): this
     {
-        return this._callContextMethod('rect', args);
+        return this.#_callContextMethod('rect', args);
     }
     /**
      * Draws a rectangle with rounded corners. The corner radius can be specified to
@@ -1059,7 +1059,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public roundRect(x: number, y: number, w: number, h: number, radius?: number): this;
     public roundRect(...args: Parameters<GraphicsContext['roundRect']>): this
     {
-        return this._callContextMethod('roundRect', args);
+        return this.#_callContextMethod('roundRect', args);
     }
     /**
      * Draws a polygon shape by specifying a sequence of points. This method allows for the creation of complex polygons,
@@ -1107,7 +1107,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public poly(points: number[] | PointData[], close?: boolean): this;
     public poly(...args: Parameters<GraphicsContext['poly']>): this
     {
-        return this._callContextMethod('poly', args);
+        return this.#_callContextMethod('poly', args);
     }
     /**
      * Draws a regular polygon with a specified number of sides. All sides and angles are equal,
@@ -1155,7 +1155,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public regularPoly(x: number, y: number, radius: number, sides: number, rotation?: number, transform?: Matrix): this;
     public regularPoly(...args: Parameters<GraphicsContext['regularPoly']>): this
     {
-        return this._callContextMethod('regularPoly', args);
+        return this.#_callContextMethod('regularPoly', args);
     }
     /**
      * Draws a polygon with rounded corners.
@@ -1196,7 +1196,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public roundPoly(x: number, y: number, radius: number, sides: number, corner: number, rotation?: number): this;
     public roundPoly(...args: Parameters<GraphicsContext['roundPoly']>): this
     {
-        return this._callContextMethod('roundPoly', args);
+        return this.#_callContextMethod('roundPoly', args);
     }
     /**
      * Draws a shape with rounded corners. This function supports custom radius for each corner of the shape.
@@ -1251,7 +1251,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public roundShape(points: RoundedPoint[], radius: number, useQuadratic?: boolean, smoothness?: number): this;
     public roundShape(...args: Parameters<GraphicsContext['roundShape']>): this
     {
-        return this._callContextMethod('roundShape', args);
+        return this.#_callContextMethod('roundShape', args);
     }
     /**
      * Draws a rectangle with fillet corners. Unlike rounded rectangles, this supports negative corner
@@ -1283,7 +1283,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public filletRect(x: number, y: number, width: number, height: number, fillet: number): this;
     public filletRect(...args: Parameters<GraphicsContext['filletRect']>): this
     {
-        return this._callContextMethod('filletRect', args);
+        return this.#_callContextMethod('filletRect', args);
     }
     /**
      * Draws a rectangle with chamfered (angled) corners. Each corner is cut off at
@@ -1319,7 +1319,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public chamferRect(x: number, y: number, width: number, height: number, chamfer: number, transform?: Matrix): this;
     public chamferRect(...args: Parameters<GraphicsContext['chamferRect']>): this
     {
-        return this._callContextMethod('chamferRect', args);
+        return this.#_callContextMethod('chamferRect', args);
     }
     /**
      * Draws a star shape centered at a specified location. This method allows for the creation
@@ -1358,7 +1358,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public star(x: number, y: number, points: number, radius: number, innerRadius?: number, rotation?: number): this;
     public star(...args: Parameters<GraphicsContext['star']>): this
     {
-        return this._callContextMethod('star', args);
+        return this.#_callContextMethod('star', args);
     }
     /**
      * Parses and renders an SVG string into the graphics context. This allows for complex shapes
@@ -1384,7 +1384,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public svg(svg: string): this;
     public svg(...args: Parameters<GraphicsContext['svg']>): this
     {
-        return this._callContextMethod('svg', args);
+        return this.#_callContextMethod('svg', args);
     }
     /**
      * Restores the most recently saved graphics state by popping the top of the graphics state stack.
@@ -1417,7 +1417,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public restore(): this;
     public restore(...args: Parameters<GraphicsContext['restore']>): this
     {
-        return this._callContextMethod('restore', args);
+        return this.#_callContextMethod('restore', args);
     }
     /**
      * Saves the current graphics state onto a stack. The state includes:
@@ -1456,7 +1456,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     public save(): this
     {
-        return this._callContextMethod('save', []);
+        return this.#_callContextMethod('save', []);
     }
     /**
      * Returns the current transformation matrix of the graphics context.
@@ -1515,7 +1515,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     public resetTransform(): this
     {
-        return this._callContextMethod('resetTransform', []);
+        return this.#_callContextMethod('resetTransform', []);
     }
     /**
      * Applies a rotation transformation to the graphics context around the current origin.
@@ -1538,7 +1538,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public rotateTransform(angle: number): this;
     public rotateTransform(...args: Parameters<GraphicsContext['rotate']>): this
     {
-        return this._callContextMethod('rotate', args);
+        return this.#_callContextMethod('rotate', args);
     }
     /**
      * Applies a scaling transformation to the graphics context, scaling drawings by x horizontally
@@ -1568,7 +1568,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public scaleTransform(x: number, y?: number): this;
     public scaleTransform(...args: Parameters<GraphicsContext['scale']>): this
     {
-        return this._callContextMethod('scale', args);
+        return this.#_callContextMethod('scale', args);
     }
     /**
      * Sets the current transformation matrix of the graphics context.
@@ -1618,7 +1618,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public setTransform(a: number | Matrix, b?: number, c?: number, d?: number, dx?: number, dy?: number): this;
     public setTransform(...args: [Matrix] | [number, number, number, number, number, number]): this
     {
-        return this._callContextMethod('setTransform', args);
+        return this.#_callContextMethod('setTransform', args);
     }
     /**
      * Applies a transformation matrix to the current graphics context by multiplying
@@ -1667,7 +1667,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public transform(a: number | Matrix, b?: number, c?: number, d?: number, dx?: number, dy?: number): this;
     public transform(...args: [Matrix] | [number, number, number, number, number, number]): this
     {
-        return this._callContextMethod('transform', args);
+        return this.#_callContextMethod('transform', args);
     }
     /**
      * Applies a translation transformation to the graphics context, moving the origin by the specified amounts.
@@ -1692,7 +1692,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     public translateTransform(x: number, y?: number): this;
     public translateTransform(...args: Parameters<GraphicsContext['translate']>): this
     {
-        return this._callContextMethod('translate', args);
+        return this.#_callContextMethod('translate', args);
     }
     /**
      * Clears all drawing commands from the graphics context, effectively resetting it.
@@ -1727,7 +1727,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     public clear(): this
     {
-        return this._callContextMethod('clear', []);
+        return this.#_callContextMethod('clear', []);
     }
     /**
      * Gets or sets the current fill style for the graphics context. The fill style determines
@@ -1772,11 +1772,11 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     get fillStyle(): GraphicsContext['fillStyle']
     {
-        return this._context.fillStyle;
+        return this.#_context.fillStyle;
     }
     set fillStyle(value: FillInput)
     {
-        this._context.fillStyle = value;
+        this.#_context.fillStyle = value;
     }
     /**
      * Gets or sets the current stroke style for the graphics context. The stroke style determines
@@ -1823,11 +1823,11 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
      */
     get strokeStyle(): GraphicsContext['strokeStyle']
     {
-        return this._context.strokeStyle;
+        return this.#_context.strokeStyle;
     }
     set strokeStyle(value: StrokeStyle)
     {
-        this._context.strokeStyle = value;
+        this.#_context.strokeStyle = value;
     }
 
     /**
@@ -1871,11 +1871,11 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
     {
         if (deep)
         {
-            return new Graphics(this._context.clone());
+            return new Graphics(this.#_context.clone());
         }
 
-        (this._ownedContext as null) = null;
-        const clone = new Graphics(this._context);
+        (this.#_ownedContext as null) = null;
+        const clone = new Graphics(this.#_context);
 
         return clone;
     }
@@ -1962,7 +1962,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
         deprecation(v8_0_0, 'Graphics#drawCircle has been renamed to Graphics#circle');
         // #endif
 
-        return this._callContextMethod('circle', args);
+        return this.#_callContextMethod('circle', args);
     }
 
     /**
@@ -1975,7 +1975,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
         deprecation(v8_0_0, 'Graphics#drawEllipse has been renamed to Graphics#ellipse');
         // #endif
 
-        return this._callContextMethod('ellipse', args);
+        return this.#_callContextMethod('ellipse', args);
     }
 
     /**
@@ -1988,7 +1988,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
         deprecation(v8_0_0, 'Graphics#drawPolygon has been renamed to Graphics#poly');
         // #endif
 
-        return this._callContextMethod('poly', args);
+        return this.#_callContextMethod('poly', args);
     }
 
     /**
@@ -2001,7 +2001,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
         deprecation(v8_0_0, 'Graphics#drawRect has been renamed to Graphics#rect');
         // #endif
 
-        return this._callContextMethod('rect', args);
+        return this.#_callContextMethod('rect', args);
     }
 
     /**
@@ -2014,7 +2014,7 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
         deprecation(v8_0_0, 'Graphics#drawRoundedRect has been renamed to Graphics#roundRect');
         // #endif
 
-        return this._callContextMethod('roundRect', args);
+        return this.#_callContextMethod('roundRect', args);
     }
 
     /**
@@ -2027,6 +2027,6 @@ export class Graphics extends ViewContainer<GraphicsGpuData> implements Instruct
         deprecation(v8_0_0, 'Graphics#drawStar has been renamed to Graphics#star');
         // #endif
 
-        return this._callContextMethod('star', args);
+        return this.#_callContextMethod('star', args);
     }
 }

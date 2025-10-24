@@ -47,14 +47,14 @@ export class ShapePath
 {
     /** The list of shape primitives that make up the path. */
     public shapePrimitives: ShapePrimitiveWithHoles[] = [];
-    private _currentPoly: Polygon | null = null;
-    private readonly _graphicsPath2D: GraphicsPath;
-    private readonly _bounds = new Bounds();
+    #_currentPoly: Polygon | null = null;
+    readonly #_graphicsPath2D: GraphicsPath;
+    readonly #_bounds = new Bounds();
     public readonly signed: boolean;
 
     constructor(graphicsPath2D: GraphicsPath)
     {
-        this._graphicsPath2D = graphicsPath2D;
+        this.#_graphicsPath2D = graphicsPath2D;
         this.signed = graphicsPath2D.checkForHoles;
     }
 
@@ -79,9 +79,9 @@ export class ShapePath
      */
     public lineTo(x: number, y: number): this
     {
-        this._ensurePoly();
+        this.#_ensurePoly();
 
-        const points = this._currentPoly.points;
+        const points = this.#_currentPoly.points;
 
         const fromX = points[points.length - 2];
         const fromY = points[points.length - 1];
@@ -109,9 +109,9 @@ export class ShapePath
     {
         // TODO - if its 360 degrees.. make it a circle object?
 
-        this._ensurePoly(false);
+        this.#_ensurePoly(false);
 
-        const points = this._currentPoly.points;
+        const points = this.#_currentPoly.points;
 
         buildArc(points, x, y, radius, startAngle, endAngle, counterclockwise);
 
@@ -130,9 +130,9 @@ export class ShapePath
      */
     public arcTo(x1: number, y1: number, x2: number, y2: number, radius: number): this
     {
-        this._ensurePoly();
+        this.#_ensurePoly();
 
-        const points = this._currentPoly.points;
+        const points = this.#_currentPoly.points;
 
         buildArcTo(points, x1, y1, x2, y2, radius);
 
@@ -157,13 +157,13 @@ export class ShapePath
         x: number, y: number
     ): this
     {
-        const points = this._currentPoly.points;
+        const points = this.#_currentPoly.points;
 
         // this needs to work on both canvas and GPU backends so might want to move this to the Graphics2D path..
         buildArcToSvg(
             points,
-            this._currentPoly.lastX,
-            this._currentPoly.lastY,
+            this.#_currentPoly.lastX,
+            this.#_currentPoly.lastY,
             x,
             y,
             rx,
@@ -195,15 +195,15 @@ export class ShapePath
         smoothness?: number
     ): this
     {
-        this._ensurePoly();
+        this.#_ensurePoly();
 
-        const currentPoly = this._currentPoly;
+        const currentPoly = this.#_currentPoly;
 
         // ensure distance from last point to first control point is not too small
 
         // TODO - make this a plugin that people can override..
         buildAdaptiveBezier(
-            this._currentPoly.points,
+            this.#_currentPoly.points,
             currentPoly.lastX, currentPoly.lastY,
             cp1x, cp1y, cp2x, cp2y, x, y,
             smoothness,
@@ -224,15 +224,15 @@ export class ShapePath
      */
     public quadraticCurveTo(cp1x: number, cp1y: number, x: number, y: number, smoothing?: number): this
     {
-        this._ensurePoly();
+        this.#_ensurePoly();
 
-        const currentPoly = this._currentPoly;
+        const currentPoly = this.#_currentPoly;
 
         // ensure distance from last point to first control point is not too small
 
         // TODO - make this a plugin that people can override..
         buildAdaptiveQuadratic(
-            this._currentPoly.points,
+            this.#_currentPoly.points,
             currentPoly.lastX, currentPoly.lastY,
             cp1x, cp1y, x, y,
             smoothing,
@@ -646,7 +646,7 @@ export class ShapePath
      */
     public startPoly(x: number, y: number): this
     {
-        let currentPoly = this._currentPoly;
+        let currentPoly = this.#_currentPoly;
 
         if (currentPoly)
         {
@@ -657,7 +657,7 @@ export class ShapePath
 
         currentPoly.points.push(x, y);
 
-        this._currentPoly = currentPoly;
+        this.#_currentPoly = currentPoly;
 
         return this;
     }
@@ -672,7 +672,7 @@ export class ShapePath
      */
     public endPoly(closePath = false): this
     {
-        const shape = this._currentPoly;
+        const shape = this.#_currentPoly;
 
         if (shape && shape.points.length > 2)
         {
@@ -681,16 +681,16 @@ export class ShapePath
             this.shapePrimitives.push({ shape });
         }
 
-        this._currentPoly = null;
+        this.#_currentPoly = null;
 
         return this;
     }
 
-    private _ensurePoly(start = true): void
+    #_ensurePoly(start = true): void
     {
-        if (this._currentPoly) return;
+        if (this.#_currentPoly) return;
 
-        this._currentPoly = new Polygon();
+        this.#_currentPoly = new Polygon();
 
         if (start)
         {
@@ -713,11 +713,11 @@ export class ShapePath
                     ly = (t.b * tempX) + (t.d * ly) + t.ty;
                 }
 
-                this._currentPoly.points.push(lx, ly);
+                this.#_currentPoly.points.push(lx, ly);
             }
             else
             {
-                this._currentPoly.points.push(0, 0);
+                this.#_currentPoly.points.push(0, 0);
             }
         }
     }
@@ -725,10 +725,10 @@ export class ShapePath
     /** Builds the path. */
     public buildPath()
     {
-        const path = this._graphicsPath2D;
+        const path = this.#_graphicsPath2D;
 
         this.shapePrimitives.length = 0;
-        this._currentPoly = null;
+        this.#_currentPoly = null;
 
         for (let i = 0; i < path.instructions.length; i++)
         {
@@ -744,7 +744,7 @@ export class ShapePath
     /** Gets the bounds of the path. */
     get bounds(): Bounds
     {
-        const bounds = this._bounds;
+        const bounds = this.#_bounds;
 
         bounds.clear();
 

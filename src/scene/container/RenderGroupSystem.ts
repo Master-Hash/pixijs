@@ -35,11 +35,11 @@ export class RenderGroupSystem implements System
         name: 'renderGroup',
     } as const;
 
-    private readonly _renderer: Renderer;
+    readonly #_renderer: Renderer;
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     protected render({ container, transform }: {container: Container, transform: Matrix}): void
@@ -52,7 +52,7 @@ export class RenderGroupSystem implements System
         container.parent = null;
         container.renderGroup.renderGroupParent = null;
 
-        const renderer = this._renderer;
+        const renderer = this.#_renderer;
 
         // collect all the renderGroups in the scene and then render them one by one..
         const originalLocalTransform: Matrix = tempMatrix;
@@ -66,9 +66,9 @@ export class RenderGroupSystem implements System
         //  this._assignTop(container.renderGroup, null);
         const renderPipes = (renderer as WebGPURenderer).renderPipes;
 
-        this._updateCachedRenderGroups(container.renderGroup, null);
+        this.#_updateCachedRenderGroups(container.renderGroup, null);
 
-        this._updateRenderGroups(container.renderGroup);
+        this.#_updateRenderGroups(container.renderGroup);
 
         renderer.globalUniforms.start({
             worldTransformMatrix: transform ? container.renderGroup.localTransform : container.renderGroup.worldTransform,
@@ -95,10 +95,10 @@ export class RenderGroupSystem implements System
 
     public destroy()
     {
-        (this._renderer as null) = null;
+        (this.#_renderer as null) = null;
     }
 
-    private _updateCachedRenderGroups(renderGroup: RenderGroup, closestCacheAsTexture: RenderGroup | null): void
+    #_updateCachedRenderGroups(renderGroup: RenderGroup, closestCacheAsTexture: RenderGroup | null): void
     {
         renderGroup._parentCacheAsTextureRenderGroup = closestCacheAsTexture;
 
@@ -113,7 +113,7 @@ export class RenderGroupSystem implements System
         // Update the closest cache reference for children if this render group is cached as texture
         for (let i = renderGroup.renderGroupChildren.length - 1; i >= 0; i--)
         {
-            this._updateCachedRenderGroups(renderGroup.renderGroupChildren[i], closestCacheAsTexture);
+            this.#_updateCachedRenderGroups(renderGroup.renderGroupChildren[i], closestCacheAsTexture);
         }
 
         renderGroup.invalidateMatrices();
@@ -137,7 +137,7 @@ export class RenderGroupSystem implements System
                     TexturePool.returnTexture(renderGroup.texture, true);
                 }
 
-                const renderer = this._renderer;
+                const renderer = this.#_renderer;
                 const resolution = renderGroup.textureOptions.resolution || renderer.view.resolution;
                 const antialias = renderGroup.textureOptions.antialias ?? renderer.view.antialias;
                 const scaleMode = renderGroup.textureOptions.scaleMode ?? 'linear';
@@ -169,9 +169,9 @@ export class RenderGroupSystem implements System
         }
     }
 
-    private _updateRenderGroups(renderGroup: RenderGroup): void
+    #_updateRenderGroups(renderGroup: RenderGroup): void
     {
-        const renderer = this._renderer;
+        const renderer = this.#_renderer;
         const renderPipes = renderer.renderPipes;
 
         renderGroup.runOnRender(renderer);
@@ -197,12 +197,12 @@ export class RenderGroupSystem implements System
             renderGroup.structureDidChange = false;
 
             // build the renderables
-            this._buildInstructions(renderGroup, renderer);
+            this.#_buildInstructions(renderGroup, renderer);
         }
         else
         {
             // update remaining renderables
-            this._updateRenderables(renderGroup);
+            this.#_updateRenderables(renderGroup);
         }
 
         // reset the renderables to update
@@ -216,11 +216,11 @@ export class RenderGroupSystem implements System
 
         for (let i = 0; i < renderGroup.renderGroupChildren.length; i++)
         {
-            this._updateRenderGroups(renderGroup.renderGroupChildren[i]);
+            this.#_updateRenderGroups(renderGroup.renderGroupChildren[i]);
         }
     }
 
-    private _updateRenderables(renderGroup: RenderGroup)
+    #_updateRenderables(renderGroup: RenderGroup)
     {
         const { list, index } = renderGroup.childrenRenderablesToUpdate;
 
@@ -242,9 +242,9 @@ export class RenderGroupSystem implements System
      * @param renderPipes
      * @deprecated since 8.3.0
      */
-    private _buildInstructions(renderGroup: RenderGroup, renderPipes: RenderPipes): void;
-    private _buildInstructions(renderGroup: RenderGroup, renderer: Renderer): void;
-    private _buildInstructions(renderGroup: RenderGroup, rendererOrPipes: RenderPipes | Renderer): void
+    #_buildInstructions(renderGroup: RenderGroup, renderPipes: RenderPipes): void;
+    #_buildInstructions(renderGroup: RenderGroup, renderer: Renderer): void;
+    #_buildInstructions(renderGroup: RenderGroup, rendererOrPipes: RenderPipes | Renderer): void
     {
     // rebuild the scene graph based on layers...
         const root = renderGroup.root;

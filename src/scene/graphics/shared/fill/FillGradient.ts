@@ -253,14 +253,14 @@ export class FillGradient implements CanvasGradient
 
     /** Whether gradient coordinates are in local or global space */
     public textureSpace: TextureSpace;
-    private readonly _textureSize: number;
+    readonly #_textureSize: number;
 
     /** The start point of the linear gradient */
     public start: PointData;
     /** The end point of the linear gradient */
     public end: PointData;
     /** The wrap mode of the gradient texture */
-    private readonly _wrapMode: WRAP_MODE;
+    readonly #_wrapMode: WRAP_MODE;
 
     /** The center point of the inner circle of the radial gradient */
     public center: PointData;
@@ -303,8 +303,8 @@ export class FillGradient implements CanvasGradient
 
         options = { ...defaults, ...definedProps(options) };
 
-        this._textureSize = options.textureSize;
-        this._wrapMode = options.wrapMode;
+        this.#_textureSize = options.textureSize;
+        this.#_wrapMode = options.wrapMode;
 
         if (options.type === 'radial')
         {
@@ -361,7 +361,7 @@ export class FillGradient implements CanvasGradient
         // Determine flip based on original dx/dy and swap coordinates if necessary
         const flip = dx < 0 || dy < 0;
 
-        if (this._wrapMode === 'clamp-to-edge')
+        if (this.#_wrapMode === 'clamp-to-edge')
         {
             if (dx < 0)
             {
@@ -383,13 +383,13 @@ export class FillGradient implements CanvasGradient
 
         const colorStops = this.colorStops.length ? this.colorStops : emptyColorStops;
 
-        const defaultSize = this._textureSize;
+        const defaultSize = this.#_textureSize;
 
         const { canvas, context } = getCanvas(defaultSize, 1);
 
         const gradient = !flip
-            ? context.createLinearGradient(0, 0, this._textureSize, 0)
-            : context.createLinearGradient(this._textureSize, 0, 0, 0);
+            ? context.createLinearGradient(0, 0, this.#_textureSize, 0)
+            : context.createLinearGradient(this.#_textureSize, 0, 0, 0);
 
         addColorStops(gradient, colorStops);
 
@@ -399,7 +399,7 @@ export class FillGradient implements CanvasGradient
         this.texture = new Texture({
             source: new ImageSource({
                 resource: canvas,
-                addressMode: this._wrapMode,
+                addressMode: this.#_wrapMode,
             }),
         });
 
@@ -453,7 +453,7 @@ export class FillGradient implements CanvasGradient
 
         const colorStops = this.colorStops.length ? this.colorStops : emptyColorStops;
 
-        const defaultSize = this._textureSize;
+        const defaultSize = this.#_textureSize;
         const { canvas, context } = getCanvas(defaultSize, defaultSize);
 
         const { x: x0, y: y0 } = this.center;
@@ -503,7 +503,7 @@ export class FillGradient implements CanvasGradient
         this.texture = new Texture({
             source: new ImageSource({
                 resource: canvas,
-                addressMode: this._wrapMode,
+                addressMode: this.#_wrapMode,
             }),
         });
 

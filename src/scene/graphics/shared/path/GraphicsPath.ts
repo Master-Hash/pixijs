@@ -41,9 +41,9 @@ export class GraphicsPath
     /** unique id for this graphics path */
     public readonly uid: number = uid('graphicsPath');
 
-    private _dirty = true;
+    #_dirty = true;
     // needed for hit testing and bounds calculations
-    private _shapePath: ShapePath;
+    #_shapePath: ShapePath;
 
     /**
      * Controls whether shapes in this path should be checked for holes using the non-zero fill rule.
@@ -66,18 +66,18 @@ export class GraphicsPath
      */
     get shapePath(): ShapePath
     {
-        if (!this._shapePath)
+        if (!this.#_shapePath)
         {
-            this._shapePath = new ShapePath(this);
+            this.#_shapePath = new ShapePath(this);
         }
 
-        if (this._dirty)
+        if (this.#_dirty)
         {
-            this._dirty = false;
-            this._shapePath.buildPath();
+            this.#_dirty = false;
+            this.#_shapePath.buildPath();
         }
 
-        return this._shapePath;
+        return this.#_shapePath;
     }
 
     /**
@@ -110,7 +110,7 @@ export class GraphicsPath
         path = path.clone();
         this.instructions.push({ action: 'addPath', data: [path, transform] });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -131,7 +131,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'arc', data: args });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -151,7 +151,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'arcTo', data: args });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -174,7 +174,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'arcToSvg', data: args });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -201,7 +201,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'bezierCurveTo', data: args });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -245,7 +245,7 @@ export class GraphicsPath
 
         this.instructions.push({ action: 'bezierCurveTo', data: [cp1x, cp1y, cp2x, cp2y, x, y, smoothness] });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -259,7 +259,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'closePath', data: [] });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -281,7 +281,7 @@ export class GraphicsPath
 
         // TODO nail this!
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -297,7 +297,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'lineTo', data: args });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -331,7 +331,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'quadraticCurveTo', data: args });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -372,7 +372,7 @@ export class GraphicsPath
 
         this.instructions.push({ action: 'quadraticCurveTo', data: [cpx1, cpy1, x, y, smoothness] });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -390,7 +390,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'rect', data: [x, y, w, h, transform] });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -407,7 +407,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'circle', data: [x, y, radius, transform] });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -429,7 +429,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'roundRect', data: args });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -448,7 +448,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'poly', data: args });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -468,7 +468,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'regularPoly', data: args });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -489,7 +489,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'roundPoly', data: args });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -512,7 +512,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'roundShape', data: args });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -531,7 +531,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'filletRect', data: args });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -550,7 +550,7 @@ export class GraphicsPath
     {
         this.instructions.push({ action: 'chamferRect', data: args });
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -633,7 +633,7 @@ export class GraphicsPath
     public clear(): this
     {
         this.instructions.length = 0;
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
@@ -768,7 +768,7 @@ export class GraphicsPath
             }
         }
 
-        this._dirty = true;
+        this.#_dirty = true;
 
         return this;
     }
