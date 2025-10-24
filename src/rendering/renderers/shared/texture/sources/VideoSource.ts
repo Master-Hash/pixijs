@@ -100,29 +100,29 @@ export class VideoSource extends TextureSource<VideoResource>
      * `true` to use Ticker.shared to auto update the base texture.
      * @default true
      */
-    #_autoUpdate: boolean;
+    private _autoUpdate: boolean;
 
     /**
      * `true` if the instance is currently connected to Ticker.shared to auto update the base texture.
      * @default false
      */
-    #_isConnectedToTicker: boolean;
+    private _isConnectedToTicker: boolean;
 
     /**
      * Promise when loading.
      * @default null
      */
-    #_load: Promise<this>;
+    private _load: Promise<this>;
 
-    #_msToNextUpdate: number;
-    #_preloadTimeout: number;
+    private _msToNextUpdate: number;
+    private _preloadTimeout: number;
 
     /** Callback when completed with load. */
-    #_resolve: (value?: this | PromiseLike<this>) => void;
-    #_reject: (error: ErrorEvent) => void;
+    private _resolve: (value?: this | PromiseLike<this>) => void;
+    private _reject: (error: ErrorEvent) => void;
 
-    #_updateFPS: number;
-    #_videoFrameRequestCallbackHandle: number | null;
+    private _updateFPS: number;
+    private _videoFrameRequestCallbackHandle: number | null;
 
     constructor(
         options: VideoSourceOptions
@@ -136,28 +136,28 @@ export class VideoSource extends TextureSource<VideoResource>
             ...options
         };
 
-        this.#_autoUpdate = true;
-        this.#_isConnectedToTicker = false;
-        this.#_updateFPS = options.updateFPS || 0;
-        this.#_msToNextUpdate = 0;
+        this._autoUpdate = true;
+        this._isConnectedToTicker = false;
+        this._updateFPS = options.updateFPS || 0;
+        this._msToNextUpdate = 0;
         this.autoPlay = options.autoPlay !== false;
         this.alphaMode = options.alphaMode ?? 'premultiply-alpha-on-upload';
 
         // Binding for frame updates
-        this.#_videoFrameRequestCallback = this.#_videoFrameRequestCallback.bind(this);
-        this.#_videoFrameRequestCallbackHandle = null;
+        this._videoFrameRequestCallback = this._videoFrameRequestCallback.bind(this);
+        this._videoFrameRequestCallbackHandle = null;
 
-        this.#_load = null;
-        this.#_resolve = null;
-        this.#_reject = null;
+        this._load = null;
+        this._resolve = null;
+        this._reject = null;
 
         // Bind for listeners
-        this.#_onCanPlay = this.#_onCanPlay.bind(this);
-        this.#_onCanPlayThrough = this.#_onCanPlayThrough.bind(this);
-        this.#_onError = this.#_onError.bind(this);
-        this.#_onPlayStart = this.#_onPlayStart.bind(this);
-        this.#_onPlayStop = this.#_onPlayStop.bind(this);
-        this.#_onSeeked = this.#_onSeeked.bind(this);
+        this._onCanPlay = this._onCanPlay.bind(this);
+        this._onCanPlayThrough = this._onCanPlayThrough.bind(this);
+        this._onError = this._onError.bind(this);
+        this._onPlayStart = this._onPlayStart.bind(this);
+        this._onPlayStop = this._onPlayStop.bind(this);
+        this._onSeeked = this._onSeeked.bind(this);
 
         if (options.autoLoad !== false)
         {
@@ -173,17 +173,17 @@ export class VideoSource extends TextureSource<VideoResource>
             return;
         }
 
-        if (this.#_updateFPS)
+        if (this._updateFPS)
         {
             // Account for if video has had its playbackRate changed
             const elapsedMS = Ticker.shared.elapsedMS * this.resource.playbackRate;
 
-            this.#_msToNextUpdate = Math.floor(this.#_msToNextUpdate - elapsedMS);
+            this._msToNextUpdate = Math.floor(this._msToNextUpdate - elapsedMS);
         }
 
-        if (!this.#_updateFPS || this.#_msToNextUpdate <= 0)
+        if (!this._updateFPS || this._msToNextUpdate <= 0)
         {
-            this.#_msToNextUpdate = this.#_updateFPS ? Math.floor(1000 / this.#_updateFPS) : 0;
+            this._msToNextUpdate = this._updateFPS ? Math.floor(1000 / this._updateFPS) : 0;
         }
 
         if (this.isValid)
@@ -193,18 +193,18 @@ export class VideoSource extends TextureSource<VideoResource>
     }
 
     /** Callback to update the video frame and potentially request the next frame update. */
-    #_videoFrameRequestCallback(): void
+    private _videoFrameRequestCallback(): void
     {
         this.updateFrame();
 
         if (this.destroyed)
         {
-            this.#_videoFrameRequestCallbackHandle = null;
+            this._videoFrameRequestCallbackHandle = null;
         }
         else
         {
-            this.#_videoFrameRequestCallbackHandle = this.resource.requestVideoFrameCallback(
-                this.#_videoFrameRequestCallback
+            this._videoFrameRequestCallbackHandle = this.resource.requestVideoFrameCallback(
+                this._videoFrameRequestCallback
             );
         }
     }
@@ -224,9 +224,9 @@ export class VideoSource extends TextureSource<VideoResource>
      */
     public async load(): Promise<this>
     {
-        if (this.#_load)
+        if (this._load)
         {
-            return this.#_load;
+            return this._load;
         }
 
         const source = this.resource;
@@ -240,31 +240,31 @@ export class VideoSource extends TextureSource<VideoResource>
         }
 
         // Add event listeners related to playback and seeking
-        source.addEventListener('play', this.#_onPlayStart);
-        source.addEventListener('pause', this.#_onPlayStop);
-        source.addEventListener('seeked', this.#_onSeeked);
+        source.addEventListener('play', this._onPlayStart);
+        source.addEventListener('pause', this._onPlayStop);
+        source.addEventListener('seeked', this._onSeeked);
 
         // Add or handle source readiness event listeners
-        if (!this.#_isSourceReady())
+        if (!this._isSourceReady())
         {
             if (!options.preload)
             {
                 // since this event fires early, only bind if not waiting for a preload event
-                source.addEventListener('canplay', this.#_onCanPlay);
+                source.addEventListener('canplay', this._onCanPlay);
             }
-            source.addEventListener('canplaythrough', this.#_onCanPlayThrough);
-            source.addEventListener('error', this.#_onError, true);
+            source.addEventListener('canplaythrough', this._onCanPlayThrough);
+            source.addEventListener('error', this._onError, true);
         }
         else
         {
             // Source is already ready, so handle it immediately
-            this.#_mediaReady();
+            this._mediaReady();
         }
 
         this.alphaMode = await detectVideoAlphaMode();
 
         // Create and return the loading promise
-        this.#_load = new Promise((resolve, reject): void =>
+        this._load = new Promise((resolve, reject): void =>
         {
             if (this.isValid)
             {
@@ -272,37 +272,37 @@ export class VideoSource extends TextureSource<VideoResource>
             }
             else
             {
-                this.#_resolve = resolve;
-                this.#_reject = reject;
+                this._resolve = resolve;
+                this._reject = reject;
 
                 if (options.preloadTimeoutMs !== undefined)
                 {
-                    this.#_preloadTimeout = setTimeout(() =>
+                    this._preloadTimeout = setTimeout(() =>
                     {
-                        this.#_onError(new ErrorEvent(`Preload exceeded timeout of ${options.preloadTimeoutMs}ms`));
+                        this._onError(new ErrorEvent(`Preload exceeded timeout of ${options.preloadTimeoutMs}ms`));
                     }) as unknown as number;
                 }
                 source.load();
             }
         });
 
-        return this.#_load;
+        return this._load;
     }
 
     /**
      * Handle video error events.
      * @param event - The error event
      */
-    #_onError(event: ErrorEvent): void
+    private _onError(event: ErrorEvent): void
     {
-        this.resource.removeEventListener('error', this.#_onError, true);
+        this.resource.removeEventListener('error', this._onError, true);
         this.emit('error', event);
 
-        if (this.#_reject)
+        if (this._reject)
         {
-            this.#_reject(event);
-            this.#_reject = null;
-            this.#_resolve = null;
+            this._reject(event);
+            this._reject = null;
+            this._resolve = null;
         }
     }
 
@@ -310,7 +310,7 @@ export class VideoSource extends TextureSource<VideoResource>
      * Checks if the underlying source is playing.
      * @returns True if playing.
      */
-    #_isSourcePlaying(): boolean
+    private _isSourcePlaying(): boolean
     {
         const source = this.resource;
 
@@ -321,7 +321,7 @@ export class VideoSource extends TextureSource<VideoResource>
      * Checks if the underlying source is ready for playing.
      * @returns True if ready.
      */
-    #_isSourceReady(): boolean
+    private _isSourceReady(): boolean
     {
         const source = this.resource;
 
@@ -329,62 +329,62 @@ export class VideoSource extends TextureSource<VideoResource>
     }
 
     /** Runs the update loop when the video is ready to play. */
-    #_onPlayStart(): void
+    private _onPlayStart(): void
     {
         // Handle edge case where video might not have received its "can play" event yet
         if (!this.isValid)
         {
-            this.#_mediaReady();
+            this._mediaReady();
         }
 
-        this.#_configureAutoUpdate();
+        this._configureAutoUpdate();
     }
 
     /** Stops the update loop when a pause event is triggered. */
-    #_onPlayStop(): void
+    private _onPlayStop(): void
     {
-        this.#_configureAutoUpdate();
+        this._configureAutoUpdate();
     }
 
     /** Handles behavior when the video completes seeking to the current playback position. */
-    #_onSeeked(): void
+    private _onSeeked(): void
     {
-        if (this.#_autoUpdate && !this.#_isSourcePlaying())
+        if (this._autoUpdate && !this._isSourcePlaying())
         {
-            this.#_msToNextUpdate = 0;
+            this._msToNextUpdate = 0;
             this.updateFrame();
-            this.#_msToNextUpdate = 0;
+            this._msToNextUpdate = 0;
         }
     }
 
-    #_onCanPlay(): void
+    private _onCanPlay(): void
     {
         const source = this.resource;
 
         // Remove event listeners
-        source.removeEventListener('canplay', this.#_onCanPlay);
+        source.removeEventListener('canplay', this._onCanPlay);
 
-        this.#_mediaReady();
+        this._mediaReady();
     }
 
-    #_onCanPlayThrough(): void
+    private _onCanPlayThrough(): void
     {
         const source = this.resource;
 
         // Remove event listeners
-        source.removeEventListener('canplaythrough', this.#_onCanPlay);
+        source.removeEventListener('canplaythrough', this._onCanPlay);
 
-        if (this.#_preloadTimeout)
+        if (this._preloadTimeout)
         {
-            clearTimeout(this.#_preloadTimeout);
-            this.#_preloadTimeout = undefined;
+            clearTimeout(this._preloadTimeout);
+            this._preloadTimeout = undefined;
         }
 
-        this.#_mediaReady();
+        this._mediaReady();
     }
 
     /** Fired when the video is loaded and ready to play. */
-    #_mediaReady(): void
+    private _mediaReady(): void
     {
         const source = this.resource;
 
@@ -395,22 +395,22 @@ export class VideoSource extends TextureSource<VideoResource>
         }
 
         // Reset update timers and perform a frame update
-        this.#_msToNextUpdate = 0;
+        this._msToNextUpdate = 0;
         this.updateFrame();
-        this.#_msToNextUpdate = 0;
+        this._msToNextUpdate = 0;
 
         // Resolve the loading promise if it exists
-        if (this.#_resolve)
+        if (this._resolve)
         {
-            this.#_resolve(this);
-            this.#_resolve = null;
-            this.#_reject = null;
+            this._resolve(this);
+            this._resolve = null;
+            this._reject = null;
         }
 
         // Handle play behavior based on current source status
-        if (this.#_isSourcePlaying())
+        if (this._isSourcePlaying())
         {
-            this.#_onPlayStart();
+            this._onPlayStart();
         }
         else if (this.autoPlay)
         {
@@ -421,19 +421,19 @@ export class VideoSource extends TextureSource<VideoResource>
     /** Cleans up resources and event listeners associated with this texture. */
     public destroy()
     {
-        this.#_configureAutoUpdate();
+        this._configureAutoUpdate();
 
         const source = this.resource;
 
         if (source)
         {
             // Remove event listeners
-            source.removeEventListener('play', this.#_onPlayStart);
-            source.removeEventListener('pause', this.#_onPlayStop);
-            source.removeEventListener('seeked', this.#_onSeeked);
-            source.removeEventListener('canplay', this.#_onCanPlay);
-            source.removeEventListener('canplaythrough', this.#_onCanPlayThrough);
-            source.removeEventListener('error', this.#_onError, true);
+            source.removeEventListener('play', this._onPlayStart);
+            source.removeEventListener('pause', this._onPlayStop);
+            source.removeEventListener('seeked', this._onSeeked);
+            source.removeEventListener('canplay', this._onCanPlay);
+            source.removeEventListener('canplaythrough', this._onCanPlayThrough);
+            source.removeEventListener('error', this._onError, true);
 
             // Clear the video source and pause
             source.pause();
@@ -447,15 +447,15 @@ export class VideoSource extends TextureSource<VideoResource>
     /** Should the base texture automatically update itself, set to true by default. */
     get autoUpdate(): boolean
     {
-        return this.#_autoUpdate;
+        return this._autoUpdate;
     }
 
     set autoUpdate(value: boolean)
     {
-        if (value !== this.#_autoUpdate)
+        if (value !== this._autoUpdate)
         {
-            this.#_autoUpdate = value;
-            this.#_configureAutoUpdate();
+            this._autoUpdate = value;
+            this._configureAutoUpdate();
         }
     }
 
@@ -466,15 +466,15 @@ export class VideoSource extends TextureSource<VideoResource>
      */
     get updateFPS(): number
     {
-        return this.#_updateFPS;
+        return this._updateFPS;
     }
 
     set updateFPS(value: number)
     {
-        if (value !== this.#_updateFPS)
+        if (value !== this._updateFPS)
         {
-            this.#_updateFPS = value;
-            this.#_configureAutoUpdate();
+            this._updateFPS = value;
+            this._configureAutoUpdate();
         }
     }
 
@@ -490,47 +490,47 @@ export class VideoSource extends TextureSource<VideoResource>
      *   - Otherwise, it will use a custom ticker for manual updates.
      * - If `_autoUpdate` is disabled or the video isn't playing, any active update mechanisms are halted.
      */
-    #_configureAutoUpdate(): void
+    private _configureAutoUpdate(): void
     {
         // Check if automatic updating is enabled and if the source is currently playing
-        if (this.#_autoUpdate && this.#_isSourcePlaying())
+        if (this._autoUpdate && this._isSourcePlaying())
         {
             // Determine if we should use the browser's native video frame callback (generally for better performance)
-            if (!this.#_updateFPS && this.resource.requestVideoFrameCallback)
+            if (!this._updateFPS && this.resource.requestVideoFrameCallback)
             {
                 // If connected to a custom ticker, remove the update frame function from it
-                if (this.#_isConnectedToTicker)
+                if (this._isConnectedToTicker)
                 {
                     Ticker.shared.remove(this.updateFrame, this);
-                    this.#_isConnectedToTicker = false;
+                    this._isConnectedToTicker = false;
                     // Reset the time until the next update
-                    this.#_msToNextUpdate = 0;
+                    this._msToNextUpdate = 0;
                 }
 
                 // Check if we haven't already requested a video frame callback, and if not, request one
-                if (this.#_videoFrameRequestCallbackHandle === null)
+                if (this._videoFrameRequestCallbackHandle === null)
                 {
-                    this.#_videoFrameRequestCallbackHandle = this.resource.requestVideoFrameCallback(
-                        this.#_videoFrameRequestCallback
+                    this._videoFrameRequestCallbackHandle = this.resource.requestVideoFrameCallback(
+                        this._videoFrameRequestCallback
                     );
                 }
             }
             else
             {
                 // If a video frame request callback exists, cancel it, as we are switching to manual ticker-based updates
-                if (this.#_videoFrameRequestCallbackHandle !== null)
+                if (this._videoFrameRequestCallbackHandle !== null)
                 {
-                    this.resource.cancelVideoFrameCallback(this.#_videoFrameRequestCallbackHandle);
-                    this.#_videoFrameRequestCallbackHandle = null;
+                    this.resource.cancelVideoFrameCallback(this._videoFrameRequestCallbackHandle);
+                    this._videoFrameRequestCallbackHandle = null;
                 }
 
                 // If not connected to the custom ticker, add the update frame function to it
-                if (!this.#_isConnectedToTicker)
+                if (!this._isConnectedToTicker)
                 {
                     Ticker.shared.add(this.updateFrame, this);
-                    this.#_isConnectedToTicker = true;
+                    this._isConnectedToTicker = true;
                     // Reset the time until the next update
-                    this.#_msToNextUpdate = 0;
+                    this._msToNextUpdate = 0;
                 }
             }
         }
@@ -539,19 +539,19 @@ export class VideoSource extends TextureSource<VideoResource>
             // If automatic updating is disabled or the source isn't playing, perform cleanup
 
             // Cancel any existing video frame callback request
-            if (this.#_videoFrameRequestCallbackHandle !== null)
+            if (this._videoFrameRequestCallbackHandle !== null)
             {
-                this.resource.cancelVideoFrameCallback(this.#_videoFrameRequestCallbackHandle);
-                this.#_videoFrameRequestCallbackHandle = null;
+                this.resource.cancelVideoFrameCallback(this._videoFrameRequestCallbackHandle);
+                this._videoFrameRequestCallbackHandle = null;
             }
 
             // Remove the update frame function from the custom ticker
-            if (this.#_isConnectedToTicker)
+            if (this._isConnectedToTicker)
             {
                 Ticker.shared.remove(this.updateFrame, this);
-                this.#_isConnectedToTicker = false;
+                this._isConnectedToTicker = false;
                 // Reset the time until the next update
-                this.#_msToNextUpdate = 0;
+                this._msToNextUpdate = 0;
             }
         }
     }
