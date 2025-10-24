@@ -88,7 +88,7 @@ export class TextureStyle extends EventEmitter<{
     public _resourceType = 'textureSampler';
     /** @internal */
     public _touched = 0;
-    private _sharedResourceId: number;
+    #_sharedResourceId: number;
 
     /** default options for the style */
     public static readonly defaultOptions: TextureStyleOptions = {
@@ -222,22 +222,22 @@ export class TextureStyle extends EventEmitter<{
     // TODO - move this to WebGL?
     get _resourceId(): number
     {
-        return this._sharedResourceId || this._generateResourceId();
+        return this.#_sharedResourceId || this.#_generateResourceId();
     }
 
     public update()
     {
         // manage the resource..
         this.emit('change', this);
-        this._sharedResourceId = null;
+        this.#_sharedResourceId = null;
     }
 
-    private _generateResourceId(): number
+    #_generateResourceId(): number
     {
         // eslint-disable-next-line max-len
         const bigKey = `${this.addressModeU}-${this.addressModeV}-${this.addressModeW}-${this.magFilter}-${this.minFilter}-${this.mipmapFilter}-${this.lodMinClamp}-${this.lodMaxClamp}-${this.compare}-${this._maxAnisotropy}`;
 
-        this._sharedResourceId = createResourceIdFromString(bigKey);
+        this.#_sharedResourceId = createResourceIdFromString(bigKey);
 
         return this._resourceId;
     }

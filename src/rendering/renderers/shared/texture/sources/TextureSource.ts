@@ -169,7 +169,7 @@ export class TextureSource<T extends Record<string, any> = any> extends EventEmi
     public dimension: TEXTURE_DIMENSIONS = '2d';
     /** the alpha mode of the texture */
     public alphaMode: ALPHA_MODES;
-    private _style: TextureStyle;
+    #_style: TextureStyle;
 
     /**
      * Only really affects RenderTextures.
@@ -271,109 +271,109 @@ export class TextureSource<T extends Record<string, any> = any> extends EventEmi
     /** the style of the texture */
     get style(): TextureStyle
     {
-        return this._style;
+        return this.#_style;
     }
 
     set style(value: TextureStyle)
     {
         if (this.style === value) return;
 
-        this._style?.off('change', this._onStyleChange, this);
-        this._style = value;
-        this._style?.on('change', this._onStyleChange, this);
+        this.#_style?.off('change', this.#_onStyleChange, this);
+        this.#_style = value;
+        this.#_style?.on('change', this.#_onStyleChange, this);
 
-        this._onStyleChange();
+        this.#_onStyleChange();
     }
 
     /** Specifies the maximum anisotropy value clamp used by the sampler. */
     set maxAnisotropy(value: number)
     {
-        this._style.maxAnisotropy = value;
+        this.#_style.maxAnisotropy = value;
     }
 
     get maxAnisotropy(): number
     {
-        return this._style.maxAnisotropy;
+        return this.#_style.maxAnisotropy;
     }
 
     /** setting this will set wrapModeU, wrapModeV and wrapModeW all at once! */
     get addressMode(): WRAP_MODE
     {
-        return this._style.addressMode;
+        return this.#_style.addressMode;
     }
 
     set addressMode(value: WRAP_MODE)
     {
-        this._style.addressMode = value;
+        this.#_style.addressMode = value;
     }
 
     /** setting this will set wrapModeU, wrapModeV and wrapModeW all at once! */
     get repeatMode(): WRAP_MODE
     {
-        return this._style.addressMode;
+        return this.#_style.addressMode;
     }
 
     set repeatMode(value: WRAP_MODE)
     {
-        this._style.addressMode = value;
+        this.#_style.addressMode = value;
     }
 
     /** Specifies the sampling behavior when the sample footprint is smaller than or equal to one texel. */
     get magFilter(): SCALE_MODE
     {
-        return this._style.magFilter;
+        return this.#_style.magFilter;
     }
 
     set magFilter(value: SCALE_MODE)
     {
-        this._style.magFilter = value;
+        this.#_style.magFilter = value;
     }
 
     /** Specifies the sampling behavior when the sample footprint is larger than one texel. */
     get minFilter(): SCALE_MODE
     {
-        return this._style.minFilter;
+        return this.#_style.minFilter;
     }
 
     set minFilter(value: SCALE_MODE)
     {
-        this._style.minFilter = value;
+        this.#_style.minFilter = value;
     }
 
     /** Specifies behavior for sampling between mipmap levels. */
     get mipmapFilter(): SCALE_MODE
     {
-        return this._style.mipmapFilter;
+        return this.#_style.mipmapFilter;
     }
 
     set mipmapFilter(value: SCALE_MODE)
     {
-        this._style.mipmapFilter = value;
+        this.#_style.mipmapFilter = value;
     }
 
     /** Specifies the minimum and maximum levels of detail, respectively, used internally when sampling a texture. */
     get lodMinClamp(): number
     {
-        return this._style.lodMinClamp;
+        return this.#_style.lodMinClamp;
     }
 
     set lodMinClamp(value: number)
     {
-        this._style.lodMinClamp = value;
+        this.#_style.lodMinClamp = value;
     }
 
     /** Specifies the minimum and maximum levels of detail, respectively, used internally when sampling a texture. */
     get lodMaxClamp(): number
     {
-        return this._style.lodMaxClamp;
+        return this.#_style.lodMaxClamp;
     }
 
     set lodMaxClamp(value: number)
     {
-        this._style.lodMaxClamp = value;
+        this.#_style.lodMaxClamp = value;
     }
 
-    private _onStyleChange()
+    #_onStyleChange()
     {
         this.emit('styleChange', this);
     }
@@ -403,10 +403,10 @@ export class TextureSource<T extends Record<string, any> = any> extends EventEmi
         this.emit('destroy', this);
         this.emit('change', this);
 
-        if (this._style)
+        if (this.#_style)
         {
-            this._style.destroy();
-            this._style = null;
+            this.#_style.destroy();
+            this.#_style = null;
         }
 
         this.uploadMethodId = null;
@@ -523,23 +523,23 @@ export class TextureSource<T extends Record<string, any> = any> extends EventEmi
 
     set wrapMode(value: WRAP_MODE)
     {
-        this._style.wrapMode = value;
+        this.#_style.wrapMode = value;
     }
 
     get wrapMode(): WRAP_MODE
     {
-        return this._style.wrapMode;
+        return this.#_style.wrapMode;
     }
 
     set scaleMode(value: SCALE_MODE)
     {
-        this._style.scaleMode = value;
+        this.#_style.scaleMode = value;
     }
 
     /** setting this will set magFilter,minFilter and mipmapFilter all at once!  */
     get scaleMode(): SCALE_MODE
     {
-        return this._style.scaleMode;
+        return this.#_style.scaleMode;
     }
 
     /**

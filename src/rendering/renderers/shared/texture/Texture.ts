@@ -223,7 +223,7 @@ export class Texture<TextureSourceType extends TextureSource = TextureSource> ex
      */
     public dynamic = false;
 
-    private _textureMatrix: TextureMatrix;
+    #_textureMatrix: TextureMatrix;
 
     /** is it a texture? yes! used for type checking */
     public readonly isTexture = true;
@@ -298,12 +298,12 @@ export class Texture<TextureSourceType extends TextureSource = TextureSource> ex
     /** returns a TextureMatrix instance for this texture. By default, that object is not created because its heavy. */
     get textureMatrix()
     {
-        if (!this._textureMatrix)
+        if (!this.#_textureMatrix)
         {
-            this._textureMatrix = new TextureMatrix(this);
+            this.#_textureMatrix = new TextureMatrix(this);
         }
 
-        return this._textureMatrix;
+        return this.#_textureMatrix;
     }
 
     /** The width of the Texture in pixels. */
@@ -387,7 +387,7 @@ export class Texture<TextureSourceType extends TextureSource = TextureSource> ex
             }
         }
 
-        this._textureMatrix = null;
+        this.#_textureMatrix = null;
         this.destroyed = true;
         this.emit('destroy', this);
         this.removeAllListeners();

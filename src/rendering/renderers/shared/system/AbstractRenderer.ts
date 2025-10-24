@@ -215,8 +215,8 @@ export class AbstractRenderer<
     protected _initOptions: OPTIONS = {} as OPTIONS;
     protected config: RendererConfig;
 
-    private _systemsHash: Record<string, System> = Object.create(null);
-    private _lastObjectRendered: Container;
+    #_systemsHash: Record<string, System> = Object.create(null);
+    #_lastObjectRendered: Container;
 
     /**
      * Set up a system with a collection of SystemClasses and runners.
@@ -232,7 +232,7 @@ export class AbstractRenderer<
 
         const combinedRunners = [...defaultRunners, ...(this.config.runners ?? [])];
 
-        this._addRunners(...combinedRunners);
+        this.#_addRunners(...combinedRunners);
         // Validation check that this environment support `new Function`
         this._unsafeEvalCheck();
     }
@@ -247,13 +247,13 @@ export class AbstractRenderer<
 
         await loadEnvironmentExtensions(skip);
 
-        this._addSystems(this.config.systems);
-        this._addPipes(this.config.renderPipes, this.config.renderPipeAdaptors);
+        this.#_addSystems(this.config.systems);
+        this.#_addPipes(this.config.renderPipes, this.config.renderPipeAdaptors);
 
         // loop through all systems...
-        for (const systemName in this._systemsHash)
+        for (const systemName in this.#_systemsHash)
         {
-            const system = this._systemsHash[systemName];
+            const system = this.#_systemsHash[systemName];
 
             const defaultSystemOptions = (system.constructor as any).defaultOptions;
 
@@ -306,7 +306,7 @@ export class AbstractRenderer<
         if (options.target === this.view.renderTarget)
         {
             // TODO get rid of this
-            this._lastObjectRendered = options.container;
+            this.#_lastObjectRendered = options.container;
 
             options.clearColor ??= this.background.colorRgba;
             options.clear ??= this.background.clearBeforeRender;
@@ -432,7 +432,7 @@ export class AbstractRenderer<
      */
     get lastObjectRendered(): Container
     {
-        return this._lastObjectRendered;
+        return this.#_lastObjectRendered;
     }
 
     /**
@@ -461,7 +461,7 @@ export class AbstractRenderer<
      * Create a bunch of runners based of a collection of ids
      * @param runnerIds - the runner ids to add
      */
-    private _addRunners(...runnerIds: string[]): void
+    #_addRunners(...runnerIds: string[]): void
     {
         runnerIds.forEach((runnerId) =>
         {
@@ -469,7 +469,7 @@ export class AbstractRenderer<
         });
     }
 
-    private _addSystems(systems: RendererConfig['systems']): void
+    #_addSystems(systems: RendererConfig['systems']): void
     {
         let i: keyof typeof systems;
 
@@ -477,7 +477,7 @@ export class AbstractRenderer<
         {
             const val = systems[i];
 
-            this._addSystem(val.value, val.name);
+            this.#_addSystem(val.value, val.name);
         }
     }
 
@@ -490,7 +490,7 @@ export class AbstractRenderer<
      *        sure it doesn't collide with properties on Renderer.
      * @returns Return instance of renderer
      */
-    private _addSystem(ClassRef: SystemConstructor, name: string): this
+    #_addSystem(ClassRef: SystemConstructor, name: string): this
     {
         const system = new ClassRef(this as unknown as Renderer);
 
@@ -501,7 +501,7 @@ export class AbstractRenderer<
 
         (this as any)[name] = system;
 
-        this._systemsHash[name] = system;
+        this.#_systemsHash[name] = system;
 
         for (const i in this.runners)
         {
@@ -511,7 +511,7 @@ export class AbstractRenderer<
         return this;
     }
 
-    private _addPipes(pipes: RendererConfig['renderPipes'], pipeAdaptors: RendererConfig['renderPipeAdaptors']): void
+    #_addPipes(pipes: RendererConfig['renderPipes'], pipeAdaptors: RendererConfig['renderPipeAdaptors']): void
     {
         const adaptors = pipeAdaptors.reduce((acc, adaptor) =>
         {
@@ -553,7 +553,7 @@ export class AbstractRenderer<
             GlobalResourceRegistry.release();
         }
 
-        this._systemsHash = null;
+        this.#_systemsHash = null;
 
         // destroy all pipes
         (this.renderPipes as null) = null;

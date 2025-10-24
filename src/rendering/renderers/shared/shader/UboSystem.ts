@@ -21,19 +21,19 @@ export interface UboAdaptor
 export class UboSystem implements System
 {
     /** Cache of uniform buffer layouts and sync functions, so we don't have to re-create them */
-    private _syncFunctionHash: Record<string, {
+    #_syncFunctionHash: Record<string, {
         layout: UboLayout,
         syncFunction: (uniforms: Record<string, any>, data: Float32Array, dataInt32: Int32Array, offset: number) => void
     }> = Object.create(null);
 
-    private readonly _adaptor: UboAdaptor;
+    readonly #_adaptor: UboAdaptor;
 
     constructor(adaptor: UboAdaptor)
     {
-        this._adaptor = adaptor;
+        this.#_adaptor = adaptor;
 
         // Validation check that this environment support `new Function`
-        this._systemCheck();
+        this.#_systemCheck();
     }
 
     /**
@@ -41,7 +41,7 @@ export class UboSystem implements System
      * throwing an error if platform doesn't support unsafe-evals.
      * @private
      */
-    private _systemCheck(): void
+    #_systemCheck(): void
     {
         if (!unsafeEvalSupported())
         {
@@ -62,37 +62,37 @@ export class UboSystem implements System
 
     public getUniformGroupData(uniformGroup: UniformGroup)
     {
-        return this._syncFunctionHash[uniformGroup._signature] || this._initUniformGroup(uniformGroup);
+        return this.#_syncFunctionHash[uniformGroup._signature] || this.#_initUniformGroup(uniformGroup);
     }
 
-    private _initUniformGroup(uniformGroup: UniformGroup)
+    #_initUniformGroup(uniformGroup: UniformGroup)
     {
         const uniformGroupSignature = uniformGroup._signature;
 
-        let uniformData = this._syncFunctionHash[uniformGroupSignature];
+        let uniformData = this.#_syncFunctionHash[uniformGroupSignature];
 
         if (!uniformData)
         {
             const elements = Object.keys(uniformGroup.uniformStructures).map((i) => uniformGroup.uniformStructures[i]);
 
-            const layout = this._adaptor.createUboElements(elements);
+            const layout = this.#_adaptor.createUboElements(elements);
 
-            const syncFunction = this._generateUboSync(layout.uboElements);
+            const syncFunction = this.#_generateUboSync(layout.uboElements);
 
-            uniformData = this._syncFunctionHash[uniformGroupSignature] = {
+            uniformData = this.#_syncFunctionHash[uniformGroupSignature] = {
                 layout,
                 syncFunction
             };
         }
 
-        return this._syncFunctionHash[uniformGroupSignature];
+        return this.#_syncFunctionHash[uniformGroupSignature];
     }
 
-    private _generateUboSync(
+    #_generateUboSync(
         uboElements: UboElement[],
     ): UniformsSyncCallback
     {
-        return this._adaptor.generateUboSync(uboElements);
+        return this.#_adaptor.generateUboSync(uboElements);
     }
 
     public syncUniformGroup(uniformGroup: UniformGroup, data?: Float32Array, offset?: number): boolean
@@ -132,6 +132,6 @@ export class UboSystem implements System
 
     public destroy(): void
     {
-        this._syncFunctionHash = null;
+        this.#_syncFunctionHash = null;
     }
 }

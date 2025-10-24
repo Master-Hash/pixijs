@@ -217,7 +217,7 @@ export class Shader extends EventEmitter<{'destroy': Shader}>
      * @internal
      */
     public _uniformBindMap: Record<number, Record<number, string>> = Object.create(null);
-    private readonly _ownedBindGroups: BindGroup[] = [];
+    readonly #_ownedBindGroups: BindGroup[] = [];
 
     /**
      * Fired after rendering finishes.
@@ -337,7 +337,7 @@ export class Shader extends EventEmitter<{'destroy': Shader}>
                 if (!groups[99])
                 {
                     groups[99] = new BindGroup();
-                    this._ownedBindGroups.push(groups[99]);
+                    this.#_ownedBindGroups.push(groups[99]);
                 }
                 // Yes i know this is a little strange, but wil line up the shaders neatly
                 // basically we want to be driven by how webGPU does things.
@@ -368,7 +368,7 @@ export class Shader extends EventEmitter<{'destroy': Shader}>
                     {
                         groups[data.group] = new BindGroup();
 
-                        this._ownedBindGroups.push(groups[data.group]);
+                        this.#_ownedBindGroups.push(groups[data.group]);
                     }
 
                     groups[data.group].setResource(value, data.binding);
@@ -379,7 +379,7 @@ export class Shader extends EventEmitter<{'destroy': Shader}>
         this.groups = groups;
         this._uniformBindMap = groupMap;
 
-        this.resources = this._buildResourceAccessor(groups, nameHash);
+        this.resources = this.#_buildResourceAccessor(groups, nameHash);
     }
 
     /**
@@ -398,11 +398,11 @@ export class Shader extends EventEmitter<{'destroy': Shader}>
         if (!this.groups[groupIndex])
         {
             this.groups[groupIndex] = new BindGroup();
-            this._ownedBindGroups.push(this.groups[groupIndex]);
+            this.#_ownedBindGroups.push(this.groups[groupIndex]);
         }
     }
 
-    private _buildResourceAccessor(groups: ShaderGroups, nameHash: Record<string, GroupsData>)
+    #_buildResourceAccessor(groups: ShaderGroups, nameHash: Record<string, GroupsData>)
     {
         const uniformsOut = {};
 
@@ -449,12 +449,12 @@ export class Shader extends EventEmitter<{'destroy': Shader}>
 
         this._uniformBindMap = null;
 
-        this._ownedBindGroups.forEach((bindGroup) =>
+        this.#_ownedBindGroups.forEach((bindGroup) =>
         {
             bindGroup.destroy();
         });
 
-        (this._ownedBindGroups as null) = null;
+        (this.#_ownedBindGroups as null) = null;
 
         this.resources = null;
         this.groups = null;

@@ -83,9 +83,9 @@ export class RenderTarget
     public dirtyId = 0;
     public isRoot = false;
 
-    private readonly _size = new Float32Array(2);
+    readonly #_size = new Float32Array(2);
     /** if true, then when the render target is destroyed, it will destroy all the textures that were created for it. */
-    private readonly _managedColorTextures: boolean = false;
+    readonly #_managedColorTextures: boolean = false;
 
     /**
      * @param [descriptor] - Options for creating a render target.
@@ -100,7 +100,7 @@ export class RenderTarget
 
         if (typeof descriptor.colorTextures === 'number')
         {
-            this._managedColorTextures = true;
+            this.#_managedColorTextures = true;
 
             for (let i = 0; i < descriptor.colorTextures; i++)
             {
@@ -144,7 +144,7 @@ export class RenderTarget
 
     get size(): [number, number]
     {
-        const _size = this._size;
+        const _size = this.#_size;
 
         _size[0] = this.pixelWidth;
         _size[1] = this.pixelHeight;
@@ -229,7 +229,7 @@ export class RenderTarget
     {
         this.colorTexture.source.off('resize', this.onSourceResize, this);
 
-        if (this._managedColorTextures)
+        if (this.#_managedColorTextures)
         {
             this.colorTextures.forEach((texture) =>
             {

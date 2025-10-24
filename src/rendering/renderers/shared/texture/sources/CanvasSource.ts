@@ -38,7 +38,7 @@ export class CanvasSource extends TextureSource<ICanvas>
     public autoDensity: boolean;
     public transparent: boolean;
 
-    private _context2D: CanvasRenderingContext2D;
+    #_context2D: CanvasRenderingContext2D;
 
     constructor(options: CanvasSourceOptions)
     {
@@ -117,6 +117,6 @@ export class CanvasSource extends TextureSource<ICanvas>
      */
     get context2D(): CanvasRenderingContext2D
     {
-        return this._context2D || (this._context2D = this.resource.getContext('2d') as CanvasRenderingContext2D);
+        return this.#_context2D || (this.#_context2D = this.resource.getContext('2d') as CanvasRenderingContext2D);
     }
 }

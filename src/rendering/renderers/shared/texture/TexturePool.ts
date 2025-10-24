@@ -34,8 +34,8 @@ export class TexturePoolClass
      */
     public enableFullScreen: boolean;
 
-    private _texturePool: {[x in string | number]: Texture[]};
-    private _poolKeyHash: Record<number, number> = Object.create(null);
+    #_texturePool: {[x in string | number]: Texture[]};
+    #_poolKeyHash: Record<number, number> = Object.create(null);
 
     /**
      * @param textureOptions - options that will be passed to BaseRenderTexture constructor
@@ -43,7 +43,7 @@ export class TexturePoolClass
      */
     constructor(textureOptions?: TextureSourceOptions)
     {
-        this._texturePool = {};
+        this.#_texturePool = {};
         this.textureOptions = textureOptions || {};
         this.enableFullScreen = false;
         this.textureStyle = new TextureStyle(this.textureOptions);
@@ -91,12 +91,12 @@ export class TexturePoolClass
 
         const key = (po2Width << 17) + (po2Height << 1) + (antialias ? 1 : 0);
 
-        if (!this._texturePool[key])
+        if (!this.#_texturePool[key])
         {
-            this._texturePool[key] = [];
+            this.#_texturePool[key] = [];
         }
 
-        let texture = this._texturePool[key].pop();
+        let texture = this.#_texturePool[key].pop();
 
         if (!texture)
         {
@@ -117,7 +117,7 @@ export class TexturePoolClass
 
         texture.updateUvs();
 
-        this._poolKeyHash[texture.uid] = key;
+        this.#_poolKeyHash[texture.uid] = key;
 
         return texture;
     }
@@ -143,7 +143,7 @@ export class TexturePoolClass
      */
     public returnTexture(renderTexture: Texture, resetStyle = false): void
     {
-        const key = this._poolKeyHash[renderTexture.uid];
+        const key = this.#_poolKeyHash[renderTexture.uid];
 
         // we can skip the copy if we don't need to reset the style
         if (resetStyle)
@@ -151,7 +151,7 @@ export class TexturePoolClass
             renderTexture.source.style = this.textureStyle;
         }
 
-        this._texturePool[key].push(renderTexture);
+        this.#_texturePool[key].push(renderTexture);
     }
 
     /**
@@ -163,9 +163,9 @@ export class TexturePoolClass
         destroyTextures = destroyTextures !== false;
         if (destroyTextures)
         {
-            for (const i in this._texturePool)
+            for (const i in this.#_texturePool)
             {
-                const textures = this._texturePool[i];
+                const textures = this.#_texturePool[i];
 
                 if (textures)
                 {
@@ -177,7 +177,7 @@ export class TexturePoolClass
             }
         }
 
-        this._texturePool = {};
+        this.#_texturePool = {};
     }
 }
 

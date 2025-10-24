@@ -101,12 +101,12 @@ export class TextureGCSystem implements System<TextureGCSystemOptions>
      * @see TextureGCSystem.defaultMode
      */
     public active: boolean;
-    private _renderer: Renderer;
+    #_renderer: Renderer;
 
     /** @param renderer - The renderer this System works for. */
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
 
         this.count = 0;
         this.checkCount = 0;
@@ -127,7 +127,7 @@ export class TextureGCSystem implements System<TextureGCSystemOptions>
      */
     protected postrender(): void
     {
-        if (!this._renderer.renderingToScreen)
+        if (!this.#_renderer.renderingToScreen)
         {
             return;
         }
@@ -152,7 +152,7 @@ export class TextureGCSystem implements System<TextureGCSystemOptions>
      */
     public run(): void
     {
-        const managedTextures = this._renderer.texture.managedTextures;
+        const managedTextures = this.#_renderer.texture.managedTextures;
 
         for (let i = 0; i < managedTextures.length; i++)
         {
@@ -174,6 +174,6 @@ export class TextureGCSystem implements System<TextureGCSystemOptions>
 
     public destroy(): void
     {
-        this._renderer = null as any as Renderer;
+        this.#_renderer = null as any as Renderer;
     }
 }

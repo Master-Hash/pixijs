@@ -44,7 +44,7 @@
 export class SystemRunner
 {
     public items: any[];
-    private _name: string;
+    #_name: string;
 
     /**
      * @param name - The function name that will be executed on the listeners added to this Runner.
@@ -52,7 +52,7 @@ export class SystemRunner
     constructor(name: string)
     {
         this.items = [];
-        this._name = name;
+        this.#_name = name;
     }
 
     /* jsdoc/check-param-names */
@@ -94,7 +94,7 @@ export class SystemRunner
      */
     public add(item: unknown): this
     {
-        if ((item as any)[this._name])
+        if ((item as any)[this.#_name])
         {
             this.remove(item);
             this.items.push(item);
@@ -141,7 +141,7 @@ export class SystemRunner
     {
         this.removeAll();
         this.items = null;
-        this._name = null;
+        this.#_name = null;
     }
 
     /**
@@ -159,6 +159,6 @@ export class SystemRunner
      */
     public get name(): string
     {
-        return this._name;
+        return this.#_name;
     }
 }
