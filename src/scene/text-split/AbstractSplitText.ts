@@ -341,7 +341,7 @@ export abstract class AbstractSplitText<T extends SplitableTextObject> extends C
         this.onTextUpdate();
     }
 
-    private _setOrigin(
+    #_setOrigin(
         value: number | PointData,
         elements: Array<Container | T>,
         property: '_lineAnchor' | '_wordAnchor' | '_charAnchor',
@@ -396,7 +396,7 @@ export abstract class AbstractSplitText<T extends SplitableTextObject> extends C
     }
     set lineAnchor(value: number | PointData)
     {
-        this._setOrigin(value, this.lines, '_lineAnchor');
+        this.#_setOrigin(value, this.lines, '_lineAnchor');
     }
 
     /**
@@ -423,7 +423,7 @@ export abstract class AbstractSplitText<T extends SplitableTextObject> extends C
     }
     set wordAnchor(value: number | PointData)
     {
-        this._setOrigin(value, this.words, '_wordAnchor');
+        this.#_setOrigin(value, this.words, '_wordAnchor');
     }
 
     /**
@@ -460,7 +460,7 @@ export abstract class AbstractSplitText<T extends SplitableTextObject> extends C
     }
     set charAnchor(value: number | PointData)
     {
-        this._setOrigin(value, this.chars, '_charAnchor');
+        this.#_setOrigin(value, this.chars, '_charAnchor');
     }
 
     get style(): TextStyle

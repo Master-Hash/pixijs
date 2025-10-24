@@ -49,18 +49,18 @@ export class RendererInitHook implements System
         priority: -10,
     } as const;
 
-    private _renderer: Renderer;
+    #_renderer: Renderer;
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
     public init(): void
     {
-        globalThis.__PIXI_RENDERER_INIT__?.(this._renderer, VERSION);
+        globalThis.__PIXI_RENDERER_INIT__?.(this.#_renderer, VERSION);
     }
     public destroy(): void
     {
-        this._renderer = null;
+        this.#_renderer = null;
     }
 }

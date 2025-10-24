@@ -86,8 +86,8 @@ export interface HTMLTextStyleOptions extends Omit<TextStyleOptions, 'leading' |
  */
 export class HTMLTextStyle extends TextStyle
 {
-    private _cssOverrides: string[] = [];
-    private _cssStyle: string;
+    #_cssOverrides: string[] = [];
+    #_cssStyle: string;
     /**
      * Custom styles to apply to specific HTML tags.
      * Allows for consistent styling of custom elements without CSS overrides.
@@ -130,14 +130,14 @@ export class HTMLTextStyle extends TextStyle
      */
     set cssOverrides(value: string | string[])
     {
-        this._cssOverrides = value instanceof Array ? value : [value];
+        this.#_cssOverrides = value instanceof Array ? value : [value];
         this.update();
     }
 
     /** @advanced */
     get cssOverrides(): string[]
     {
-        return this._cssOverrides;
+        return this.#_cssOverrides;
     }
 
     /**
@@ -162,7 +162,7 @@ export class HTMLTextStyle extends TextStyle
      */
     public update()
     {
-        this._cssStyle = null;
+        this.#_cssStyle = null;
         super.update();
     }
 
@@ -236,12 +236,12 @@ export class HTMLTextStyle extends TextStyle
      */
     get cssStyle(): string
     {
-        if (!this._cssStyle)
+        if (!this.#_cssStyle)
         {
-            this._cssStyle = textStyleToCSS(this);
+            this.#_cssStyle = textStyleToCSS(this);
         }
 
-        return this._cssStyle;
+        return this.#_cssStyle;
     }
 
     /**

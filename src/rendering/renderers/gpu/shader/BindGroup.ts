@@ -36,7 +36,7 @@ export class BindGroup
      * @internal
      */
     public _key: string;
-    private _dirty = true;
+    #_dirty = true;
 
     /**
      * Create a new instance eof the Bind Group.
@@ -63,9 +63,9 @@ export class BindGroup
      */
     public _updateKey(): void
     {
-        if (!this._dirty) return;
+        if (!this.#_dirty) return;
 
-        this._dirty = false;
+        this.#_dirty = false;
 
         const keyParts = [];
         let index = 0;
@@ -101,7 +101,7 @@ export class BindGroup
         resource.on?.('change', this.onResourceChange, this);
 
         this.resources[index] = resource;
-        this._dirty = true;
+        this.#_dirty = true;
     }
 
     /**
@@ -147,7 +147,7 @@ export class BindGroup
 
     protected onResourceChange(resource: BindResource)
     {
-        this._dirty = true;
+        this.#_dirty = true;
 
         // check if a resource has been destroyed, if it has then we need to destroy this bind group
         // using this bind group with a destroyed resource will cause the renderer to explode :)

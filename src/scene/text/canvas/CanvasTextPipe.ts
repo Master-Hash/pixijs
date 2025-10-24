@@ -20,16 +20,16 @@ export class CanvasTextPipe implements RenderPipe<Text>
         name: 'text',
     } as const;
 
-    private _renderer: Renderer;
+    #_renderer: Renderer;
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public validateRenderable(text: Text): boolean
     {
-        const gpuText = this._getGpuText(text);
+        const gpuText = this.#_getGpuText(text);
 
         const newKey = text.styleKey;
 
@@ -40,11 +40,11 @@ export class CanvasTextPipe implements RenderPipe<Text>
 
     public addRenderable(text: Text, instructionSet: InstructionSet)
     {
-        const batchableText = this._getGpuText(text);
+        const batchableText = this.#_getGpuText(text);
 
         if (text._didTextUpdate)
         {
-            const resolution = text._autoResolution ? this._renderer.resolution : text.resolution;
+            const resolution = text._autoResolution ? this.#_renderer.resolution : text.resolution;
 
             if (batchableText.currentKey !== text.styleKey || text.resolution !== resolution)
             {
@@ -57,53 +57,53 @@ export class CanvasTextPipe implements RenderPipe<Text>
             updateTextBounds(batchableText, text);
         }
 
-        this._renderer.renderPipes.batch.addToBatch(batchableText, instructionSet);
+        this.#_renderer.renderPipes.batch.addToBatch(batchableText, instructionSet);
     }
 
     public updateRenderable(text: Text)
     {
-        const batchableText = this._getGpuText(text);
+        const batchableText = this.#_getGpuText(text);
 
         batchableText._batcher.updateElement(batchableText);
     }
 
     private _updateGpuText(text: Text)
     {
-        const batchableText = this._getGpuText(text);
+        const batchableText = this.#_getGpuText(text);
 
         if (batchableText.texture)
         {
-            this._renderer.canvasText.decreaseReferenceCount(batchableText.currentKey);
+            this.#_renderer.canvasText.decreaseReferenceCount(batchableText.currentKey);
         }
 
-        text._resolution = text._autoResolution ? this._renderer.resolution : text.resolution;
+        text._resolution = text._autoResolution ? this.#_renderer.resolution : text.resolution;
 
-        batchableText.texture = this._renderer.canvasText.getManagedTexture(text);
+        batchableText.texture = this.#_renderer.canvasText.getManagedTexture(text);
         batchableText.currentKey = text.styleKey;
     }
 
-    private _getGpuText(text: Text)
+    #_getGpuText(text: Text)
     {
-        return text._gpuData[this._renderer.uid] || this.initGpuText(text);
+        return text._gpuData[this.#_renderer.uid] || this.initGpuText(text);
     }
 
     public initGpuText(text: Text)
     {
-        const batchableText = new BatchableText(this._renderer);
+        const batchableText = new BatchableText(this.#_renderer);
 
         batchableText.currentKey = '--';
         batchableText.renderable = text;
         batchableText.transform = text.groupTransform;
         batchableText.bounds = { minX: 0, maxX: 1, minY: 0, maxY: 0 };
-        batchableText.roundPixels = (this._renderer._roundPixels | text._roundPixels) as 0 | 1;
+        batchableText.roundPixels = (this.#_renderer._roundPixels | text._roundPixels) as 0 | 1;
 
-        text._gpuData[this._renderer.uid] = batchableText;
+        text._gpuData[this.#_renderer.uid] = batchableText;
 
         return batchableText;
     }
 
     public destroy()
     {
-        this._renderer = null;
+        this.#_renderer = null;
     }
 }

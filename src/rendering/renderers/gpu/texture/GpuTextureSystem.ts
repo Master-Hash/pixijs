@@ -37,26 +37,26 @@ export class GpuTextureSystem implements System, CanvasGenerator
     public readonly managedTextures: TextureSource[] = [];
 
     protected CONTEXT_UID: number;
-    private _gpuSources: Record<number, GPUTexture> = Object.create(null);
-    private _gpuSamplers: Record<string, GPUSampler> = Object.create(null);
-    private _bindGroupHash: Record<string, BindGroup> = Object.create(null);
-    private _textureViewHash: Record<string, GPUTextureView> = Object.create(null);
+    #_gpuSources: Record<number, GPUTexture> = Object.create(null);
+    #_gpuSamplers: Record<string, GPUSampler> = Object.create(null);
+    #_bindGroupHash: Record<string, BindGroup> = Object.create(null);
+    #_textureViewHash: Record<string, GPUTextureView> = Object.create(null);
 
-    private readonly _uploads: Record<string, GpuTextureUploader> = {
+    readonly #_uploads: Record<string, GpuTextureUploader> = {
         image: gpuUploadImageResource,
         buffer: gpuUploadBufferImageResource,
         video: gpuUploadVideoResource,
         compressed: gpuUploadCompressedTextureResource
     };
 
-    private _gpu: GPU;
-    private _mipmapGenerator?: GpuMipmapGenerator;
+    #_gpu: GPU;
+    #_mipmapGenerator?: GpuMipmapGenerator;
 
-    private readonly _renderer: WebGPURenderer;
+    readonly #_renderer: WebGPURenderer;
 
     constructor(renderer: WebGPURenderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
         renderer.renderableGC.addManagedHash(this, '_gpuSources');
         renderer.renderableGC.addManagedHash(this, '_gpuSamplers');
         renderer.renderableGC.addManagedHash(this, '_bindGroupHash');
@@ -65,7 +65,7 @@ export class GpuTextureSystem implements System, CanvasGenerator
 
     protected contextChange(gpu: GPU): void
     {
-        this._gpu = gpu;
+        this.#_gpu = gpu;
     }
 
     /**
@@ -75,15 +75,15 @@ export class GpuTextureSystem implements System, CanvasGenerator
      */
     public initSource(source: TextureSource): GPUTexture
     {
-        if (this._gpuSources[source.uid])
+        if (this.#_gpuSources[source.uid])
         {
-            return this._gpuSources[source.uid];
+            return this.#_gpuSources[source.uid];
         }
 
-        return this._initSource(source);
+        return this.#_initSource(source);
     }
 
-    private _initSource(source: TextureSource): GPUTexture
+    #_initSource(source: TextureSource): GPUTexture
     {
         if (source.autoGenerateMipmaps)
         {
@@ -115,7 +115,7 @@ export class GpuTextureSystem implements System, CanvasGenerator
             usage
         };
 
-        const gpuTexture = this._gpuSources[source.uid] = this._gpu.device.createTexture(textureDescriptor);
+        const gpuTexture = this.#_gpuSources[source.uid] = this.#_gpu.device.createTexture(textureDescriptor);
 
         if (!this.managedTextures.includes(source))
         {
@@ -140,9 +140,9 @@ export class GpuTextureSystem implements System, CanvasGenerator
         // destroyed!
         if (!gpuTexture) return;
 
-        if (this._uploads[source.uploadMethodId])
+        if (this.#_uploads[source.uploadMethodId])
         {
-            this._uploads[source.uploadMethodId].upload(source, gpuTexture, this._gpu);
+            this.#_uploads[source.uploadMethodId].upload(source, gpuTexture, this.#_gpu);
         }
 
         if (source.autoGenerateMipmaps && source.mipLevelCount > 1)
@@ -153,11 +153,11 @@ export class GpuTextureSystem implements System, CanvasGenerator
 
     protected onSourceUnload(source: TextureSource): void
     {
-        const gpuTexture = this._gpuSources[source.uid];
+        const gpuTexture = this.#_gpuSources[source.uid];
 
         if (gpuTexture)
         {
-            this._gpuSources[source.uid] = null;
+            this.#_gpuSources[source.uid] = null;
 
             gpuTexture.destroy();
         }
@@ -165,14 +165,14 @@ export class GpuTextureSystem implements System, CanvasGenerator
 
     protected onUpdateMipmaps(source: TextureSource): void
     {
-        if (!this._mipmapGenerator)
+        if (!this.#_mipmapGenerator)
         {
-            this._mipmapGenerator = new GpuMipmapGenerator(this._gpu.device);
+            this.#_mipmapGenerator = new GpuMipmapGenerator(this.#_gpu.device);
         }
 
         const gpuTexture = this.getGpuSource(source);
 
-        this._mipmapGenerator.generateMipmap(gpuTexture);
+        this.#_mipmapGenerator.generateMipmap(gpuTexture);
     }
 
     protected onSourceDestroy(source: TextureSource): void
@@ -190,7 +190,7 @@ export class GpuTextureSystem implements System, CanvasGenerator
 
     protected onSourceResize(source: TextureSource): void
     {
-        const gpuTexture = this._gpuSources[source.uid];
+        const gpuTexture = this.#_gpuSources[source.uid];
 
         if (!gpuTexture)
         {
@@ -198,29 +198,29 @@ export class GpuTextureSystem implements System, CanvasGenerator
         }
         else if (gpuTexture.width !== source.pixelWidth || gpuTexture.height !== source.pixelHeight)
         {
-            this._textureViewHash[source.uid] = null;
-            this._bindGroupHash[source.uid] = null;
+            this.#_textureViewHash[source.uid] = null;
+            this.#_bindGroupHash[source.uid] = null;
 
             this.onSourceUnload(source);
             this.initSource(source);
         }
     }
 
-    private _initSampler(sampler: TextureStyle): GPUSampler
+    #_initSampler(sampler: TextureStyle): GPUSampler
     {
-        this._gpuSamplers[sampler._resourceId] = this._gpu.device.createSampler(sampler);
+        this.#_gpuSamplers[sampler._resourceId] = this.#_gpu.device.createSampler(sampler);
 
-        return this._gpuSamplers[sampler._resourceId];
+        return this.#_gpuSamplers[sampler._resourceId];
     }
 
     public getGpuSampler(sampler: TextureStyle): GPUSampler
     {
-        return this._gpuSamplers[sampler._resourceId] || this._initSampler(sampler);
+        return this.#_gpuSamplers[sampler._resourceId] || this.#_initSampler(sampler);
     }
 
     public getGpuSource(source: TextureSource): GPUTexture
     {
-        return this._gpuSources[source.uid] || this.initSource(source);
+        return this.#_gpuSources[source.uid] || this.initSource(source);
     }
 
     /**
@@ -234,14 +234,14 @@ export class GpuTextureSystem implements System, CanvasGenerator
      */
     public getTextureBindGroup(texture: Texture)
     {
-        return this._bindGroupHash[texture.uid] ?? this._createTextureBindGroup(texture);
+        return this.#_bindGroupHash[texture.uid] ?? this.#_createTextureBindGroup(texture);
     }
 
-    private _createTextureBindGroup(texture: Texture)
+    #_createTextureBindGroup(texture: Texture)
     {
         const source = texture.source;
 
-        this._bindGroupHash[texture.uid] = new BindGroup({
+        this.#_bindGroupHash[texture.uid] = new BindGroup({
             0: source,
             1: source.style,
             2: new UniformGroup({
@@ -249,26 +249,26 @@ export class GpuTextureSystem implements System, CanvasGenerator
             })
         });
 
-        return this._bindGroupHash[texture.uid];
+        return this.#_bindGroupHash[texture.uid];
     }
 
     public getTextureView(texture: BindableTexture)
     {
         const source = texture.source;
 
-        return this._textureViewHash[source.uid] ?? this._createTextureView(source);
+        return this.#_textureViewHash[source.uid] ?? this.#_createTextureView(source);
     }
 
-    private _createTextureView(texture: TextureSource)
+    #_createTextureView(texture: TextureSource)
     {
-        this._textureViewHash[texture.uid] = this.getGpuSource(texture).createView();
+        this.#_textureViewHash[texture.uid] = this.getGpuSource(texture).createView();
 
-        return this._textureViewHash[texture.uid];
+        return this.#_textureViewHash[texture.uid];
     }
 
     public generateCanvas(texture: Texture): ICanvas
     {
-        const renderer = this._renderer;
+        const renderer = this.#_renderer;
 
         const commandEncoder = renderer.gpu.device.createCommandEncoder();
 
@@ -337,20 +337,20 @@ export class GpuTextureSystem implements System, CanvasGenerator
 
         (this.managedTextures as null) = null;
 
-        for (const k of Object.keys(this._bindGroupHash))
+        for (const k of Object.keys(this.#_bindGroupHash))
         {
             const key = Number(k);
-            const bindGroup = this._bindGroupHash[key];
+            const bindGroup = this.#_bindGroupHash[key];
 
             bindGroup?.destroy();
-            this._bindGroupHash[key] = null;
+            this.#_bindGroupHash[key] = null;
         }
 
-        this._gpu = null;
-        this._mipmapGenerator = null;
-        this._gpuSources = null;
-        this._bindGroupHash = null;
-        this._textureViewHash = null;
-        this._gpuSamplers = null;
+        this.#_gpu = null;
+        this.#_mipmapGenerator = null;
+        this.#_gpuSources = null;
+        this.#_bindGroupHash = null;
+        this.#_textureViewHash = null;
+        this.#_gpuSamplers = null;
     }
 }

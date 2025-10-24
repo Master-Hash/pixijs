@@ -30,11 +30,11 @@ export class CustomRenderPipe implements InstructionPipe<RenderContainer>, Rende
         name: 'customRender',
     } as const;
 
-    private _renderer: Renderer;
+    #_renderer: Renderer;
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public updateRenderable() { /** empty */ }
@@ -43,7 +43,7 @@ export class CustomRenderPipe implements InstructionPipe<RenderContainer>, Rende
 
     public addRenderable(container: RenderContainer, instructionSet: InstructionSet): void
     {
-        this._renderer.renderPipes.batch.break(instructionSet);
+        this.#_renderer.renderPipes.batch.break(instructionSet);
 
         instructionSet.add(container);
     }
@@ -52,11 +52,11 @@ export class CustomRenderPipe implements InstructionPipe<RenderContainer>, Rende
     {
         if (!container.isRenderable) return;
 
-        container.render(this._renderer);
+        container.render(this.#_renderer);
     }
 
     public destroy(): void
     {
-        this._renderer = null;
+        this.#_renderer = null;
     }
 }

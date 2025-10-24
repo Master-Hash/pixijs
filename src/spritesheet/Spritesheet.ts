@@ -259,25 +259,25 @@ export class Spritesheet<S extends SpritesheetData = SpritesheetData>
      * Reference to original source image from the Loader. This reference is retained so we
      * can destroy the Texture later on. It is never used internally.
      */
-    private _texture: Texture;
+    #_texture: Texture;
 
     /**
      * Map of spritesheet frames.
      * @type {object}
      */
-    private _frames: S['frames'];
+    #_frames: S['frames'];
 
     /** Collection of frame names. */
-    private _frameKeys: (keyof S['frames'])[];
+    #_frameKeys: (keyof S['frames'])[];
 
     /** Current batch index being processed. */
-    private _batchIndex: number;
+    #_batchIndex: number;
 
     /**
      * Callback when parse is completed.
      * @type {Function}
      */
-    private _callback: (textures: Dict<Texture>) => void;
+    #_callback: (textures: Dict<Texture>) => void;
 
     /** Prefix string to add to global cache */
     public readonly cachePrefix: string;
@@ -308,7 +308,7 @@ export class Spritesheet<S extends SpritesheetData = SpritesheetData>
         const { texture, data, cachePrefix = '' } = options;
 
         this.cachePrefix = cachePrefix;
-        this._texture = texture instanceof Texture ? texture : null;
+        this.#_texture = texture instanceof Texture ? texture : null;
         this.textureSource = texture.source;
         this.textures = {} as Record<keyof S['frames'], Texture>;
         this.animations = {} as Record<keyof NonNullable<S['animations']>, Texture[]>;
@@ -326,10 +326,10 @@ export class Spritesheet<S extends SpritesheetData = SpritesheetData>
             this.resolution = texture.source._resolution;
         }
 
-        this._frames = this.data.frames;
-        this._frameKeys = Object.keys(this._frames);
-        this._batchIndex = 0;
-        this._callback = null;
+        this.#_frames = this.data.frames;
+        this.#_frameKeys = Object.keys(this.#_frames);
+        this.#_batchIndex = 0;
+        this.#_callback = null;
     }
 
     /**
@@ -340,18 +340,18 @@ export class Spritesheet<S extends SpritesheetData = SpritesheetData>
     {
         return new Promise((resolve) =>
         {
-            this._callback = resolve;
-            this._batchIndex = 0;
+            this.#_callback = resolve;
+            this.#_batchIndex = 0;
 
-            if (this._frameKeys.length <= Spritesheet.BATCH_SIZE)
+            if (this.#_frameKeys.length <= Spritesheet.BATCH_SIZE)
             {
-                this._processFrames(0);
-                this._processAnimations();
-                this._parseComplete();
+                this.#_processFrames(0);
+                this.#_processAnimations();
+                this.#_parseComplete();
             }
             else
             {
-                this._nextBatch();
+                this.#_nextBatch();
             }
         });
     }
@@ -360,15 +360,15 @@ export class Spritesheet<S extends SpritesheetData = SpritesheetData>
      * Process a batch of frames
      * @param initialFrameIndex - The index of frame to start.
      */
-    private _processFrames(initialFrameIndex: number): void
+    #_processFrames(initialFrameIndex: number): void
     {
         let frameIndex = initialFrameIndex;
         const maxFrames = Spritesheet.BATCH_SIZE;
 
-        while (frameIndex - initialFrameIndex < maxFrames && frameIndex < this._frameKeys.length)
+        while (frameIndex - initialFrameIndex < maxFrames && frameIndex < this.#_frameKeys.length)
         {
-            const i = this._frameKeys[frameIndex];
-            const data = this._frames[i];
+            const i = this.#_frameKeys[frameIndex];
+            const data = this.#_frames[i];
             const rect = data.frame;
 
             if (rect)
@@ -434,7 +434,7 @@ export class Spritesheet<S extends SpritesheetData = SpritesheetData>
     }
 
     /** Parse animations config. */
-    private _processAnimations(): void
+    #_processAnimations(): void
     {
         const animations = this.data.animations || {};
 
@@ -451,30 +451,30 @@ export class Spritesheet<S extends SpritesheetData = SpritesheetData>
     }
 
     /** The parse has completed. */
-    private _parseComplete(): void
+    #_parseComplete(): void
     {
-        const callback = this._callback;
+        const callback = this.#_callback;
 
-        this._callback = null;
-        this._batchIndex = 0;
+        this.#_callback = null;
+        this.#_batchIndex = 0;
         callback.call(this, this.textures);
     }
 
     /** Begin the next batch of textures. */
-    private _nextBatch(): void
+    #_nextBatch(): void
     {
-        this._processFrames(this._batchIndex * Spritesheet.BATCH_SIZE);
-        this._batchIndex++;
+        this.#_processFrames(this.#_batchIndex * Spritesheet.BATCH_SIZE);
+        this.#_batchIndex++;
         setTimeout(() =>
         {
-            if (this._batchIndex * Spritesheet.BATCH_SIZE < this._frameKeys.length)
+            if (this.#_batchIndex * Spritesheet.BATCH_SIZE < this.#_frameKeys.length)
             {
-                this._nextBatch();
+                this.#_nextBatch();
             }
             else
             {
-                this._processAnimations();
-                this._parseComplete();
+                this.#_processAnimations();
+                this.#_parseComplete();
             }
         }, 0);
     }
@@ -489,16 +489,16 @@ export class Spritesheet<S extends SpritesheetData = SpritesheetData>
         {
             this.textures[i].destroy();
         }
-        this._frames = null;
-        this._frameKeys = null;
+        this.#_frames = null;
+        this.#_frameKeys = null;
         this.data = null;
         this.textures = null;
         if (destroyBase)
         {
-            this._texture?.destroy();
+            this.#_texture?.destroy();
             this.textureSource.destroy();
         }
-        this._texture = null;
+        this.#_texture = null;
         this.textureSource = null;
         this.linkedSheets = [];
     }

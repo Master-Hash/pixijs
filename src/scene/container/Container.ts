@@ -779,7 +779,7 @@ export class Container<C extends ContainerChild = ContainerChild> extends EventE
     public groupTransform: Matrix = this.relativeGroupTransform;
 
     // the global transform taking into account the render group and all parents
-    private _worldTransform: Matrix;
+    #_worldTransform: Matrix;
 
     /**
      * Whether this object has been destroyed. If true, the object should no longer be used.
@@ -859,7 +859,7 @@ export class Container<C extends ContainerChild = ContainerChild> extends EventE
      * The rotation amount.
      * @internal
      */
-    private _rotation = 0;
+    #_rotation = 0;
 
     // / COLOR related props //////////////
 
@@ -953,7 +953,7 @@ export class Container<C extends ContainerChild = ContainerChild> extends EventE
      * property that tracks if the container transform has changed
      * @ignore
      */
-    private _didLocalTransformChangeId = -1;
+    #_didLocalTransformChangeId = -1;
 
     constructor(options: ContainerOptions<C> = {})
     {
@@ -1137,7 +1137,7 @@ export class Container<C extends ContainerChild = ContainerChild> extends EventE
 
             if (point === this._skew)
             {
-                this._updateSkew();
+                this.#_updateSkew();
             }
         }
 
@@ -1244,18 +1244,18 @@ export class Container<C extends ContainerChild = ContainerChild> extends EventE
      */
     get worldTransform()
     {
-        this._worldTransform ||= new Matrix();
+        this.#_worldTransform ||= new Matrix();
 
         if (this.renderGroup)
         {
-            this._worldTransform.copyFrom(this.renderGroup.worldTransform);
+            this.#_worldTransform.copyFrom(this.renderGroup.worldTransform);
         }
         else if (this.parentRenderGroup)
         {
-            this._worldTransform.appendFrom(this.relativeGroupTransform, this.parentRenderGroup.worldTransform);
+            this.#_worldTransform.appendFrom(this.relativeGroupTransform, this.parentRenderGroup.worldTransform);
         }
 
-        return this._worldTransform;
+        return this.#_worldTransform;
     }
 
     /**
@@ -1345,14 +1345,14 @@ export class Container<C extends ContainerChild = ContainerChild> extends EventE
      */
     get rotation(): number
     {
-        return this._rotation;
+        return this.#_rotation;
     }
 
     set rotation(value: number)
     {
-        if (this._rotation !== value)
+        if (this.#_rotation !== value)
         {
-            this._rotation = value;
+            this.#_rotation = value;
             this._onUpdate(this._skew);
         }
     }
@@ -1676,9 +1676,9 @@ export class Container<C extends ContainerChild = ContainerChild> extends EventE
     }
 
     /** Called when the skew or the rotation changes. */
-    private _updateSkew(): void
+    #_updateSkew(): void
     {
-        const rotation = this._rotation;
+        const rotation = this.#_rotation;
         const skew = this._skew;
 
         this._cx = Math.cos(rotation + skew._y);
@@ -1792,9 +1792,9 @@ export class Container<C extends ContainerChild = ContainerChild> extends EventE
     {
         const localTransformChangeId = this._didContainerChangeTick;
 
-        if (this._didLocalTransformChangeId === localTransformChangeId) return;
+        if (this.#_didLocalTransformChangeId === localTransformChangeId) return;
 
-        this._didLocalTransformChangeId = localTransformChangeId;
+        this.#_didLocalTransformChangeId = localTransformChangeId;
 
         const lt = this.localTransform;
         const scale = this._scale;

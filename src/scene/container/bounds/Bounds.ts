@@ -155,7 +155,7 @@ export class Bounds
      */
     public matrix = defaultMatrix;
 
-    private _rectangle: Rectangle;
+    #_rectangle: Rectangle;
 
     /**
      * Creates a new Bounds object.
@@ -220,12 +220,12 @@ export class Bounds
      */
     get rectangle(): Rectangle
     {
-        if (!this._rectangle)
+        if (!this.#_rectangle)
         {
-            this._rectangle = new Rectangle();
+            this.#_rectangle = new Rectangle();
         }
 
-        const rectangle = this._rectangle;
+        const rectangle = this.#_rectangle;
 
         if (this.minX > this.maxX || this.minY > this.maxY)
         {

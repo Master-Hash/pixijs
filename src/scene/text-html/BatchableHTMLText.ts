@@ -11,7 +11,7 @@ import type { HTMLText } from './HTMLText';
  */
 export class BatchableHTMLText extends BatchableSprite
 {
-    private readonly _renderer: Renderer;
+    readonly #_renderer: Renderer;
     public texturePromise: Promise<Texture>;
     public generatingTexture = false;
     public currentKey: string = '--';
@@ -26,7 +26,7 @@ export class BatchableHTMLText extends BatchableSprite
 
         // Next step is to make canvasTextSystem a GLOBAL object.
         // so this is ok for now..
-        this._renderer = renderer;
+        this.#_renderer = renderer;
 
         renderer.runners.resolutionChange.add(this);
     }
@@ -45,13 +45,13 @@ export class BatchableHTMLText extends BatchableSprite
     /** Destroys the BatchableHTMLText instance. Returns the texture promise to the renderer and cleans up references. */
     public destroy()
     {
-        const { htmlText } = this._renderer;
+        const { htmlText } = this.#_renderer;
 
         htmlText.getReferenceCount(this.currentKey) === null
             ? htmlText.returnTexturePromise(this.texturePromise)
             : htmlText.decreaseReferenceCount(this.currentKey);
-        this._renderer.runners.resolutionChange.remove(this);
+        this.#_renderer.runners.resolutionChange.remove(this);
         this.texturePromise = null;
-        (this._renderer as null) = null;
+        (this.#_renderer as null) = null;
     }
 }

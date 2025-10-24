@@ -241,7 +241,7 @@ export class HTMLText extends AbstractText<
     override set text(text: TextString)
     {
         // Sanitise the text to ensure it is valid HTML
-        const sanitisedText = this._sanitiseText(text.toString());
+        const sanitisedText = this.#_sanitiseText(text.toString());
 
         // Call the parent class's text setter with the sanitised text
         super.text = sanitisedText;
@@ -252,15 +252,15 @@ export class HTMLText extends AbstractText<
      * @param text
      * @see https://www.sitepoint.com/community/t/xhtml-1-0-transitional-xml-parsing-error-entity-nbsp-not-defined/3392/3
      */
-    private _sanitiseText(text: string): string
+    #_sanitiseText(text: string): string
     {
-        return this._removeInvalidHtmlTags(text
+        return this.#_removeInvalidHtmlTags(text
             .replace(/<br>/gi, '<br/>')
             .replace(/<hr>/gi, '<hr/>')
             .replace(/&nbsp;/gi, '&#160;'));
     }
 
-    private _removeInvalidHtmlTags(input: string): string
+    #_removeInvalidHtmlTags(input: string): string
     {
         // This regex finds "<" followed by anything except ">" until the next "<" or end-of-string
         // i.e., it finds broken tags like "<br" or "<div id='x'" that never close

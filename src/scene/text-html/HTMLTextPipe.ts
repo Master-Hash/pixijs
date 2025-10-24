@@ -24,16 +24,16 @@ export class HTMLTextPipe implements RenderPipe<HTMLText>
         name: 'htmlText',
     } as const;
 
-    private _renderer: Renderer;
+    #_renderer: Renderer;
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public validateRenderable(htmlText: HTMLText): boolean
     {
-        const gpuText = this._getGpuText(htmlText);
+        const gpuText = this.#_getGpuText(htmlText);
 
         const newKey = htmlText.styleKey;
 
@@ -47,16 +47,16 @@ export class HTMLTextPipe implements RenderPipe<HTMLText>
 
     public addRenderable(htmlText: HTMLText, instructionSet: InstructionSet)
     {
-        const batchableHTMLText = this._getGpuText(htmlText);
+        const batchableHTMLText = this.#_getGpuText(htmlText);
 
         if (htmlText._didTextUpdate)
         {
-            const resolution = htmlText._autoResolution ? this._renderer.resolution : htmlText.resolution;
+            const resolution = htmlText._autoResolution ? this.#_renderer.resolution : htmlText.resolution;
 
             if (batchableHTMLText.currentKey !== htmlText.styleKey || htmlText.resolution !== resolution)
             {
                 // If the text has changed, we need to update the GPU text
-                this._updateGpuText(htmlText).catch((e) =>
+                this.#_updateGpuText(htmlText).catch((e) =>
                 {
                     console.error(e);
                 });
@@ -67,20 +67,20 @@ export class HTMLTextPipe implements RenderPipe<HTMLText>
             updateTextBounds(batchableHTMLText, htmlText);
         }
 
-        this._renderer.renderPipes.batch.addToBatch(batchableHTMLText, instructionSet);
+        this.#_renderer.renderPipes.batch.addToBatch(batchableHTMLText, instructionSet);
     }
 
     public updateRenderable(htmlText: HTMLText)
     {
-        const batchableHTMLText = this._getGpuText(htmlText);
+        const batchableHTMLText = this.#_getGpuText(htmlText);
 
         batchableHTMLText._batcher.updateElement(batchableHTMLText);
     }
 
-    private async _updateGpuText(htmlText: HTMLText)
+    async #_updateGpuText(htmlText: HTMLText)
     {
         htmlText._didTextUpdate = false;
-        const batchableHTMLText = this._getGpuText(htmlText);
+        const batchableHTMLText = this.#_getGpuText(htmlText);
 
         if (batchableHTMLText.generatingTexture) return;
 
@@ -93,17 +93,17 @@ export class HTMLTextPipe implements RenderPipe<HTMLText>
 
         batchableHTMLText.generatingTexture = true;
 
-        htmlText._resolution = htmlText._autoResolution ? this._renderer.resolution : htmlText.resolution;
+        htmlText._resolution = htmlText._autoResolution ? this.#_renderer.resolution : htmlText.resolution;
 
-        let texturePromise = this._renderer.htmlText.getTexturePromise(htmlText);
+        let texturePromise = this.#_renderer.htmlText.getTexturePromise(htmlText);
 
         if (oldTexturePromise)
         {
             // Release old texture after new one is generated.
             texturePromise = texturePromise.finally(() =>
             {
-                this._renderer.htmlText.decreaseReferenceCount(batchableHTMLText.currentKey);
-                this._renderer.htmlText.returnTexturePromise(oldTexturePromise);
+                this.#_renderer.htmlText.decreaseReferenceCount(batchableHTMLText.currentKey);
+                this.#_renderer.htmlText.returnTexturePromise(oldTexturePromise);
             });
         }
 
@@ -126,30 +126,30 @@ export class HTMLTextPipe implements RenderPipe<HTMLText>
         updateTextBounds(batchableHTMLText, htmlText);
     }
 
-    private _getGpuText(htmlText: HTMLText)
+    #_getGpuText(htmlText: HTMLText)
     {
-        return htmlText._gpuData[this._renderer.uid] || this.initGpuText(htmlText);
+        return htmlText._gpuData[this.#_renderer.uid] || this.initGpuText(htmlText);
     }
 
     public initGpuText(htmlText: HTMLText)
     {
-        const batchableHTMLText = new BatchableHTMLText(this._renderer);
+        const batchableHTMLText = new BatchableHTMLText(this.#_renderer);
 
         batchableHTMLText.renderable = htmlText;
         batchableHTMLText.transform = htmlText.groupTransform;
         batchableHTMLText.texture = Texture.EMPTY;
         batchableHTMLText.bounds = { minX: 0, maxX: 1, minY: 0, maxY: 0 };
-        batchableHTMLText.roundPixels = (this._renderer._roundPixels | htmlText._roundPixels) as 0 | 1;
+        batchableHTMLText.roundPixels = (this.#_renderer._roundPixels | htmlText._roundPixels) as 0 | 1;
 
-        htmlText._resolution = htmlText._autoResolution ? this._renderer.resolution : htmlText.resolution;
-        htmlText._gpuData[this._renderer.uid] = batchableHTMLText;
+        htmlText._resolution = htmlText._autoResolution ? this.#_renderer.resolution : htmlText.resolution;
+        htmlText._gpuData[this.#_renderer.uid] = batchableHTMLText;
 
         return batchableHTMLText;
     }
 
     public destroy()
     {
-        this._renderer = null;
+        this.#_renderer = null;
     }
 }
 

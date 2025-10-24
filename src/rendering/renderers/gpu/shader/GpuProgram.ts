@@ -144,7 +144,7 @@ export class GpuProgram
      * Makes it much easier to debug!
      */
     public readonly name: string;
-    private _attributeData: Record<string, ExtractedAttributeData>;
+    #_attributeData: Record<string, ExtractedAttributeData>;
 
     /** if true, the program will automatically assign global uniforms to group[0] */
     public autoAssignGlobalUniforms: boolean;
@@ -189,11 +189,11 @@ export class GpuProgram
         this.autoAssignGlobalUniforms = !!(this.layout[0]?.globalUniforms !== undefined);
         this.autoAssignLocalUniforms = !!(this.layout[1]?.localUniforms !== undefined);
 
-        this._generateProgramKey();
+        this.#_generateProgramKey();
     }
 
     // TODO maker this pure
-    private _generateProgramKey()
+    #_generateProgramKey()
     {
         const { vertex, fragment } = this;
 
@@ -204,9 +204,9 @@ export class GpuProgram
 
     get attributeData()
     {
-        this._attributeData ??= extractAttributesFromGpuProgram(this.vertex);
+        this.#_attributeData ??= extractAttributesFromGpuProgram(this.vertex);
 
-        return this._attributeData;
+        return this.#_attributeData;
     }
     /** destroys the program */
     public destroy(): void

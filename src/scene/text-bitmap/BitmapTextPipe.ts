@@ -39,18 +39,18 @@ export class BitmapTextPipe implements RenderPipe<BitmapText>
         name: 'bitmapText',
     } as const;
 
-    private _renderer: Renderer;
+    #_renderer: Renderer;
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public validateRenderable(bitmapText: BitmapText): boolean
     {
-        const graphicsRenderable = this._getGpuBitmapText(bitmapText);
+        const graphicsRenderable = this.#_getGpuBitmapText(bitmapText);
 
-        return this._renderer.renderPipes.graphics.validateRenderable(graphicsRenderable);
+        return this.#_renderer.renderPipes.graphics.validateRenderable(graphicsRenderable);
 
         // TODO - need to shift all the verts in the graphicsData to the new anchor
 
@@ -59,7 +59,7 @@ export class BitmapTextPipe implements RenderPipe<BitmapText>
 
     public addRenderable(bitmapText: BitmapText, instructionSet: InstructionSet)
     {
-        const graphicsRenderable = this._getGpuBitmapText(bitmapText);
+        const graphicsRenderable = this.#_getGpuBitmapText(bitmapText);
 
         // sync..
         syncWithProxy(bitmapText, graphicsRenderable);
@@ -68,33 +68,33 @@ export class BitmapTextPipe implements RenderPipe<BitmapText>
         {
             bitmapText._didTextUpdate = false;
 
-            this._updateContext(bitmapText, graphicsRenderable);
+            this.#_updateContext(bitmapText, graphicsRenderable);
         }
 
-        this._renderer.renderPipes.graphics.addRenderable(graphicsRenderable, instructionSet);
+        this.#_renderer.renderPipes.graphics.addRenderable(graphicsRenderable, instructionSet);
 
         if (graphicsRenderable.context.customShader)
         {
-            this._updateDistanceField(bitmapText);
+            this.#_updateDistanceField(bitmapText);
         }
     }
 
     public updateRenderable(bitmapText: BitmapText)
     {
-        const graphicsRenderable = this._getGpuBitmapText(bitmapText);
+        const graphicsRenderable = this.#_getGpuBitmapText(bitmapText);
 
         // sync..
         syncWithProxy(bitmapText, graphicsRenderable);
 
-        this._renderer.renderPipes.graphics.updateRenderable(graphicsRenderable);
+        this.#_renderer.renderPipes.graphics.updateRenderable(graphicsRenderable);
 
         if (graphicsRenderable.context.customShader)
         {
-            this._updateDistanceField(bitmapText);
+            this.#_updateDistanceField(bitmapText);
         }
     }
 
-    private _updateContext(bitmapText: BitmapText, proxyGraphics: Graphics)
+    #_updateContext(bitmapText: BitmapText, proxyGraphics: Graphics)
     {
         const { context } = proxyGraphics;
 
@@ -107,7 +107,7 @@ export class BitmapTextPipe implements RenderPipe<BitmapText>
             if (!context.customShader)
             {
                 // TODO: Check if this is a WebGL renderer before asserting type
-                context.customShader = new SdfShader(this._renderer.limits.maxBatchableTextures);
+                context.customShader = new SdfShader(this.#_renderer.limits.maxBatchableTextures);
             }
         }
 
@@ -183,9 +183,9 @@ export class BitmapTextPipe implements RenderPipe<BitmapText>
         }
     }
 
-    private _getGpuBitmapText(bitmapText: BitmapText)
+    #_getGpuBitmapText(bitmapText: BitmapText)
     {
-        return bitmapText._gpuData[this._renderer.uid] || this.initGpuText(bitmapText);
+        return bitmapText._gpuData[this.#_renderer.uid] || this.initGpuText(bitmapText);
     }
 
     public initGpuText(bitmapText: BitmapText)
@@ -193,16 +193,16 @@ export class BitmapTextPipe implements RenderPipe<BitmapText>
         // TODO we could keep a bunch of contexts around and reuse one that has the same style!
         const proxyRenderable = new BitmapTextGraphics();
 
-        bitmapText._gpuData[this._renderer.uid] = proxyRenderable;
+        bitmapText._gpuData[this.#_renderer.uid] = proxyRenderable;
 
-        this._updateContext(bitmapText, proxyRenderable);
+        this.#_updateContext(bitmapText, proxyRenderable);
 
         return proxyRenderable;
     }
 
-    private _updateDistanceField(bitmapText: BitmapText)
+    #_updateDistanceField(bitmapText: BitmapText)
     {
-        const context = this._getGpuBitmapText(bitmapText).context;
+        const context = this.#_getGpuBitmapText(bitmapText).context;
 
         const fontFamily = bitmapText._style.fontFamily as string;
         const dynamicFont = Cache.get(`${fontFamily as string}-bitmap`);
@@ -223,7 +223,7 @@ export class BitmapTextPipe implements RenderPipe<BitmapText>
 
     public destroy()
     {
-        this._renderer = null;
+        this.#_renderer = null;
     }
 }
 

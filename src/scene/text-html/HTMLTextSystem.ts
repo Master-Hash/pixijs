@@ -44,10 +44,10 @@ export class HTMLTextSystem implements System
      * To get around this we need to create a canvas draw the image to it and upload that instead.
      * Bit of a shame.. but no other work around just yet!
      */
-    private readonly _createCanvas: boolean;
-    private readonly _renderer: Renderer;
+    readonly #_createCanvas: boolean;
+    readonly #_renderer: Renderer;
 
-    private readonly _activeTextures: Record<string, {
+    readonly #_activeTextures: Record<string, {
         texture: Texture,
         usageCount: number,
         promise: Promise<Texture>,
@@ -55,8 +55,8 @@ export class HTMLTextSystem implements System
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
-        this._createCanvas = renderer.type === RendererType.WEBGPU;
+        this.#_renderer = renderer;
+        this.#_createCanvas = renderer.type === RendererType.WEBGPU;
     }
 
     /**
@@ -76,22 +76,22 @@ export class HTMLTextSystem implements System
     {
         const textKey = text.styleKey;
 
-        if (this._activeTextures[textKey])
+        if (this.#_activeTextures[textKey])
         {
-            this._increaseReferenceCount(textKey);
+            this.#_increaseReferenceCount(textKey);
 
-            return this._activeTextures[textKey].promise;
+            return this.#_activeTextures[textKey].promise;
         }
 
-        const promise = this._buildTexturePromise(text)
+        const promise = this.#_buildTexturePromise(text)
             .then((texture) =>
             {
-                this._activeTextures[textKey].texture = texture;
+                this.#_activeTextures[textKey].texture = texture;
 
                 return texture;
             });
 
-        this._activeTextures[textKey] = {
+        this.#_activeTextures[textKey] = {
             texture: null,
             promise,
             usageCount: 1,
@@ -107,12 +107,12 @@ export class HTMLTextSystem implements System
      */
     public getReferenceCount(textKey: string)
     {
-        return this._activeTextures[textKey]?.usageCount ?? null;
+        return this.#_activeTextures[textKey]?.usageCount ?? null;
     }
 
-    private _increaseReferenceCount(textKey: string)
+    #_increaseReferenceCount(textKey: string)
     {
-        this._activeTextures[textKey].usageCount++;
+        this.#_activeTextures[textKey].usageCount++;
     }
 
     /**
@@ -122,7 +122,7 @@ export class HTMLTextSystem implements System
      */
     public decreaseReferenceCount(textKey: string)
     {
-        const activeTexture = this._activeTextures[textKey];
+        const activeTexture = this.#_activeTextures[textKey];
 
         if (!activeTexture) return;
 
@@ -132,7 +132,7 @@ export class HTMLTextSystem implements System
         {
             if (activeTexture.texture)
             {
-                this._cleanUp(activeTexture.texture);
+                this.#_cleanUp(activeTexture.texture);
             }
             else
             {
@@ -141,7 +141,7 @@ export class HTMLTextSystem implements System
                 {
                     activeTexture.texture = texture;
 
-                    this._cleanUp(activeTexture.texture);
+                    this.#_cleanUp(activeTexture.texture);
                 }).catch(() =>
                 {
                     // #if _DEBUG
@@ -150,7 +150,7 @@ export class HTMLTextSystem implements System
                 });
             }
 
-            this._activeTextures[textKey] = null;
+            this.#_activeTextures[textKey] = null;
         }
     }
 
@@ -161,10 +161,10 @@ export class HTMLTextSystem implements System
      */
     public getTexturePromise(options: HTMLTextOptions): Promise<Texture>
     {
-        return this._buildTexturePromise(options);
+        return this.#_buildTexturePromise(options);
     }
 
-    private async _buildTexturePromise(options: HTMLTextOptions)
+    async #_buildTexturePromise(options: HTMLTextOptions)
     {
         const { text, style, resolution, textureStyle } = options as {
             text: string,
@@ -196,7 +196,7 @@ export class HTMLTextSystem implements System
         const resource: ImageLike | HTMLCanvasElement = image;
         let canvasAndContext: CanvasAndContext;
 
-        if (this._createCanvas)
+        if (this.#_createCanvas)
         {
             // silly webGPU workaround..
             canvasAndContext = getTemporaryCanvasFromImage(image, resolution);
@@ -210,9 +210,9 @@ export class HTMLTextSystem implements System
 
         if (textureStyle) texture.source.style = textureStyle;
 
-        if (this._createCanvas)
+        if (this.#_createCanvas)
         {
-            this._renderer.texture.initSource(texture.source);
+            this.#_renderer.texture.initSource(texture.source);
             CanvasPool.returnCanvasAndContext(canvasAndContext);
         }
 
@@ -225,7 +225,7 @@ export class HTMLTextSystem implements System
     {
         texturePromise.then((texture) =>
         {
-            this._cleanUp(texture);
+            this.#_cleanUp(texture);
         }).catch(() =>
         {
             // #if _DEBUG
@@ -234,7 +234,7 @@ export class HTMLTextSystem implements System
         });
     }
 
-    private _cleanUp(texture: Texture)
+    #_cleanUp(texture: Texture)
     {
         TexturePool.returnTexture(texture, true);
         texture.source.resource = null;
@@ -244,11 +244,11 @@ export class HTMLTextSystem implements System
     public destroy()
     {
         // BOOM!
-        (this._renderer as null) = null;
-        for (const key in this._activeTextures)
+        (this.#_renderer as null) = null;
+        for (const key in this.#_activeTextures)
         {
-            if (this._activeTextures[key]) this.returnTexturePromise(this._activeTextures[key].promise);
+            if (this.#_activeTextures[key]) this.returnTexturePromise(this.#_activeTextures[key].promise);
         }
-        (this._activeTextures as null) = null;
+        (this.#_activeTextures as null) = null;
     }
 }

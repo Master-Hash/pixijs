@@ -84,11 +84,11 @@ export class GlStateSystem implements System
      * This is used for render textures where the Y-coordinate is flipped
      * @default false
      */
-    private _invertFrontFace: boolean = false;
-    private _glFrontFace: boolean;
-    private _cullFace: boolean;
-    private _frontFaceDirty: boolean;
-    private _frontFace: boolean;
+    #_invertFrontFace: boolean = false;
+    #_glFrontFace: boolean;
+    #_cullFace: boolean;
+    #_frontFaceDirty: boolean;
+    #_frontFace: boolean;
 
     constructor(renderer: WebGLRenderer)
     {
@@ -120,18 +120,18 @@ export class GlStateSystem implements System
 
     protected onRenderTargetChange(renderTarget: RenderTarget)
     {
-        this._invertFrontFace = !renderTarget.isRoot;
+        this.#_invertFrontFace = !renderTarget.isRoot;
 
         // mini optimization to avoid setting the front face if culling is disabled
-        if (this._cullFace)
+        if (this.#_cullFace)
         {
             // need to set the front face to the requested value as it matters because of the culling is active!
-            this.setFrontFace(this._frontFace);
+            this.setFrontFace(this.#_frontFace);
         }
         else
         {
             // if culling is disabled, we need to set the front face dirty
-            this._frontFaceDirty = true;
+            this.#_frontFaceDirty = true;
         }
     }
 
@@ -210,7 +210,7 @@ export class GlStateSystem implements System
      */
     public setBlend(value: boolean): void
     {
-        this._updateCheck(GlStateSystem._checkBlendMode, value);
+        this.#_updateCheck(GlStateSystem.#_checkBlendMode, value);
 
         this.gl[value ? 'enable' : 'disable'](this.gl.BLEND);
     }
@@ -221,7 +221,7 @@ export class GlStateSystem implements System
      */
     public setOffset(value: boolean): void
     {
-        this._updateCheck(GlStateSystem._checkPolygonOffset, value);
+        this.#_updateCheck(GlStateSystem.#_checkPolygonOffset, value);
 
         this.gl[value ? 'enable' : 'disable'](this.gl.POLYGON_OFFSET_FILL);
     }
@@ -250,13 +250,13 @@ export class GlStateSystem implements System
      */
     public setCullFace(value: boolean): void
     {
-        this._cullFace = value;
+        this.#_cullFace = value;
         this.gl[value ? 'enable' : 'disable'](this.gl.CULL_FACE);
 
-        if (this._cullFace && this._frontFaceDirty)
+        if (this.#_cullFace && this.#_frontFaceDirty)
         {
             // need to set the front face to the requested value as it matters because of the culling is active!
-            this.setFrontFace(this._frontFace);
+            this.setFrontFace(this.#_frontFace);
         }
     }
 
@@ -266,14 +266,14 @@ export class GlStateSystem implements System
      */
     public setFrontFace(value: boolean): void
     {
-        this._frontFace = value;
-        this._frontFaceDirty = false;
+        this.#_frontFace = value;
+        this.#_frontFaceDirty = false;
         // If invertFrontFace is true, we invert the face direction
-        const faceMode = this._invertFrontFace ? !value : value;
+        const faceMode = this.#_invertFrontFace ? !value : value;
 
-        if (this._glFrontFace !== faceMode)
+        if (this.#_glFrontFace !== faceMode)
         {
-            this._glFrontFace = faceMode;
+            this.#_glFrontFace = faceMode;
             this.gl.frontFace(this.gl[faceMode ? 'CW' : 'CCW']);
         }
     }
@@ -333,11 +333,11 @@ export class GlStateSystem implements System
     /** Resets all the logic and disables the VAOs. */
     public resetState(): void
     {
-        this._glFrontFace = false;
-        this._frontFace = false;
-        this._cullFace = false;
-        this._frontFaceDirty = false;
-        this._invertFrontFace = false;
+        this.#_glFrontFace = false;
+        this.#_frontFace = false;
+        this.#_cullFace = false;
+        this.#_frontFaceDirty = false;
+        this.#_invertFrontFace = false;
 
         this.gl.frontFace(this.gl.CCW);
         this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, false);
@@ -359,7 +359,7 @@ export class GlStateSystem implements System
      * @param func - the checking function to add or remove
      * @param value - should the check function be added or removed.
      */
-    private _updateCheck(func: (system: this, state: State) => void, value: boolean): void
+    #_updateCheck(func: (system: this, state: State) => void, value: boolean): void
     {
         const index = this.checks.indexOf(func);
 
@@ -378,7 +378,7 @@ export class GlStateSystem implements System
      * @param system - the System to perform the state check on
      * @param state - the state that the blendMode will pulled from
      */
-    private static _checkBlendMode(system: GlStateSystem, state: State): void
+    static #_checkBlendMode(system: GlStateSystem, state: State): void
     {
         system.setBlendMode(state.blendMode);
     }
@@ -388,7 +388,7 @@ export class GlStateSystem implements System
      * @param system - the System to perform the state check on
      * @param state - the state that the blendMode will pulled from
      */
-    private static _checkPolygonOffset(system: GlStateSystem, state: State): void
+    static #_checkPolygonOffset(system: GlStateSystem, state: State): void
     {
         system.setPolygonOffset(1, state.polygonOffset);
     }

@@ -242,7 +242,7 @@ class CanvasTextGeneratorClass
 
                 if (style._stroke?.width)
                 {
-                    this._drawLetterSpacing(
+                    this.#_drawLetterSpacing(
                         lines[i],
                         style,
                         canvasAndContext,
@@ -254,7 +254,7 @@ class CanvasTextGeneratorClass
 
                 if (style._fill !== undefined)
                 {
-                    this._drawLetterSpacing(
+                    this.#_drawLetterSpacing(
                         lines[i],
                         style,
                         canvasAndContext,
@@ -283,7 +283,7 @@ class CanvasTextGeneratorClass
      * @param isStroke - Whether to render the stroke (true) or fill (false)
      * @private
      */
-    private _drawLetterSpacing(
+    #_drawLetterSpacing(
         text: string,
         style: TextStyle,
         canvasAndContext: CanvasAndContext,

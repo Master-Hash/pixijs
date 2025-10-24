@@ -44,28 +44,28 @@ export class GlShaderSystem
     /** @internal */
     public _activeProgram: GlProgram = null;
 
-    private _programDataHash: Record<string, GlProgramData> = Object.create(null);
-    private readonly _renderer: WebGLRenderer;
+    #_programDataHash: Record<string, GlProgramData> = Object.create(null);
+    readonly #_renderer: WebGLRenderer;
     /** @internal */
     public _gl: WebGL2RenderingContext;
-    private _shaderSyncFunctions: Record<string, ShaderSyncFunction> = Object.create(null);
+    #_shaderSyncFunctions: Record<string, ShaderSyncFunction> = Object.create(null);
 
     constructor(renderer: WebGLRenderer)
     {
-        this._renderer = renderer;
-        this._renderer.renderableGC.addManagedHash(this, '_programDataHash');
+        this.#_renderer = renderer;
+        this.#_renderer.renderableGC.addManagedHash(this, '_programDataHash');
     }
 
     protected contextChange(gl: GlRenderingContext): void
     {
         this._gl = gl;
 
-        this._programDataHash = Object.create(null);
+        this.#_programDataHash = Object.create(null);
         /**
          * these need to also be cleared as internally some uniforms are set as an optimisation as the sync
          * function is generated. Specifically the texture ints.
          */
-        this._shaderSyncFunctions = Object.create(null);
+        this.#_shaderSyncFunctions = Object.create(null);
         this._activeProgram = null;
     }
 
@@ -77,23 +77,23 @@ export class GlShaderSystem
      */
     public bind(shader: Shader, skipSync?: boolean): void
     {
-        this._setProgram(shader.glProgram);
+        this.#_setProgram(shader.glProgram);
 
         if (skipSync) return;
 
         defaultSyncData.textureCount = 0;
         defaultSyncData.blockIndex = 0;
 
-        let syncFunction = this._shaderSyncFunctions[shader.glProgram._key];
+        let syncFunction = this.#_shaderSyncFunctions[shader.glProgram._key];
 
         if (!syncFunction)
         {
-            syncFunction = this._shaderSyncFunctions[shader.glProgram._key] = this._generateShaderSync(shader, this);
+            syncFunction = this.#_shaderSyncFunctions[shader.glProgram._key] = this._generateShaderSync(shader, this);
         }
 
         // TODO: take into account number of TF buffers. Currently works only with interleaved
-        this._renderer.buffer.nextBindBase(!!shader.glProgram.transformFeedbackVaryings);
-        syncFunction(this._renderer, shader, defaultSyncData);
+        this.#_renderer.buffer.nextBindBase(!!shader.glProgram.transformFeedbackVaryings);
+        syncFunction(this.#_renderer, shader, defaultSyncData);
     }
 
     /**
@@ -102,7 +102,7 @@ export class GlShaderSystem
      */
     public updateUniformGroup(uniformGroup: UniformGroup): void
     {
-        this._renderer.uniformGroup.updateUniformGroup(uniformGroup, this._activeProgram, defaultSyncData);
+        this.#_renderer.uniformGroup.updateUniformGroup(uniformGroup, this._activeProgram, defaultSyncData);
     }
 
     /**
@@ -113,14 +113,14 @@ export class GlShaderSystem
      */
     public bindUniformBlock(uniformGroup: UniformGroup | BufferResource, name: string, index = 0): void
     {
-        const bufferSystem = this._renderer.buffer;
+        const bufferSystem = this.#_renderer.buffer;
         const programData = this._getProgramData(this._activeProgram);
 
         const isBufferResource = (uniformGroup as BufferResource)._bufferResource;
 
         if (!isBufferResource)
         {
-            this._renderer.ubo.updateUniformGroup(uniformGroup as UniformGroup);
+            this.#_renderer.ubo.updateUniformGroup(uniformGroup as UniformGroup);
         }
 
         const buffer = uniformGroup.buffer;
@@ -154,10 +154,10 @@ export class GlShaderSystem
         if (programData.uniformBlockBindings[index] === boundLocation) return;
         programData.uniformBlockBindings[index] = boundLocation;
 
-        this._renderer.gl.uniformBlockBinding(programData.program, uniformBlockIndex, boundLocation);
+        this.#_renderer.gl.uniformBlockBinding(programData.program, uniformBlockIndex, boundLocation);
     }
 
-    private _setProgram(program: GlProgram)
+    #_setProgram(program: GlProgram)
     {
         if (this._activeProgram === program) return;
 
@@ -174,32 +174,32 @@ export class GlShaderSystem
      */
     public _getProgramData(program: GlProgram): GlProgramData
     {
-        return this._programDataHash[program._key] || this._createProgramData(program);
+        return this.#_programDataHash[program._key] || this.#_createProgramData(program);
     }
 
-    private _createProgramData(program: GlProgram): GlProgramData
+    #_createProgramData(program: GlProgram): GlProgramData
     {
         const key = program._key;
 
-        this._programDataHash[key] = generateProgram(this._gl, program);
+        this.#_programDataHash[key] = generateProgram(this._gl, program);
 
-        return this._programDataHash[key];
+        return this.#_programDataHash[key];
     }
 
     public destroy(): void
     {
-        for (const key of Object.keys(this._programDataHash))
+        for (const key of Object.keys(this.#_programDataHash))
         {
-            const programData = this._programDataHash[key];
+            const programData = this.#_programDataHash[key];
 
             programData.destroy();
-            this._programDataHash[key] = null;
+            this.#_programDataHash[key] = null;
         }
 
-        this._programDataHash = null;
-        this._shaderSyncFunctions = null;
+        this.#_programDataHash = null;
+        this.#_shaderSyncFunctions = null;
         this._activeProgram = null;
-        (this._renderer as null) = null;
+        (this.#_renderer as null) = null;
         this._gl = null;
     }
 

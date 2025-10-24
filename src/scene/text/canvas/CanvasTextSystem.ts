@@ -29,16 +29,16 @@ export class CanvasTextSystem implements System
         name: 'canvasText',
     } as const;
 
-    private readonly _renderer: Renderer;
+    readonly #_renderer: Renderer;
 
-    private readonly _activeTextures: Record<string, {
+    readonly #_activeTextures: Record<string, {
         texture: Texture,
         usageCount: number,
     }> = {};
 
     constructor(_renderer: Renderer)
     {
-        this._renderer = _renderer;
+        this.#_renderer = _renderer;
     }
 
     /** @deprecated since 8.0.0 */
@@ -90,7 +90,7 @@ export class CanvasTextSystem implements System
 
         const { text, style, textureStyle } = options;
 
-        const resolution = options.resolution ?? this._renderer.resolution;
+        const resolution = options.resolution ?? this.#_renderer.resolution;
 
         const { frame, canvasAndContext } = CanvasTextGenerator.getCanvasAndContext({
             text: text as string,
@@ -119,7 +119,7 @@ export class CanvasTextSystem implements System
         {
             // apply the filters to the texture if required..
             // this returns a new texture with the filters applied
-            const filteredTexture = this._applyFilters(texture, style.filters as Filter[]);
+            const filteredTexture = this.#_applyFilters(texture, style.filters as Filter[]);
 
             // return the original texture to the pool so we can reuse the next frame
             this.returnTexture(texture);
@@ -130,7 +130,7 @@ export class CanvasTextSystem implements System
             return filteredTexture;
         }
 
-        this._renderer.texture.initSource(texture._source);
+        this.#_renderer.texture.initSource(texture._source);
 
         CanvasTextGenerator.returnCanvasAndContext(canvasAndContext);
 
@@ -180,14 +180,14 @@ export class CanvasTextSystem implements System
      */
     public getManagedTexture(text: Text)
     {
-        text._resolution = text._autoResolution ? this._renderer.resolution : text.resolution;
+        text._resolution = text._autoResolution ? this.#_renderer.resolution : text.resolution;
         const textKey = text.styleKey;
 
-        if (this._activeTextures[textKey])
+        if (this.#_activeTextures[textKey])
         {
-            this._increaseReferenceCount(textKey);
+            this.#_increaseReferenceCount(textKey);
 
-            return this._activeTextures[textKey].texture;
+            return this.#_activeTextures[textKey].texture;
         }
 
         const texture = this.getTexture({
@@ -197,7 +197,7 @@ export class CanvasTextSystem implements System
             textureStyle: text.textureStyle,
         });
 
-        this._activeTextures[textKey] = {
+        this.#_activeTextures[textKey] = {
             texture,
             usageCount: 1,
         };
@@ -215,14 +215,14 @@ export class CanvasTextSystem implements System
      */
     public decreaseReferenceCount(textKey: string)
     {
-        const activeTexture = this._activeTextures[textKey];
+        const activeTexture = this.#_activeTextures[textKey];
 
         activeTexture.usageCount--;
 
         if (activeTexture.usageCount === 0)
         {
             this.returnTexture(activeTexture.texture);
-            this._activeTextures[textKey] = null;
+            this.#_activeTextures[textKey] = null;
         }
     }
 
@@ -233,12 +233,12 @@ export class CanvasTextSystem implements System
      */
     public getReferenceCount(textKey: string)
     {
-        return this._activeTextures[textKey]?.usageCount ?? 0;
+        return this.#_activeTextures[textKey]?.usageCount ?? 0;
     }
 
-    private _increaseReferenceCount(textKey: string)
+    #_increaseReferenceCount(textKey: string)
     {
-        this._activeTextures[textKey].usageCount++;
+        this.#_activeTextures[textKey].usageCount++;
     }
 
     /**
@@ -251,13 +251,13 @@ export class CanvasTextSystem implements System
      * @param {Filter[]} filters - The filters to apply to the texture.
      * @returns {Texture} The resulting texture after all filters have been applied.
      */
-    private _applyFilters(texture: Texture, filters: Filter[]): Texture
+    #_applyFilters(texture: Texture, filters: Filter[]): Texture
     {
         // Save the current render target so it can be restored later
-        const currentRenderTarget = this._renderer.renderTarget.renderTarget;
+        const currentRenderTarget = this.#_renderer.renderTarget.renderTarget;
 
         // Apply the filters to the texture and get the resulting texture
-        const resultTexture = this._renderer.filter.generateFilteredTexture({
+        const resultTexture = this.#_renderer.filter.generateFilteredTexture({
             texture,
             filters,
         });
@@ -265,7 +265,7 @@ export class CanvasTextSystem implements System
         // Set the alpha mode of the resulting texture to 'premultiplied-alpha'
 
         // Restore the previous render target
-        this._renderer.renderTarget.bind(currentRenderTarget, false);
+        this.#_renderer.renderTarget.bind(currentRenderTarget, false);
 
         // Return the resulting texture with the filters applied
         return resultTexture;
@@ -273,12 +273,12 @@ export class CanvasTextSystem implements System
 
     public destroy(): void
     {
-        (this._renderer as null) = null;
+        (this.#_renderer as null) = null;
         // Clean up active textures
-        for (const key in this._activeTextures)
+        for (const key in this.#_activeTextures)
         {
-            if (this._activeTextures[key]) this.returnTexture(this._activeTextures[key].texture);
+            if (this.#_activeTextures[key]) this.returnTexture(this.#_activeTextures[key].texture);
         }
-        (this._activeTextures as null) = null;
+        (this.#_activeTextures as null) = null;
     }
 }

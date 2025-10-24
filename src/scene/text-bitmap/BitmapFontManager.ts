@@ -467,7 +467,7 @@ class BitmapFontManagerClass
         const textStyle = options.style;
 
         const style = textStyle instanceof TextStyle ? textStyle : new TextStyle(textStyle);
-        const overrideFill = options.dynamicFill ?? this._canUseTintForStyle(style);
+        const overrideFill = options.dynamicFill ?? this.#_canUseTintForStyle(style);
         const font = new DynamicBitmapFont({
             style,
             overrideFill,
@@ -511,7 +511,7 @@ class BitmapFontManagerClass
      * @returns true if the style can use tinting, false if colors must be baked in
      * @private
      */
-    private _canUseTintForStyle(style: TextStyle): boolean
+    #_canUseTintForStyle(style: TextStyle): boolean
     {
         // Exclude strokes, non black shadows and ensure
         // we have a non gradient or pattern fill,

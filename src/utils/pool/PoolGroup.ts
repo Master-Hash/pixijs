@@ -22,7 +22,7 @@ export class PoolGroupClass
      * A map to store the pools by their class type.
      * @private
      */
-    private readonly _poolsByClass: Map<PoolItemConstructor<PoolItem>, Pool<PoolItem>> = new Map();
+    readonly #_poolsByClass: Map<PoolItemConstructor<PoolItem>, Pool<PoolItem>> = new Map();
 
     /**
      * Prepopulates a specific pool with a given number of items.
@@ -70,12 +70,12 @@ export class PoolGroupClass
      */
     public getPool<T extends PoolItem>(ClassType: PoolItemConstructor<T>): Pool<T>
     {
-        if (!this._poolsByClass.has(ClassType))
+        if (!this.#_poolsByClass.has(ClassType))
         {
-            this._poolsByClass.set(ClassType, new Pool(ClassType));
+            this.#_poolsByClass.set(ClassType, new Pool(ClassType));
         }
 
-        return this._poolsByClass.get(ClassType) as Pool<T>;
+        return this.#_poolsByClass.get(ClassType) as Pool<T>;
     }
 
     /** gets the usage stats of each pool in the system */
@@ -83,7 +83,7 @@ export class PoolGroupClass
     {
         const stats = {} as Record<string, {free: number; used: number; size: number}>;
 
-        this._poolsByClass.forEach((pool) =>
+        this.#_poolsByClass.forEach((pool) =>
         {
             // TODO: maybe we should allow the name to be set when `createEntity` is called
             const name = stats[pool._classType.name]
@@ -102,8 +102,8 @@ export class PoolGroupClass
     /** Clears all pools in the group. This will reset all pools and free their resources. */
     public clear(): void
     {
-        this._poolsByClass.forEach((pool) => pool.clear());
-        this._poolsByClass.clear();
+        this.#_poolsByClass.forEach((pool) => pool.clear());
+        this.#_poolsByClass.clear();
     }
 }
 

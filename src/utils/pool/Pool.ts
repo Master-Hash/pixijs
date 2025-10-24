@@ -8,9 +8,9 @@ export class Pool<T extends PoolItem>
 {
     /** @internal */
     public readonly _classType: PoolItemConstructor<T>;
-    private readonly _pool: T[] = [];
-    private _count = 0;
-    private _index = 0;
+    readonly #_pool: T[] = [];
+    #_count = 0;
+    #_index = 0;
 
     /**
      * Constructs a new Pool.
@@ -35,10 +35,10 @@ export class Pool<T extends PoolItem>
     {
         for (let i = 0; i < total; i++)
         {
-            this._pool[this._index++] = new this._classType();
+            this.#_pool[this.#_index++] = new this._classType();
         }
 
-        this._count += total;
+        this.#_count += total;
     }
 
     /**
@@ -51,9 +51,9 @@ export class Pool<T extends PoolItem>
     {
         let item;
 
-        if (this._index > 0)
+        if (this.#_index > 0)
         {
-            item = this._pool[--this._index];
+            item = this.#_pool[--this.#_index];
         }
         else
         {
@@ -73,7 +73,7 @@ export class Pool<T extends PoolItem>
     {
         item.reset?.();
 
-        this._pool[this._index++] = item;
+        this.#_pool[this.#_index++] = item;
     }
 
     /**
@@ -82,7 +82,7 @@ export class Pool<T extends PoolItem>
      */
     get totalSize(): number
     {
-        return this._count;
+        return this.#_count;
     }
 
     /**
@@ -91,7 +91,7 @@ export class Pool<T extends PoolItem>
      */
     get totalFree(): number
     {
-        return this._index;
+        return this.#_index;
     }
 
     /**
@@ -100,22 +100,22 @@ export class Pool<T extends PoolItem>
      */
     get totalUsed(): number
     {
-        return this._count - this._index;
+        return this.#_count - this.#_index;
     }
 
     /** clears the pool */
     public clear()
     {
-        if (this._pool.length > 0 && this._pool[0].destroy)
+        if (this.#_pool.length > 0 && this.#_pool[0].destroy)
         {
-            for (let i = 0; i < this._index; i++)
+            for (let i = 0; i < this.#_index; i++)
             {
-                this._pool[i].destroy();
+                this.#_pool[i].destroy();
             }
         }
-        this._pool.length = 0;
-        this._count = 0;
-        this._index = 0;
+        this.#_pool.length = 0;
+        this.#_count = 0;
+        this.#_index = 0;
     }
 }
 

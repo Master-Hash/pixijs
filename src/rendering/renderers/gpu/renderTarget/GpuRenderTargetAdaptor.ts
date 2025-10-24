@@ -19,13 +19,13 @@ import type { WebGPURenderer } from '../WebGPURenderer';
  */
 export class GpuRenderTargetAdaptor implements RenderTargetAdaptor<GpuRenderTarget>
 {
-    private _renderTargetSystem: RenderTargetSystem<GpuRenderTarget>;
-    private _renderer: WebGPURenderer<HTMLCanvasElement>;
+    #_renderTargetSystem: RenderTargetSystem<GpuRenderTarget>;
+    #_renderer: WebGPURenderer<HTMLCanvasElement>;
 
     public init(renderer: WebGPURenderer, renderTargetSystem: RenderTargetSystem<GpuRenderTarget>): void
     {
-        this._renderer = renderer;
-        this._renderTargetSystem = renderTargetSystem;
+        this.#_renderer = renderer;
+        this.#_renderTargetSystem = renderTargetSystem;
     }
 
     public copyToTexture(
@@ -36,9 +36,9 @@ export class GpuRenderTargetAdaptor implements RenderTargetAdaptor<GpuRenderTarg
         originDest: { x: number; y: number; },
     )
     {
-        const renderer = this._renderer;
+        const renderer = this.#_renderer;
 
-        const baseGpuTexture = this._getGpuColorTexture(
+        const baseGpuTexture = this.#_getGpuColorTexture(
             sourceRenderSurfaceTexture
         );
 
@@ -68,7 +68,7 @@ export class GpuRenderTargetAdaptor implements RenderTargetAdaptor<GpuRenderTarg
         viewport?: Rectangle
     )
     {
-        const renderTargetSystem = this._renderTargetSystem;
+        const renderTargetSystem = this.#_renderTargetSystem;
 
         const gpuRenderTarget = renderTargetSystem.getGpuRenderTarget(renderTarget);
 
@@ -78,14 +78,14 @@ export class GpuRenderTargetAdaptor implements RenderTargetAdaptor<GpuRenderTarg
 
         // TODO we should not finish a render pass each time we bind
         // for example filters - we would want to push / pop render targets
-        this._renderer.pipeline.setRenderTarget(gpuRenderTarget);
-        this._renderer.encoder.beginRenderPass(gpuRenderTarget);
-        this._renderer.encoder.setViewport(viewport);
+        this.#_renderer.pipeline.setRenderTarget(gpuRenderTarget);
+        this.#_renderer.encoder.beginRenderPass(gpuRenderTarget);
+        this.#_renderer.encoder.setViewport(viewport);
     }
 
     public finishRenderPass()
     {
-        this._renderer.encoder.endRenderPass();
+        this.#_renderer.encoder.endRenderPass();
     }
 
     /**
@@ -94,16 +94,16 @@ export class GpuRenderTargetAdaptor implements RenderTargetAdaptor<GpuRenderTarg
      * @param renderTarget
      * @returns a gpu texture
      */
-    private _getGpuColorTexture(renderTarget: RenderTarget): GPUTexture
+    #_getGpuColorTexture(renderTarget: RenderTarget): GPUTexture
     {
-        const gpuRenderTarget = this._renderTargetSystem.getGpuRenderTarget(renderTarget);
+        const gpuRenderTarget = this.#_renderTargetSystem.getGpuRenderTarget(renderTarget);
 
         if (gpuRenderTarget.contexts[0])
         {
             return gpuRenderTarget.contexts[0].getCurrentTexture();
         }
 
-        return this._renderer.texture.getGpuSource(
+        return this.#_renderer.texture.getGpuSource(
             renderTarget.colorTextures[0].source
         );
     }
@@ -119,7 +119,7 @@ export class GpuRenderTargetAdaptor implements RenderTargetAdaptor<GpuRenderTarg
             clear = clear ? CLEAR.ALL : CLEAR.NONE;
         }
 
-        const renderTargetSystem = this._renderTargetSystem;
+        const renderTargetSystem = this.#_renderTargetSystem;
 
         const gpuRenderTarget = renderTargetSystem.getGpuRenderTarget(renderTarget);
 
@@ -141,7 +141,7 @@ export class GpuRenderTargetAdaptor implements RenderTargetAdaptor<GpuRenderTarg
                 }
                 else
                 {
-                    view = this._renderer.texture.getGpuSource(texture).createView({
+                    view = this.#_renderer.texture.getGpuSource(texture).createView({
                         mipLevelCount: 1,
                     });
                 }
@@ -149,7 +149,7 @@ export class GpuRenderTargetAdaptor implements RenderTargetAdaptor<GpuRenderTarg
                 if (gpuRenderTarget.msaaTextures[i])
                 {
                     resolveTarget = view;
-                    view = this._renderer.texture.getTextureView(
+                    view = this.#_renderer.texture.getTextureView(
                         gpuRenderTarget.msaaTextures[i]
                     );
                 }
@@ -184,7 +184,7 @@ export class GpuRenderTargetAdaptor implements RenderTargetAdaptor<GpuRenderTarg
             const depthLoadOp = (clear & CLEAR.DEPTH ? 'clear' : 'load') as GPULoadOp;
 
             depthStencilAttachment = {
-                view: this._renderer.texture
+                view: this.#_renderer.texture
                     .getGpuSource(renderTarget.depthStencilTexture.source)
                     .createView(),
                 stencilStoreOp: 'store',
@@ -207,7 +207,7 @@ export class GpuRenderTargetAdaptor implements RenderTargetAdaptor<GpuRenderTarg
     {
         if (!clear) return;
 
-        const { gpu, encoder } = this._renderer;
+        const { gpu, encoder } = this.#_renderer;
 
         const device = gpu.device;
 
@@ -256,7 +256,7 @@ export class GpuRenderTargetAdaptor implements RenderTargetAdaptor<GpuRenderTarg
                 try
                 {
                     context.configure({
-                        device: this._renderer.gpu.device,
+                        device: this.#_renderer.gpu.device,
                         usage: GPUTextureUsage.TEXTURE_BINDING
                             | GPUTextureUsage.COPY_DST
                             | GPUTextureUsage.RENDER_ATTACHMENT
@@ -319,7 +319,7 @@ export class GpuRenderTargetAdaptor implements RenderTargetAdaptor<GpuRenderTarg
     public ensureDepthStencilTexture(renderTarget: RenderTarget)
     {
         // TODO This function will be more useful once we cache the descriptors
-        const gpuRenderTarget = this._renderTargetSystem.getGpuRenderTarget(renderTarget);
+        const gpuRenderTarget = this.#_renderTargetSystem.getGpuRenderTarget(renderTarget);
 
         if (renderTarget.depthStencilTexture && gpuRenderTarget.msaa)
         {
@@ -329,7 +329,7 @@ export class GpuRenderTargetAdaptor implements RenderTargetAdaptor<GpuRenderTarg
 
     public resizeGpuRenderTarget(renderTarget: RenderTarget)
     {
-        const gpuRenderTarget = this._renderTargetSystem.getGpuRenderTarget(renderTarget);
+        const gpuRenderTarget = this.#_renderTargetSystem.getGpuRenderTarget(renderTarget);
 
         gpuRenderTarget.width = renderTarget.width;
         gpuRenderTarget.height = renderTarget.height;

@@ -30,29 +30,29 @@ export class GpuShaderSystem
         name: 'shader',
     } as const;
 
-    private _gpu: GPU;
+    #_gpu: GPU;
 
-    private readonly _gpuProgramData: Record<number, GPUProgramData> = Object.create(null);
+    readonly #_gpuProgramData: Record<number, GPUProgramData> = Object.create(null);
 
     protected contextChange(gpu: GPU): void
     {
-        this._gpu = gpu;
+        this.#_gpu = gpu;
     }
 
     public getProgramData(program: GpuProgram)
     {
-        return this._gpuProgramData[program._layoutKey] || this._createGPUProgramData(program);
+        return this.#_gpuProgramData[program._layoutKey] || this.#_createGPUProgramData(program);
     }
 
-    private _createGPUProgramData(program: GpuProgram)
+    #_createGPUProgramData(program: GpuProgram)
     {
-        const device = this._gpu.device;
+        const device = this.#_gpu.device;
 
         const bindGroups = program.gpuLayout.map((group) => device.createBindGroupLayout({ entries: group }));
 
         const pipelineLayoutDesc = { bindGroupLayouts: bindGroups };
 
-        this._gpuProgramData[program._layoutKey] = {
+        this.#_gpuProgramData[program._layoutKey] = {
             bindGroups,
             pipeline: device.createPipelineLayout(pipelineLayoutDesc),
         };
@@ -64,13 +64,13 @@ export class GpuShaderSystem
         //     pipeline: 'auto',
         // };
 
-        return this._gpuProgramData[program._layoutKey];
+        return this.#_gpuProgramData[program._layoutKey];
     }
 
     public destroy(): void
     {
         // TODO destroy the _gpuProgramData
-        this._gpu = null;
-        (this._gpuProgramData as null) = null;
+        this.#_gpu = null;
+        (this.#_gpuProgramData as null) = null;
     }
 }
