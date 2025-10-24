@@ -41,16 +41,16 @@ export class GpuLimitsSystem implements System
     /** The maximum number of batchable textures */
     public maxBatchableTextures: number;
 
-    private readonly _renderer: WebGPURenderer;
+    readonly #_renderer: WebGPURenderer;
 
     constructor(renderer: WebGPURenderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public contextChange(): void
     {
-        this.maxTextures = this._renderer.device.gpu.device.limits.maxSampledTexturesPerShaderStage;
+        this.maxTextures = this.#_renderer.device.gpu.device.limits.maxSampledTexturesPerShaderStage;
         this.maxBatchableTextures = this.maxTextures;
     }
 

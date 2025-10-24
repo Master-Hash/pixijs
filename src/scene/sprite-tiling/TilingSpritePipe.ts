@@ -59,21 +59,21 @@ export class TilingSpritePipe implements RenderPipe<TilingSprite>
         name: 'tilingSprite',
     } as const;
 
-    private _renderer: Renderer;
-    private readonly _state: State = State.default2d;
+    #_renderer: Renderer;
+    readonly #_state: State = State.default2d;
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public validateRenderable(renderable: TilingSprite): boolean
     {
-        const tilingSpriteData = this._getTilingSpriteData(renderable);
+        const tilingSpriteData = this.#_getTilingSpriteData(renderable);
 
         const couldBatch = tilingSpriteData.canBatch;
 
-        this._updateCanBatch(renderable);
+        this.#_updateCanBatch(renderable);
 
         const canBatch = tilingSpriteData.canBatch;
 
@@ -97,12 +97,12 @@ export class TilingSpritePipe implements RenderPipe<TilingSprite>
 
     public addRenderable(tilingSprite: TilingSprite, instructionSet: InstructionSet)
     {
-        const batcher = this._renderer.renderPipes.batch;
+        const batcher = this.#_renderer.renderPipes.batch;
 
         // init
-        this._updateCanBatch(tilingSprite);
+        this.#_updateCanBatch(tilingSprite);
 
-        const tilingSpriteData = this._getTilingSpriteData(tilingSprite);
+        const tilingSpriteData = this.#_getTilingSpriteData(tilingSprite);
 
         const { geometry, canBatch } = tilingSpriteData;
 
@@ -114,7 +114,7 @@ export class TilingSpritePipe implements RenderPipe<TilingSprite>
 
             if (tilingSprite.didViewUpdate)
             {
-                this._updateBatchableMesh(tilingSprite);
+                this.#_updateBatchableMesh(tilingSprite);
 
                 batchableMesh.geometry = geometry;
                 batchableMesh.renderable = tilingSprite;
@@ -122,7 +122,7 @@ export class TilingSpritePipe implements RenderPipe<TilingSprite>
                 batchableMesh.setTexture(tilingSprite._texture);
             }
 
-            batchableMesh.roundPixels = (this._renderer._roundPixels | tilingSprite._roundPixels) as 0 | 1;
+            batchableMesh.roundPixels = (this.#_renderer._roundPixels | tilingSprite._roundPixels) as 0 | 1;
 
             batcher.addToBatch(batchableMesh, instructionSet);
         }
@@ -140,15 +140,15 @@ export class TilingSpritePipe implements RenderPipe<TilingSprite>
 
     public execute(tilingSprite: TilingSprite)
     {
-        const { shader } = this._getTilingSpriteData(tilingSprite);
+        const { shader } = this.#_getTilingSpriteData(tilingSprite);
 
-        shader.groups[0] = this._renderer.globalUniforms.bindGroup;
+        shader.groups[0] = this.#_renderer.globalUniforms.bindGroup;
 
         // deal with local uniforms...
         const localUniforms = shader.resources.localUniforms.uniforms;
 
         localUniforms.uTransformMatrix = tilingSprite.groupTransform;
-        localUniforms.uRound = this._renderer._roundPixels | tilingSprite._roundPixels;
+        localUniforms.uRound = this.#_renderer._roundPixels | tilingSprite._roundPixels;
 
         color32BitToUniform(
             tilingSprite.groupColorAlpha,
@@ -156,18 +156,18 @@ export class TilingSpritePipe implements RenderPipe<TilingSprite>
             0
         );
 
-        this._state.blendMode = getAdjustedBlendModeBlend(tilingSprite.groupBlendMode, tilingSprite.texture._source);
+        this.#_state.blendMode = getAdjustedBlendModeBlend(tilingSprite.groupBlendMode, tilingSprite.texture._source);
 
-        this._renderer.encoder.draw({
+        this.#_renderer.encoder.draw({
             geometry: sharedQuad,
             shader,
-            state: this._state,
+            state: this.#_state,
         });
     }
 
     public updateRenderable(tilingSprite: TilingSprite)
     {
-        const tilingSpriteData = this._getTilingSpriteData(tilingSprite);
+        const tilingSpriteData = this.#_getTilingSpriteData(tilingSprite);
 
         const { canBatch } = tilingSpriteData;
 
@@ -175,7 +175,7 @@ export class TilingSpritePipe implements RenderPipe<TilingSprite>
         {
             const { batchableMesh } = tilingSpriteData;
 
-            if (tilingSprite.didViewUpdate) this._updateBatchableMesh(tilingSprite);
+            if (tilingSprite.didViewUpdate) this.#_updateBatchableMesh(tilingSprite);
 
             batchableMesh._batcher.updateElement(batchableMesh);
         }
@@ -195,24 +195,24 @@ export class TilingSpritePipe implements RenderPipe<TilingSprite>
         }
     }
 
-    private _getTilingSpriteData(renderable: TilingSprite): TilingSpriteGpuData
+    #_getTilingSpriteData(renderable: TilingSprite): TilingSpriteGpuData
     {
-        return renderable._gpuData[this._renderer.uid] || this._initTilingSpriteData(renderable);
+        return renderable._gpuData[this.#_renderer.uid] || this.#_initTilingSpriteData(renderable);
     }
 
-    private _initTilingSpriteData(tilingSprite: TilingSprite): TilingSpriteGpuData
+    #_initTilingSpriteData(tilingSprite: TilingSprite): TilingSpriteGpuData
     {
         const gpuData = new TilingSpriteGpuData();
 
         gpuData.renderable = tilingSprite;
-        tilingSprite._gpuData[this._renderer.uid] = gpuData;
+        tilingSprite._gpuData[this.#_renderer.uid] = gpuData;
 
         return gpuData;
     }
 
-    private _updateBatchableMesh(tilingSprite: TilingSprite)
+    #_updateBatchableMesh(tilingSprite: TilingSprite)
     {
-        const renderableData = this._getTilingSpriteData(tilingSprite);
+        const renderableData = this.#_getTilingSpriteData(tilingSprite);
 
         const { geometry } = renderableData;
 
@@ -230,19 +230,19 @@ export class TilingSpritePipe implements RenderPipe<TilingSprite>
 
     public destroy()
     {
-        this._renderer = null;
+        this.#_renderer = null;
     }
 
-    private _updateCanBatch(tilingSprite: TilingSprite)
+    #_updateCanBatch(tilingSprite: TilingSprite)
     {
-        const renderableData = this._getTilingSpriteData(tilingSprite);
+        const renderableData = this.#_getTilingSpriteData(tilingSprite);
         const texture = tilingSprite.texture;
 
         let _nonPowOf2wrapping = true;
 
-        if (this._renderer.type === RendererType.WEBGL)
+        if (this.#_renderer.type === RendererType.WEBGL)
         {
-            _nonPowOf2wrapping = (this._renderer as WebGLRenderer).context.supports.nonPowOf2wrapping;
+            _nonPowOf2wrapping = (this.#_renderer as WebGLRenderer).context.supports.nonPowOf2wrapping;
         }
 
         renderableData.canBatch = texture.textureMatrix.isSimple && (_nonPowOf2wrapping || texture.source.isPowerOfTwo);

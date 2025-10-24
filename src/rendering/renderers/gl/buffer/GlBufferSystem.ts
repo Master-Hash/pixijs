@@ -36,50 +36,50 @@ export class GlBufferSystem implements System
         name: 'buffer',
     } as const;
 
-    private _gl: GlRenderingContext;
-    private _gpuBuffers: {[key: number]: GlBuffer} = Object.create(null);
+    #_gl: GlRenderingContext;
+    #_gpuBuffers: {[key: number]: GlBuffer} = Object.create(null);
 
     /** Cache keeping track of the base bound buffer bases */
-    private _boundBufferBases: {[key: number]: GlBuffer} = Object.create(null);
+    #_boundBufferBases: {[key: number]: GlBuffer} = Object.create(null);
 
-    private _renderer: WebGLRenderer;
+    #_renderer: WebGLRenderer;
 
-    private _minBaseLocation = 0;
-    private _maxBindings: number;
-    private _nextBindBaseIndex = this._minBaseLocation;
-    private _bindCallId = 0;
+    #_minBaseLocation = 0;
+    #_maxBindings: number;
+    #_nextBindBaseIndex = this.#_minBaseLocation;
+    #_bindCallId = 0;
 
     /**
      * @param {Renderer} renderer - The renderer this System works for.
      */
     constructor(renderer: WebGLRenderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
 
-        this._renderer.renderableGC.addManagedHash(this, '_gpuBuffers');
+        this.#_renderer.renderableGC.addManagedHash(this, '_gpuBuffers');
     }
 
     /** @ignore */
     public destroy(): void
     {
-        this._renderer = null;
-        this._gl = null;
-        this._gpuBuffers = null;
-        (this._boundBufferBases as null) = null;
+        this.#_renderer = null;
+        this.#_gl = null;
+        this.#_gpuBuffers = null;
+        (this.#_boundBufferBases as null) = null;
     }
 
     /** Sets up the renderer context and necessary buffers. */
     protected contextChange(): void
     {
-        this._gl = this._renderer.gl;
+        this.#_gl = this.#_renderer.gl;
 
-        this._gpuBuffers = Object.create(null);
-        this._maxBindings = this._renderer.limits.maxUniformBindings;
+        this.#_gpuBuffers = Object.create(null);
+        this.#_maxBindings = this.#_renderer.limits.maxUniformBindings;
     }
 
     public getGlBuffer(buffer: Buffer): GlBuffer
     {
-        return this._gpuBuffers[buffer.uid] || this.createGLBuffer(buffer);
+        return this.#_gpuBuffers[buffer.uid] || this.createGLBuffer(buffer);
     }
 
     /**
@@ -88,7 +88,7 @@ export class GlBufferSystem implements System
      */
     public bind(buffer: Buffer): void
     {
-        const { _gl: gl } = this;
+        const gl = this.#_gl;
 
         const glBuffer = this.getGlBuffer(buffer);
 
@@ -104,11 +104,11 @@ export class GlBufferSystem implements System
      */
     public bindBufferBase(glBuffer: GlBuffer, index: number): void
     {
-        const { _gl: gl } = this;
+        const gl = this.#_gl;
 
-        if (this._boundBufferBases[index] !== glBuffer)
+        if (this.#_boundBufferBases[index] !== glBuffer)
         {
-            this._boundBufferBases[index] = glBuffer;
+            this.#_boundBufferBases[index] = glBuffer;
             glBuffer._lastBindBaseLocation = index;
 
             gl.bindBufferBase(gl.UNIFORM_BUFFER, index, glBuffer.buffer);
@@ -117,15 +117,15 @@ export class GlBufferSystem implements System
 
     public nextBindBase(hasTransformFeedback: boolean)
     {
-        this._bindCallId++;
-        this._minBaseLocation = 0;
+        this.#_bindCallId++;
+        this.#_minBaseLocation = 0;
         if (hasTransformFeedback)
         {
-            this._boundBufferBases[0] = null;
-            this._minBaseLocation = 1;
-            if (this._nextBindBaseIndex < 1)
+            this.#_boundBufferBases[0] = null;
+            this.#_minBaseLocation = 1;
+            if (this.#_nextBindBaseIndex < 1)
             {
-                this._nextBindBaseIndex = 1;
+                this.#_nextBindBaseIndex = 1;
             }
         }
     }
@@ -135,27 +135,27 @@ export class GlBufferSystem implements System
         let freeIndex = this.getLastBindBaseLocation(glBuffer);
 
         // check if it is already bound..
-        if (freeIndex >= this._minBaseLocation)
+        if (freeIndex >= this.#_minBaseLocation)
         {
-            glBuffer._lastBindCallId = this._bindCallId;
+            glBuffer._lastBindCallId = this.#_bindCallId;
 
             return freeIndex;
         }
 
         let loop = 0;
-        let nextIndex = this._nextBindBaseIndex;
+        let nextIndex = this.#_nextBindBaseIndex;
 
         while (loop < 2)
         {
-            if (nextIndex >= this._maxBindings)
+            if (nextIndex >= this.#_maxBindings)
             {
-                nextIndex = this._minBaseLocation;
+                nextIndex = this.#_minBaseLocation;
                 loop++;
             }
 
-            const curBuf = this._boundBufferBases[nextIndex];
+            const curBuf = this.#_boundBufferBases[nextIndex];
 
-            if (curBuf && curBuf._lastBindCallId === this._bindCallId)
+            if (curBuf && curBuf._lastBindCallId === this.#_bindCallId)
             {
                 nextIndex++;
                 continue;
@@ -164,7 +164,7 @@ export class GlBufferSystem implements System
         }
 
         freeIndex = nextIndex;
-        this._nextBindBaseIndex = nextIndex + 1;
+        this.#_nextBindBaseIndex = nextIndex + 1;
 
         if (loop >= 2)
         {
@@ -172,8 +172,8 @@ export class GlBufferSystem implements System
             return -1;
         }
 
-        glBuffer._lastBindCallId = this._bindCallId;
-        this._boundBufferBases[freeIndex] = null;
+        glBuffer._lastBindCallId = this.#_bindCallId;
+        this.#_boundBufferBases[freeIndex] = null;
 
         return freeIndex;
     }
@@ -182,7 +182,7 @@ export class GlBufferSystem implements System
     {
         const index = glBuffer._lastBindBaseLocation;
 
-        if (this._boundBufferBases[index] === glBuffer)
+        if (this.#_boundBufferBases[index] === glBuffer)
         {
             return index;
         }
@@ -200,12 +200,12 @@ export class GlBufferSystem implements System
      */
     public bindBufferRange(glBuffer: GlBuffer, index?: number, offset?: number, size?: number): void
     {
-        const { _gl: gl } = this;
+        const gl = this.#_gl;
 
         offset ||= 0;
         index ||= 0;
 
-        this._boundBufferBases[index] = null;
+        this.#_boundBufferBases[index] = null;
 
         gl.bindBufferRange(gl.UNIFORM_BUFFER, index || 0, glBuffer.buffer, offset * 256, size || 256);
     }
@@ -216,7 +216,7 @@ export class GlBufferSystem implements System
      */
     public updateBuffer(buffer: Buffer): GlBuffer
     {
-        const { _gl: gl } = this;
+        const gl = this.#_gl;
 
         const glBuffer = this.getGlBuffer(buffer);
 
@@ -260,14 +260,14 @@ export class GlBufferSystem implements System
     /** dispose all WebGL resources of all managed buffers */
     public destroyAll(): void
     {
-        const gl = this._gl;
+        const gl = this.#_gl;
 
-        for (const id in this._gpuBuffers)
+        for (const id in this.#_gpuBuffers)
         {
-            gl.deleteBuffer(this._gpuBuffers[id].buffer);
+            gl.deleteBuffer(this.#_gpuBuffers[id].buffer);
         }
 
-        this._gpuBuffers = Object.create(null);
+        this.#_gpuBuffers = Object.create(null);
     }
 
     /**
@@ -277,16 +277,16 @@ export class GlBufferSystem implements System
      */
     protected onBufferDestroy(buffer: Buffer, contextLost?: boolean): void
     {
-        const glBuffer = this._gpuBuffers[buffer.uid];
+        const glBuffer = this.#_gpuBuffers[buffer.uid];
 
-        const gl = this._gl;
+        const gl = this.#_gl;
 
         if (!contextLost)
         {
             gl.deleteBuffer(glBuffer.buffer);
         }
 
-        this._gpuBuffers[buffer.uid] = null;
+        this.#_gpuBuffers[buffer.uid] = null;
     }
 
     /**
@@ -296,7 +296,7 @@ export class GlBufferSystem implements System
      */
     protected createGLBuffer(buffer: Buffer): GlBuffer
     {
-        const { _gl: gl } = this;
+        const gl = this.#_gl;
 
         let type = BUFFER_TYPE.ARRAY_BUFFER;
 
@@ -311,7 +311,7 @@ export class GlBufferSystem implements System
 
         const glBuffer = new GlBuffer(gl.createBuffer(), type);
 
-        this._gpuBuffers[buffer.uid] = glBuffer;
+        this.#_gpuBuffers[buffer.uid] = glBuffer;
 
         buffer.on('destroy', this.onBufferDestroy, this);
 
@@ -320,6 +320,6 @@ export class GlBufferSystem implements System
 
     public resetState(): void
     {
-        this._boundBufferBases = Object.create(null);
+        this.#_boundBufferBases = Object.create(null);
     }
 }

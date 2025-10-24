@@ -18,26 +18,26 @@ export class GpuColorMaskSystem implements System
         name: 'colorMask',
     } as const;
 
-    private readonly _renderer: WebGPURenderer;
+    readonly #_renderer: WebGPURenderer;
 
-    private _colorMaskCache = 0b1111;
+    #_colorMaskCache = 0b1111;
 
     constructor(renderer: WebGPURenderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public setMask(colorMask: number)
     {
-        if (this._colorMaskCache === colorMask) return;
-        this._colorMaskCache = colorMask;
+        if (this.#_colorMaskCache === colorMask) return;
+        this.#_colorMaskCache = colorMask;
 
-        this._renderer.pipeline.setColorMask(colorMask);
+        this.#_renderer.pipeline.setColorMask(colorMask);
     }
 
     public destroy()
     {
-        (this._renderer as null) = null;
-        this._colorMaskCache = null;
+        (this.#_renderer as null) = null;
+        this.#_colorMaskCache = null;
     }
 }

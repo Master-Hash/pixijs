@@ -49,18 +49,18 @@ export class DynamicBitmapFont extends AbstractBitmapFont<DynamicBitmapFont>
     /** The pages of the font. */
     public override readonly pages: {canvasAndContext?: CanvasAndContext, texture: Texture}[] = [];
 
-    private readonly _padding: number = 0;
-    private readonly _measureCache: Record<string, number> = Object.create(null);
-    private _currentChars: string[] = [];
-    private _currentX = 0;
-    private _currentY = 0;
-    private _currentMaxCharHeight = 0;
-    private _currentPageIndex = -1;
-    private readonly _style: TextStyle;
-    private readonly _skipKerning: boolean = false;
-    private readonly _textureSize: number;
-    private readonly _mipmap: boolean;
-    private readonly _textureStyle?: TextureStyle;
+    readonly #_padding: number = 0;
+    readonly #_measureCache: Record<string, number> = Object.create(null);
+    #_currentChars: string[] = [];
+    #_currentX = 0;
+    #_currentY = 0;
+    #_currentMaxCharHeight = 0;
+    #_currentPageIndex = -1;
+    readonly #_style: TextStyle;
+    readonly #_skipKerning: boolean = false;
+    readonly #_textureSize: number;
+    readonly #_mipmap: boolean;
+    readonly #_textureStyle?: TextureStyle;
 
     /**
      * @param options - The options for the dynamic bitmap font.
@@ -71,8 +71,8 @@ export class DynamicBitmapFont extends AbstractBitmapFont<DynamicBitmapFont>
 
         const dynamicOptions = { ...DynamicBitmapFont.defaultOptions, ...options };
 
-        this._textureSize = dynamicOptions.textureSize;
-        this._mipmap = dynamicOptions.mipmap;
+        this.#_textureSize = dynamicOptions.textureSize;
+        this.#_mipmap = dynamicOptions.mipmap;
 
         const style = dynamicOptions.style.clone();
 
@@ -109,14 +109,14 @@ export class DynamicBitmapFont extends AbstractBitmapFont<DynamicBitmapFont>
             style.fontSize = this.baseRenderedFontSize = requestedFontSize;
         }
 
-        this._style = style;
-        this._skipKerning = dynamicOptions.skipKerning ?? false;
+        this.#_style = style;
+        this.#_skipKerning = dynamicOptions.skipKerning ?? false;
         this.resolution = dynamicOptions.resolution ?? 1;
-        this._padding = dynamicOptions.padding ?? 4;
+        this.#_padding = dynamicOptions.padding ?? 4;
 
         if (dynamicOptions.textureStyle)
         {
-            this._textureStyle = dynamicOptions.textureStyle instanceof TextureStyle
+            this.#_textureStyle = dynamicOptions.textureStyle instanceof TextureStyle
                 ? dynamicOptions.textureStyle
                 : new TextureStyle(dynamicOptions.textureStyle);
         }
@@ -128,36 +128,36 @@ export class DynamicBitmapFont extends AbstractBitmapFont<DynamicBitmapFont>
     public ensureCharacters(chars: string): void
     {
         const charList = CanvasTextMetrics.graphemeSegmenter(chars)
-            .filter((char) => !this._currentChars.includes(char))
+            .filter((char) => !this.#_currentChars.includes(char))
             .filter((char, index, self) => self.indexOf(char) === index);
         // filter returns..
 
         if (!charList.length) return;
 
-        this._currentChars = [...this._currentChars, ...charList];
+        this.#_currentChars = [...this.#_currentChars, ...charList];
 
         let pageData;
 
-        if (this._currentPageIndex === -1)
+        if (this.#_currentPageIndex === -1)
         {
-            pageData = this._nextPage();
+            pageData = this.#_nextPage();
         }
         else
         {
-            pageData = this.pages[this._currentPageIndex];
+            pageData = this.pages[this.#_currentPageIndex];
         }
 
         let { canvas, context } = pageData.canvasAndContext;
         let textureSource = pageData.texture.source;
 
-        const style = this._style;
+        const style = this.#_style;
 
-        let currentX = this._currentX;
-        let currentY = this._currentY;
-        let currentMaxCharHeight = this._currentMaxCharHeight;
+        let currentX = this.#_currentX;
+        let currentY = this.#_currentY;
+        let currentMaxCharHeight = this.#_currentMaxCharHeight;
 
         const fontScale = this.baseRenderedFontSize / this.baseMeasurementFontSize;
-        const padding = this._padding * fontScale;
+        const padding = this.#_padding * fontScale;
 
         let skipTexture = false;
 
@@ -203,7 +203,7 @@ export class DynamicBitmapFont extends AbstractBitmapFont<DynamicBitmapFont>
                 {
                     textureSource.update();
 
-                    const pageData = this._nextPage();
+                    const pageData = this.#_nextPage();
 
                     canvas = pageData.canvasAndContext.canvas;
                     context = pageData.canvasAndContext.context;
@@ -222,15 +222,15 @@ export class DynamicBitmapFont extends AbstractBitmapFont<DynamicBitmapFont>
             // This is in coord space of the measurements.. not the texture
             this.chars[char] = {
                 id: char.codePointAt(0),
-                xOffset: -this._padding,
-                yOffset: -this._padding,
+                xOffset: -this.#_padding,
+                yOffset: -this.#_padding,
                 xAdvance,
                 kerning: {},
             };
 
             if (skipTexture)
             {
-                this._drawGlyph(
+                this.#_drawGlyph(
                     context,
                     metrics,
                     currentX + padding,
@@ -260,12 +260,12 @@ export class DynamicBitmapFont extends AbstractBitmapFont<DynamicBitmapFont>
 
         textureSource.update();
 
-        this._currentX = currentX;
-        this._currentY = currentY;
-        this._currentMaxCharHeight = currentMaxCharHeight;
+        this.#_currentX = currentX;
+        this.#_currentY = currentY;
+        this.#_currentMaxCharHeight = currentMaxCharHeight;
 
         // now apply kerning..
-        this._skipKerning && this._applyKerning(charList, context);
+        this.#_skipKerning && this.#_applyKerning(charList, context);
     }
 
     /**
@@ -281,18 +281,18 @@ export class DynamicBitmapFont extends AbstractBitmapFont<DynamicBitmapFont>
         return this.pages;
     }
 
-    private _applyKerning(newChars: string[], context: ICanvasRenderingContext2D): void
+    #_applyKerning(newChars: string[], context: ICanvasRenderingContext2D): void
     {
-        const measureCache = this._measureCache;
+        const measureCache = this.#_measureCache;
 
         for (let i = 0; i < newChars.length; i++)
         {
             const first = newChars[i];
 
-            for (let j = 0; j < this._currentChars.length; j++)
+            for (let j = 0; j < this.#_currentChars.length; j++)
             {
                 // first go through new char being first
-                const second = this._currentChars[j];
+                const second = this.#_currentChars[j];
 
                 let c1 = measureCache[first];
 
@@ -322,18 +322,18 @@ export class DynamicBitmapFont extends AbstractBitmapFont<DynamicBitmapFont>
         }
     }
 
-    private _nextPage(): {canvasAndContext: CanvasAndContext, texture: Texture}
+    #_nextPage(): {canvasAndContext: CanvasAndContext, texture: Texture}
     {
-        this._currentPageIndex++;
+        this.#_currentPageIndex++;
 
         const textureResolution = this.resolution;
         const canvasAndContext = CanvasPool.getOptimalCanvasAndContext(
-            this._textureSize,
-            this._textureSize,
+            this.#_textureSize,
+            this.#_textureSize,
             textureResolution
         );
 
-        this._setupContext(canvasAndContext.context, this._style, textureResolution);
+        this.#_setupContext(canvasAndContext.context, this.#_style, textureResolution);
 
         const resolution = textureResolution * (this.baseRenderedFontSize / this.baseMeasurementFontSize);
         const texture = new Texture({
@@ -341,14 +341,14 @@ export class DynamicBitmapFont extends AbstractBitmapFont<DynamicBitmapFont>
                 resource: canvasAndContext.canvas,
                 resolution,
                 alphaMode: 'premultiply-alpha-on-upload',
-                autoGenerateMipmaps: this._mipmap,
+                autoGenerateMipmaps: this.#_mipmap,
             }),
 
         });
 
-        if (this._textureStyle)
+        if (this.#_textureStyle)
         {
-            texture.source.style = this._textureStyle;
+            texture.source.style = this.#_textureStyle;
         }
 
         const pageData = {
@@ -356,13 +356,13 @@ export class DynamicBitmapFont extends AbstractBitmapFont<DynamicBitmapFont>
             texture,
         };
 
-        this.pages[this._currentPageIndex] = pageData;
+        this.pages[this.#_currentPageIndex] = pageData;
 
         return pageData;
     }
 
     // canvas style!
-    private _setupContext(context: ICanvasRenderingContext2D, style: TextStyle, resolution: number): void
+    #_setupContext(context: ICanvasRenderingContext2D, style: TextStyle, resolution: number): void
     {
         style.fontSize = this.baseRenderedFontSize;
         context.scale(resolution, resolution);
@@ -411,7 +411,7 @@ export class DynamicBitmapFont extends AbstractBitmapFont<DynamicBitmapFont>
         }
     }
 
-    private _drawGlyph(
+    #_drawGlyph(
         context: ICanvasRenderingContext2D,
         metrics: CanvasTextMetrics,
         x: number,

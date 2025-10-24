@@ -23,16 +23,16 @@ export class GlEncoderSystem implements System
     } as const;
 
     public readonly commandFinished = Promise.resolve();
-    private readonly _renderer: WebGLRenderer;
+    readonly #_renderer: WebGLRenderer;
 
     constructor(renderer: WebGLRenderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public setGeometry(geometry: Geometry, shader?: Shader)
     {
-        this._renderer.geometry.bind(geometry, shader.glProgram);
+        this.#_renderer.geometry.bind(geometry, shader.glProgram);
     }
 
     public finishRenderPass()
@@ -51,7 +51,7 @@ export class GlEncoderSystem implements System
         skipSync?: boolean,
     })
     {
-        const renderer = this._renderer;
+        const renderer = this.#_renderer;
         const { geometry, shader, state, skipSync, topology: type, size, start, instanceCount } = options;
 
         renderer.shader.bind(shader, skipSync);
@@ -68,6 +68,6 @@ export class GlEncoderSystem implements System
 
     public destroy()
     {
-        (this._renderer as null) = null;
+        (this.#_renderer as null) = null;
     }
 }

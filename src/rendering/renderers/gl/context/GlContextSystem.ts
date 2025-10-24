@@ -173,13 +173,13 @@ export class GlContextSystem implements System<ContextSystemOptions>
      */
     public canvas: ICanvas;
 
-    private _renderer: WebGLRenderer;
-    private _contextLossForced: boolean;
+    #_renderer: WebGLRenderer;
+    #_contextLossForced: boolean;
 
     /** @param renderer - The renderer this System works for. */
     constructor(renderer: WebGLRenderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
 
         this.extensions = Object.create(null);
 
@@ -204,7 +204,7 @@ export class GlContextSystem implements System<ContextSystemOptions>
     protected contextChange(gl: WebGL2RenderingContext): void
     {
         this.gl = gl;
-        this._renderer.gl = gl;
+        this.#_renderer.gl = gl;
     }
 
     public init(options: ContextSystemOptions): void
@@ -225,11 +225,11 @@ export class GlContextSystem implements System<ContextSystemOptions>
         if (multiView)
         {
             this.canvas = DOMAdapter.get()
-                .createCanvas(this._renderer.canvas.width, this._renderer.canvas.height);
+                .createCanvas(this.#_renderer.canvas.width, this.#_renderer.canvas.height);
         }
         else
         {
-            this.canvas = this._renderer.view.canvas;
+            this.canvas = this.#_renderer.view.canvas;
         }
         /*
          * The options passed in to create a new WebGL context.
@@ -240,9 +240,9 @@ export class GlContextSystem implements System<ContextSystemOptions>
         }
         else
         {
-            const alpha = this._renderer.background.alpha < 1;
+            const alpha = this.#_renderer.background.alpha < 1;
             const premultipliedAlpha = options.premultipliedAlpha ?? true;
-            const antialias = options.antialias && !this._renderer.backBuffer.useBackBuffer;
+            const antialias = options.antialias && !this.#_renderer.backBuffer.useBackBuffer;
 
             this.createContext(options.preferWebGLVersion, {
                 alpha,
@@ -291,9 +291,9 @@ export class GlContextSystem implements System<ContextSystemOptions>
 
         this.validateContext(gl);
 
-        this._renderer.runners.contextChange.emit(gl);
+        this.#_renderer.runners.contextChange.emit(gl);
 
-        const element = this._renderer.view.canvas;
+        const element = this.#_renderer.view.canvas;
 
         (element as any).addEventListener('webglcontextlost', this.handleContextLost, false);
         element.addEventListener('webglcontextrestored', this.handleContextRestored, false);
@@ -401,9 +401,9 @@ export class GlContextSystem implements System<ContextSystemOptions>
         event.preventDefault();
 
         // only restore if we purposefully nuked it
-        if (this._contextLossForced)
+        if (this.#_contextLossForced)
         {
-            this._contextLossForced = false;
+            this.#_contextLossForced = false;
             // Restore the context after this event has exited
             setTimeout(() =>
             {
@@ -419,14 +419,14 @@ export class GlContextSystem implements System<ContextSystemOptions>
     protected handleContextRestored(): void
     {
         this.getExtensions(); // restore extensions state
-        this._renderer.runners.contextChange.emit(this.gl);
+        this.#_renderer.runners.contextChange.emit(this.gl);
     }
 
     public destroy(): void
     {
-        const element = this._renderer.view.canvas;
+        const element = this.#_renderer.view.canvas;
 
-        this._renderer = null;
+        this.#_renderer = null;
 
         // remove listeners
         (element as any).removeEventListener('webglcontextlost', this.handleContextLost);
@@ -447,7 +447,7 @@ export class GlContextSystem implements System<ContextSystemOptions>
     public forceContextLoss(): void
     {
         this.extensions.loseContext?.loseContext();
-        this._contextLossForced = true;
+        this.#_contextLossForced = true;
     }
     /**
      * Validate context.

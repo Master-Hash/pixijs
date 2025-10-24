@@ -21,12 +21,12 @@ export class ViewableBuffer
     /** View on the raw binary data as a `Uint16Array`. */
     public uint16View: Uint16Array;
 
-    private _int8View: Int8Array;
-    private _uint8View: Uint8Array;
-    private _int16View: Int16Array;
-    private _int32View: Int32Array;
-    private _float64Array: Float64Array;
-    private _bigUint64Array: BigUint64Array;
+    #_int8View: Int8Array;
+    #_uint8View: Uint8Array;
+    #_int16View: Int16Array;
+    #_int32View: Int32Array;
+    #_float64Array: Float64Array;
+    #_bigUint64Array: BigUint64Array;
 
     /**
      * @param length - The size of the buffer in bytes.
@@ -62,67 +62,67 @@ export class ViewableBuffer
     /** View on the raw binary data as a `Int8Array`. */
     get int8View(): Int8Array
     {
-        if (!this._int8View)
+        if (!this.#_int8View)
         {
-            this._int8View = new Int8Array(this.rawBinaryData);
+            this.#_int8View = new Int8Array(this.rawBinaryData);
         }
 
-        return this._int8View;
+        return this.#_int8View;
     }
 
     /** View on the raw binary data as a `Uint8Array`. */
     get uint8View(): Uint8Array
     {
-        if (!this._uint8View)
+        if (!this.#_uint8View)
         {
-            this._uint8View = new Uint8Array(this.rawBinaryData);
+            this.#_uint8View = new Uint8Array(this.rawBinaryData);
         }
 
-        return this._uint8View;
+        return this.#_uint8View;
     }
 
     /**  View on the raw binary data as a `Int16Array`. */
     get int16View(): Int16Array
     {
-        if (!this._int16View)
+        if (!this.#_int16View)
         {
-            this._int16View = new Int16Array(this.rawBinaryData);
+            this.#_int16View = new Int16Array(this.rawBinaryData);
         }
 
-        return this._int16View;
+        return this.#_int16View;
     }
 
     /** View on the raw binary data as a `Int32Array`. */
     get int32View(): Int32Array
     {
-        if (!this._int32View)
+        if (!this.#_int32View)
         {
-            this._int32View = new Int32Array(this.rawBinaryData);
+            this.#_int32View = new Int32Array(this.rawBinaryData);
         }
 
-        return this._int32View;
+        return this.#_int32View;
     }
 
     /** View on the raw binary data as a `Float64Array`. */
     get float64View(): Float64Array
     {
-        if (!this._float64Array)
+        if (!this.#_float64Array)
         {
-            this._float64Array = new Float64Array(this.rawBinaryData);
+            this.#_float64Array = new Float64Array(this.rawBinaryData);
         }
 
-        return this._float64Array;
+        return this.#_float64Array;
     }
 
     /** View on the raw binary data as a `BigUint64Array`. */
     get bigUint64View(): BigUint64Array
     {
-        if (!this._bigUint64Array)
+        if (!this.#_bigUint64Array)
         {
-            this._bigUint64Array = new BigUint64Array(this.rawBinaryData);
+            this.#_bigUint64Array = new BigUint64Array(this.rawBinaryData);
         }
 
-        return this._bigUint64Array;
+        return this.#_bigUint64Array;
     }
 
     /**
@@ -140,11 +140,11 @@ export class ViewableBuffer
     public destroy(): void
     {
         this.rawBinaryData = null;
-        this._int8View = null;
-        this._uint8View = null;
-        this._int16View = null;
+        this.#_int8View = null;
+        this.#_uint8View = null;
+        this.#_int16View = null;
         this.uint16View = null;
-        this._int32View = null;
+        this.#_int32View = null;
         this.uint32View = null;
         this.float32View = null;
     }

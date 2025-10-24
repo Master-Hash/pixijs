@@ -15,13 +15,13 @@ export class TickerListener<T = any>
     public previous: TickerListener = null;
 
     /** The handler function to execute. */
-    private _fn: TickerCallback<T>;
+    #_fn: TickerCallback<T>;
     /** The calling to execute. */
-    private _context: T;
+    #_context: T;
     /** If this should only execute once. */
-    private readonly _once: boolean;
+    readonly #_once: boolean;
     /** `true` if this listener has been destroyed already. */
-    private _destroyed = false;
+    #_destroyed = false;
 
     /**
      * Constructor
@@ -33,10 +33,10 @@ export class TickerListener<T = any>
      */
     constructor(fn: TickerCallback<T>, context: T = null, priority = 0, once = false)
     {
-        this._fn = fn;
-        this._context = context;
+        this.#_fn = fn;
+        this.#_context = context;
         this.priority = priority;
-        this._once = once;
+        this.#_once = once;
     }
 
     /**
@@ -47,7 +47,7 @@ export class TickerListener<T = any>
      */
     public match(fn: TickerCallback<T>, context: any = null): boolean
     {
-        return this._fn === fn && this._context === context;
+        return this.#_fn === fn && this.#_context === context;
     }
 
     /**
@@ -57,28 +57,28 @@ export class TickerListener<T = any>
      */
     public emit(ticker: Ticker): TickerListener
     {
-        if (this._fn)
+        if (this.#_fn)
         {
-            if (this._context)
+            if (this.#_context)
             {
-                this._fn.call(this._context, ticker);
+                this.#_fn.call(this.#_context, ticker);
             }
             else
             {
-                (this as TickerListener<any>)._fn(ticker);
+                (this as TickerListener<any>).#_fn(ticker);
             }
         }
 
         const redirect = this.next;
 
-        if (this._once)
+        if (this.#_once)
         {
             this.destroy(true);
         }
 
         // Soft-destroying should remove
         // the next reference
-        if (this._destroyed)
+        if (this.#_destroyed)
         {
             this.next = null;
         }
@@ -109,9 +109,9 @@ export class TickerListener<T = any>
      */
     public destroy(hard = false): TickerListener
     {
-        this._destroyed = true;
-        this._fn = null;
-        this._context = null;
+        this.#_destroyed = true;
+        this.#_fn = null;
+        this.#_context = null;
 
         // Disconnect, hook up next and previous
         if (this.previous)

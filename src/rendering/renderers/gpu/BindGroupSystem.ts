@@ -27,37 +27,37 @@ export class BindGroupSystem implements System
         name: 'bindGroup',
     } as const;
 
-    private readonly _renderer: WebGPURenderer;
+    readonly #_renderer: WebGPURenderer;
 
-    private _hash: Record<string, GPUBindGroup> = Object.create(null);
-    private _gpu: GPU;
+    #_hash: Record<string, GPUBindGroup> = Object.create(null);
+    #_gpu: GPU;
 
     constructor(renderer: WebGPURenderer)
     {
-        this._renderer = renderer;
-        this._renderer.renderableGC.addManagedHash(this, '_hash');
+        this.#_renderer = renderer;
+        this.#_renderer.renderableGC.addManagedHash(this, '_hash');
     }
 
     protected contextChange(gpu: GPU): void
     {
-        this._gpu = gpu;
+        this.#_gpu = gpu;
     }
 
     public getBindGroup(bindGroup: BindGroup, program: GpuProgram, groupIndex: number): GPUBindGroup
     {
         bindGroup._updateKey();
 
-        const gpuBindGroup = this._hash[bindGroup._key] || this._createBindGroup(bindGroup, program, groupIndex);
+        const gpuBindGroup = this.#_hash[bindGroup._key] || this.#_createBindGroup(bindGroup, program, groupIndex);
 
         return gpuBindGroup;
     }
 
-    private _createBindGroup(group: BindGroup, program: GpuProgram, groupIndex: number): GPUBindGroup
+    #_createBindGroup(group: BindGroup, program: GpuProgram, groupIndex: number): GPUBindGroup
     {
-        const device = this._gpu.device;
+        const device = this.#_gpu.device;
         const groupLayout = program.layout[groupIndex];
         const entries: GPUBindGroupEntry[] = [];
-        const renderer = this._renderer;
+        const renderer = this.#_renderer;
 
         for (const j in groupLayout)
         {
@@ -127,20 +127,20 @@ export class BindGroupSystem implements System
             entries,
         });
 
-        this._hash[group._key] = gpuBindGroup;
+        this.#_hash[group._key] = gpuBindGroup;
 
         return gpuBindGroup;
     }
 
     public destroy(): void
     {
-        for (const key of Object.keys(this._hash))
+        for (const key of Object.keys(this.#_hash))
         {
-            this._hash[key] = null;
+            this.#_hash[key] = null;
         }
 
-        this._hash = null;
+        this.#_hash = null;
 
-        (this._renderer as null) = null;
+        (this.#_renderer as null) = null;
     }
 }

@@ -95,9 +95,9 @@ export class Ticker
     public static targetFPMS = 0.06;
 
     /** The private shared ticker instance */
-    private static _shared: Ticker;
+    static #_shared: Ticker;
     /** The private system ticker instance  */
-    private static _system: Ticker;
+    static #_system: Ticker;
 
     /**
      * Whether or not this ticker should invoke the method {@link Ticker#start|start}
@@ -239,23 +239,23 @@ export class Ticker
     public started = false;
 
     /** The first listener. All new listeners added are chained on this. */
-    private _head: TickerListener;
+    #_head: TickerListener;
     /** Internal current frame request ID */
-    private _requestId: number = null;
+    #_requestId: number = null;
     /**
      * Internal value managed by minFPS property setter and getter.
      * This is the maximum allowed milliseconds between updates.
      */
-    private _maxElapsedMS = 100;
+    #_maxElapsedMS = 100;
     /**
      * Internal value managed by minFPS property setter and getter.
      * This is the minimum allowed milliseconds between updates.
      */
-    private _minElapsedMS = 0;
+    #_minElapsedMS = 0;
     /** If enabled, deleting is disabled.*/
-    private _protected = false;
+    #_protected = false;
     /** The last time keyframe was executed. Maintains a relatively fixed interval with the previous value. */
-    private _lastFrame = -1;
+    #_lastFrame = -1;
     /**
      * Internal tick method bound to ticker instance.
      * This is because in early 2015, Function.bind
@@ -265,26 +265,26 @@ export class Ticker
      * any animation API, just invoke ticker.update(time).
      * @param time - Time since last tick.
      */
-    private readonly _tick: (time: number) => any;
+    readonly #_tick: (time: number) => any;
 
     constructor()
     {
-        this._head = new TickerListener(null, null, Infinity);
+        this.#_head = new TickerListener(null, null, Infinity);
         this.deltaMS = 1 / Ticker.targetFPMS;
         this.elapsedMS = 1 / Ticker.targetFPMS;
 
-        this._tick = (time: number): void =>
+        this.#_tick = (time: number): void =>
         {
-            this._requestId = null;
+            this.#_requestId = null;
 
             if (this.started)
             {
                 // Invoke listeners now
                 this.update(time);
                 // Listener side effects may have modified ticker state.
-                if (this.started && this._requestId === null && this._head.next)
+                if (this.started && this.#_requestId === null && this.#_head.next)
                 {
-                    this._requestId = requestAnimationFrame(this._tick);
+                    this.#_requestId = requestAnimationFrame(this.#_tick);
                 }
             }
         };
@@ -295,24 +295,24 @@ export class Ticker
      * If a frame has not already been requested, and if the internal
      * emitter has listeners, a new frame is requested.
      */
-    private _requestIfNeeded(): void
+    #_requestIfNeeded(): void
     {
-        if (this._requestId === null && this._head.next)
+        if (this.#_requestId === null && this.#_head.next)
         {
             // ensure callbacks get correct delta
             this.lastTime = performance.now();
-            this._lastFrame = this.lastTime;
-            this._requestId = requestAnimationFrame(this._tick);
+            this.#_lastFrame = this.lastTime;
+            this.#_requestId = requestAnimationFrame(this.#_tick);
         }
     }
 
     /** Conditionally cancels a pending animation frame. */
-    private _cancelIfNeeded(): void
+    #_cancelIfNeeded(): void
     {
-        if (this._requestId !== null)
+        if (this.#_requestId !== null)
         {
-            cancelAnimationFrame(this._requestId);
-            this._requestId = null;
+            cancelAnimationFrame(this.#_requestId);
+            this.#_requestId = null;
         }
     }
 
@@ -324,11 +324,11 @@ export class Ticker
      * been started, but autoStart is `true`, then the ticker starts now,
      * and continues with the previous conditions to request a new frame.
      */
-    private _startIfPossible(): void
+    #_startIfPossible(): void
     {
         if (this.started)
         {
-            this._requestIfNeeded();
+            this.#_requestIfNeeded();
         }
         else if (this.autoStart)
         {
@@ -358,7 +358,7 @@ export class Ticker
      */
     public add<T = any>(fn: TickerCallback<T>, context?: T, priority: number = UPDATE_PRIORITY.NORMAL): this
     {
-        return this._addListener(new TickerListener(fn, context, priority));
+        return this.#_addListener(new TickerListener(fn, context, priority));
     }
 
     /**
@@ -398,7 +398,7 @@ export class Ticker
      */
     public addOnce<T = any>(fn: TickerCallback<T>, context?: T, priority: number = UPDATE_PRIORITY.NORMAL): this
     {
-        return this._addListener(new TickerListener(fn, context, priority, true));
+        return this.#_addListener(new TickerListener(fn, context, priority, true));
     }
 
     /**
@@ -409,11 +409,11 @@ export class Ticker
      * @param listener - Current listener being added.
      * @returns This instance of a ticker
      */
-    private _addListener(listener: TickerListener): this
+    #_addListener(listener: TickerListener): this
     {
         // For attaching to head
-        let current = this._head.next;
-        let previous = this._head;
+        let current = this.#_head.next;
+        let previous = this.#_head;
 
         // Add the first item
         if (!current)
@@ -441,7 +441,7 @@ export class Ticker
             }
         }
 
-        this._startIfPossible();
+        this.#_startIfPossible();
 
         return this;
     }
@@ -481,7 +481,7 @@ export class Ticker
      */
     public remove<T = any>(fn: TickerCallback<T>, context?: T): this
     {
-        let listener = this._head.next;
+        let listener = this.#_head.next;
 
         while (listener)
         {
@@ -498,9 +498,9 @@ export class Ticker
             }
         }
 
-        if (!this._head.next)
+        if (!this.#_head.next)
         {
-            this._cancelIfNeeded();
+            this.#_cancelIfNeeded();
         }
 
         return this;
@@ -529,13 +529,13 @@ export class Ticker
      */
     get count(): number
     {
-        if (!this._head)
+        if (!this.#_head)
         {
             return 0;
         }
 
         let count = 0;
-        let current = this._head;
+        let current = this.#_head;
 
         while ((current = current.next))
         {
@@ -565,7 +565,7 @@ export class Ticker
         if (!this.started)
         {
             this.started = true;
-            this._requestIfNeeded();
+            this.#_requestIfNeeded();
         }
     }
 
@@ -586,7 +586,7 @@ export class Ticker
         if (this.started)
         {
             this.started = false;
-            this._cancelIfNeeded();
+            this.#_cancelIfNeeded();
         }
     }
 
@@ -604,19 +604,19 @@ export class Ticker
      */
     public destroy(): void
     {
-        if (!this._protected)
+        if (!this.#_protected)
         {
             this.stop();
 
-            let listener = this._head.next;
+            let listener = this.#_head.next;
 
             while (listener)
             {
                 listener = listener.destroy(true);
             }
 
-            this._head.destroy();
-            this._head = null;
+            this.#_head.destroy();
+            this.#_head = null;
         }
     }
 
@@ -668,9 +668,9 @@ export class Ticker
             elapsedMS = this.elapsedMS = currentTime - this.lastTime;
 
             // cap the milliseconds elapsed used for deltaTime
-            if (elapsedMS > this._maxElapsedMS)
+            if (elapsedMS > this.#_maxElapsedMS)
             {
-                elapsedMS = this._maxElapsedMS;
+                elapsedMS = this.#_maxElapsedMS;
             }
 
             elapsedMS *= this.speed;
@@ -678,16 +678,16 @@ export class Ticker
             // If not enough time has passed, exit the function.
             // Get ready for next frame by setting _lastFrame, but based on _minElapsedMS
             // adjustment to ensure a relatively stable interval.
-            if (this._minElapsedMS)
+            if (this.#_minElapsedMS)
             {
-                const delta = currentTime - this._lastFrame | 0;
+                const delta = currentTime - this.#_lastFrame | 0;
 
-                if (delta < this._minElapsedMS)
+                if (delta < this.#_minElapsedMS)
                 {
                     return;
                 }
 
-                this._lastFrame = currentTime - (delta % this._minElapsedMS);
+                this.#_lastFrame = currentTime - (delta % this.#_minElapsedMS);
             }
 
             this.deltaMS = elapsedMS;
@@ -695,7 +695,7 @@ export class Ticker
 
             // Cache a local reference, in-case ticker is destroyed
             // during the emit, we can still check for head.next
-            const head = this._head;
+            const head = this.#_head;
 
             // Invoke listeners added to internal emitter
             let listener = head.next;
@@ -707,7 +707,7 @@ export class Ticker
 
             if (!head.next)
             {
-                this._cancelIfNeeded();
+                this.#_cancelIfNeeded();
             }
         }
         else
@@ -767,7 +767,7 @@ export class Ticker
      */
     get minFPS(): number
     {
-        return 1000 / this._maxElapsedMS;
+        return 1000 / this.#_maxElapsedMS;
     }
 
     set minFPS(fps: number)
@@ -778,7 +778,7 @@ export class Ticker
         // Must be at least 0, but below 1 / Ticker.targetFPMS
         const minFPMS = Math.min(Math.max(0, minFPS) / 1000, Ticker.targetFPMS);
 
-        this._maxElapsedMS = 1 / minFPMS;
+        this.#_maxElapsedMS = 1 / minFPMS;
     }
 
     /**
@@ -809,9 +809,9 @@ export class Ticker
      */
     get maxFPS(): number
     {
-        if (this._minElapsedMS)
+        if (this.#_minElapsedMS)
         {
-            return Math.round(1000 / this._minElapsedMS);
+            return Math.round(1000 / this.#_minElapsedMS);
         }
 
         return 0;
@@ -821,14 +821,14 @@ export class Ticker
     {
         if (fps === 0)
         {
-            this._minElapsedMS = 0;
+            this.#_minElapsedMS = 0;
         }
         else
         {
             // Max must be at least the minFPS
             const maxFPS = Math.max(this.minFPS, fps);
 
-            this._minElapsedMS = 1 / (maxFPS / 1000);
+            this.#_minElapsedMS = 1 / (maxFPS / 1000);
         }
     }
 
@@ -877,15 +877,15 @@ export class Ticker
      */
     static get shared(): Ticker
     {
-        if (!Ticker._shared)
+        if (!Ticker.#_shared)
         {
-            const shared = Ticker._shared = new Ticker();
+            const shared = Ticker.#_shared = new Ticker();
 
             shared.autoStart = true;
-            shared._protected = true;
+            shared.#_protected = true;
         }
 
-        return Ticker._shared;
+        return Ticker.#_shared;
     }
 
     /**
@@ -900,14 +900,14 @@ export class Ticker
      */
     static get system(): Ticker
     {
-        if (!Ticker._system)
+        if (!Ticker.#_system)
         {
-            const system = Ticker._system = new Ticker();
+            const system = Ticker.#_system = new Ticker();
 
             system.autoStart = true;
-            system._protected = true;
+            system.#_protected = true;
         }
 
-        return Ticker._system;
+        return Ticker.#_system;
     }
 }

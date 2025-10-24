@@ -20,47 +20,47 @@ export class GpuStencilSystem implements System
         name: 'stencil',
     } as const;
 
-    private readonly _renderer: WebGPURenderer;
+    readonly #_renderer: WebGPURenderer;
 
-    private _renderTargetStencilState: Record<number, {
+    #_renderTargetStencilState: Record<number, {
         stencilMode: STENCIL_MODES;
         stencilReference: number;
     }> = Object.create(null);
 
-    private _activeRenderTarget: RenderTarget;
+    #_activeRenderTarget: RenderTarget;
 
     constructor(renderer: WebGPURenderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
 
         renderer.renderTarget.onRenderTargetChange.add(this);
     }
 
     protected onRenderTargetChange(renderTarget: RenderTarget)
     {
-        let stencilState = this._renderTargetStencilState[renderTarget.uid];
+        let stencilState = this.#_renderTargetStencilState[renderTarget.uid];
 
         if (!stencilState)
         {
-            stencilState = this._renderTargetStencilState[renderTarget.uid] = {
+            stencilState = this.#_renderTargetStencilState[renderTarget.uid] = {
                 stencilMode: STENCIL_MODES.DISABLED,
                 stencilReference: 0,
             };
         }
 
-        this._activeRenderTarget = renderTarget;
+        this.#_activeRenderTarget = renderTarget;
 
         this.setStencilMode(stencilState.stencilMode, stencilState.stencilReference);
     }
 
     public setStencilMode(stencilMode: STENCIL_MODES, stencilReference: number)
     {
-        const stencilState = this._renderTargetStencilState[this._activeRenderTarget.uid];
+        const stencilState = this.#_renderTargetStencilState[this.#_activeRenderTarget.uid];
 
         stencilState.stencilMode = stencilMode;
         stencilState.stencilReference = stencilReference;
 
-        const renderer = this._renderer;
+        const renderer = this.#_renderer;
 
         renderer.pipeline.setStencilMode(stencilMode);
         renderer.encoder.renderPassEncoder.setStencilReference(stencilReference);
@@ -68,11 +68,11 @@ export class GpuStencilSystem implements System
 
     public destroy()
     {
-        this._renderer.renderTarget.onRenderTargetChange.remove(this);
+        this.#_renderer.renderTarget.onRenderTargetChange.remove(this);
 
-        (this._renderer as null) = null;
+        (this.#_renderer as null) = null;
 
-        this._activeRenderTarget = null;
-        this._renderTargetStencilState = null;
+        this.#_activeRenderTarget = null;
+        this.#_renderTargetStencilState = null;
     }
 }

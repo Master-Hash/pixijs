@@ -81,30 +81,30 @@ export class GpuDeviceSystem implements System<GpuContextOptions>
     /** The GPU device */
     public gpu: GPU;
 
-    private _renderer: WebGPURenderer;
-    private _initPromise: Promise<void>;
+    #_renderer: WebGPURenderer;
+    #_initPromise: Promise<void>;
 
     /**
      * @param {WebGPURenderer} renderer - The renderer this System works for.
      */
     constructor(renderer: WebGPURenderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public async init(options: GpuContextOptions): Promise<void>
     {
-        if (this._initPromise) return this._initPromise;
+        if (this.#_initPromise) return this.#_initPromise;
 
-        this._initPromise = (options.gpu ? Promise.resolve(options.gpu) : this._createDeviceAndAdaptor(options))
+        this.#_initPromise = (options.gpu ? Promise.resolve(options.gpu) : this.#_createDeviceAndAdaptor(options))
             .then((gpu) =>
             {
                 this.gpu = gpu;
 
-                this._renderer.runners.contextChange.emit(this.gpu);
+                this.#_renderer.runners.contextChange.emit(this.gpu);
             });
 
-        return this._initPromise;
+        return this.#_initPromise;
     }
 
     /**
@@ -113,7 +113,7 @@ export class GpuDeviceSystem implements System<GpuContextOptions>
      */
     protected contextChange(gpu: GPU): void
     {
-        this._renderer.gpu = gpu;
+        this.#_renderer.gpu = gpu;
     }
 
     /**
@@ -123,7 +123,7 @@ export class GpuDeviceSystem implements System<GpuContextOptions>
      * @see https://developer.mozilla.org/en/docs/Web/API/HTMLCanvasElement/getContext
      * @returns {WebGLRenderingContext} the WebGL context
      */
-    private async _createDeviceAndAdaptor(options: GpuContextOptions): Promise<GPU>
+    async #_createDeviceAndAdaptor(options: GpuContextOptions): Promise<GPU>
     {
         // TODO we only need one of these..
         const adapter = await DOMAdapter.get().getNavigator().gpu.requestAdapter({
@@ -148,6 +148,6 @@ export class GpuDeviceSystem implements System<GpuContextOptions>
     public destroy(): void
     {
         this.gpu = null;
-        this._renderer = null;
+        this.#_renderer = null;
     }
 }

@@ -18,20 +18,20 @@ export class GlColorMaskSystem implements System
         name: 'colorMask',
     } as const;
 
-    private readonly _renderer: WebGLRenderer;
-    private _colorMaskCache = 0b1111;
+    readonly #_renderer: WebGLRenderer;
+    #_colorMaskCache = 0b1111;
 
     constructor(renderer: WebGLRenderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public setMask(colorMask: number)
     {
-        if (this._colorMaskCache === colorMask) return;
-        this._colorMaskCache = colorMask;
+        if (this.#_colorMaskCache === colorMask) return;
+        this.#_colorMaskCache = colorMask;
 
-        this._renderer.gl.colorMask(
+        this.#_renderer.gl.colorMask(
             !!(colorMask & 0b1000),
             !!(colorMask & 0b0100),
             !!(colorMask & 0b0010),

@@ -75,17 +75,17 @@ export class GlBackBufferSystem implements System<GlBackBufferOptions>
     /** if true, the back buffer is used */
     public useBackBuffer = false;
 
-    private _backBufferTexture: Texture;
-    private readonly _renderer: WebGLRenderer;
-    private _targetTexture: TextureSource;
-    private _useBackBufferThisRender = false;
-    private _antialias: boolean;
-    private _state: State;
-    private _bigTriangleShader: Shader;
+    #_backBufferTexture: Texture;
+    readonly #_renderer: WebGLRenderer;
+    #_targetTexture: TextureSource;
+    #_useBackBufferThisRender = false;
+    #_antialias: boolean;
+    #_state: State;
+    #_bigTriangleShader: Shader;
 
     constructor(renderer: WebGLRenderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public init(options: GlBackBufferOptions = {})
@@ -94,16 +94,16 @@ export class GlBackBufferSystem implements System<GlBackBufferOptions>
 
         this.useBackBuffer = useBackBuffer;
 
-        this._antialias = antialias;
+        this.#_antialias = antialias;
 
-        if (!this._renderer.context.supports.msaa)
+        if (!this.#_renderer.context.supports.msaa)
         {
             warn('antialiasing, is not supported on when using the back buffer');
 
-            this._antialias = false;
+            this.#_antialias = false;
         }
 
-        this._state = State.for2d();
+        this.#_state = State.for2d();
 
         const bigTriangleProgram = new GlProgram({
             vertex: `
@@ -130,7 +130,7 @@ export class GlBackBufferSystem implements System<GlBackBufferOptions>
             name: 'big-triangle',
         });
 
-        this._bigTriangleShader = new Shader({
+        this.#_bigTriangleShader = new Shader({
             glProgram: bigTriangleProgram,
             resources: {
                 uTexture: Texture.WHITE.source,
@@ -145,72 +145,72 @@ export class GlBackBufferSystem implements System<GlBackBufferOptions>
      */
     protected renderStart(options: RenderOptions)
     {
-        const renderTarget = this._renderer.renderTarget.getRenderTarget(options.target);
+        const renderTarget = this.#_renderer.renderTarget.getRenderTarget(options.target);
 
-        this._useBackBufferThisRender = this.useBackBuffer && !!renderTarget.isRoot;
+        this.#_useBackBufferThisRender = this.useBackBuffer && !!renderTarget.isRoot;
 
-        if (this._useBackBufferThisRender)
+        if (this.#_useBackBufferThisRender)
         {
-            const renderTarget = this._renderer.renderTarget.getRenderTarget(options.target);
+            const renderTarget = this.#_renderer.renderTarget.getRenderTarget(options.target);
 
-            this._targetTexture = renderTarget.colorTexture;
+            this.#_targetTexture = renderTarget.colorTexture;
 
-            options.target = this._getBackBufferTexture(renderTarget.colorTexture);
+            options.target = this.#_getBackBufferTexture(renderTarget.colorTexture);
         }
     }
 
     protected renderEnd()
     {
-        this._presentBackBuffer();
+        this.#_presentBackBuffer();
     }
 
-    private _presentBackBuffer()
+    #_presentBackBuffer()
     {
-        const renderer = this._renderer;
+        const renderer = this.#_renderer;
 
         renderer.renderTarget.finishRenderPass();
 
-        if (!this._useBackBufferThisRender) return;
+        if (!this.#_useBackBufferThisRender) return;
 
-        renderer.renderTarget.bind(this._targetTexture, false);
+        renderer.renderTarget.bind(this.#_targetTexture, false);
 
-        this._bigTriangleShader.resources.uTexture = this._backBufferTexture.source;
+        this.#_bigTriangleShader.resources.uTexture = this.#_backBufferTexture.source;
 
         renderer.encoder.draw({
             geometry: bigTriangleGeometry,
-            shader: this._bigTriangleShader,
-            state: this._state,
+            shader: this.#_bigTriangleShader,
+            state: this.#_state,
         });
     }
 
-    private _getBackBufferTexture(targetSourceTexture: TextureSource)
+    #_getBackBufferTexture(targetSourceTexture: TextureSource)
     {
-        this._backBufferTexture = this._backBufferTexture || new Texture({
+        this.#_backBufferTexture = this.#_backBufferTexture || new Texture({
             source: new TextureSource({
                 width: targetSourceTexture.width,
                 height: targetSourceTexture.height,
                 resolution: targetSourceTexture._resolution,
-                antialias: this._antialias,
+                antialias: this.#_antialias,
             }),
         });
 
         // this will not resize if its the same size already! No extra check required
-        this._backBufferTexture.source.resize(
+        this.#_backBufferTexture.source.resize(
             targetSourceTexture.width,
             targetSourceTexture.height,
             targetSourceTexture._resolution,
         );
 
-        return this._backBufferTexture;
+        return this.#_backBufferTexture;
     }
 
     /** destroys the back buffer */
     public destroy()
     {
-        if (this._backBufferTexture)
+        if (this.#_backBufferTexture)
         {
-            this._backBufferTexture.destroy();
-            this._backBufferTexture = null;
+            this.#_backBufferTexture.destroy();
+            this.#_backBufferTexture = null;
         }
     }
 }

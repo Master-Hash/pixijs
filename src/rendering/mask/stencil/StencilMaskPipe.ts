@@ -35,26 +35,26 @@ export class StencilMaskPipe implements InstructionPipe<StencilMaskInstruction>
         name: 'stencilMask',
     } as const;
 
-    private _renderer: Renderer;
+    #_renderer: Renderer;
 
     // used when building and also when executing..
-    private _maskStackHash: Record<number, number> = {};
+    #_maskStackHash: Record<number, number> = {};
 
-    private _maskHash = new WeakMap<StencilMask, {
+    #_maskHash = new WeakMap<StencilMask, {
         instructionsStart: number,
         instructionsLength: number,
     }>();
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     public push(mask: Effect, _container: Container, instructionSet: InstructionSet): void
     {
         const effect = mask as StencilMask;
 
-        const renderer = this._renderer;
+        const renderer = this.#_renderer;
 
         renderer.renderPipes.batch.break(instructionSet);
 
@@ -72,15 +72,15 @@ export class StencilMaskPipe implements InstructionPipe<StencilMaskInstruction>
 
         maskContainer.includeInBuild = true;
 
-        if (!this._maskHash.has(effect))
+        if (!this.#_maskHash.has(effect))
         {
-            this._maskHash.set(effect, {
+            this.#_maskHash.set(effect, {
                 instructionsStart: 0,
                 instructionsLength: 0,
             });
         }
 
-        const maskData = this._maskHash.get(effect);
+        const maskData = this.#_maskHash.get(effect);
 
         maskData.instructionsStart = instructionSet.instructionSize;
 
@@ -108,14 +108,14 @@ export class StencilMaskPipe implements InstructionPipe<StencilMaskInstruction>
 
         const renderTargetUid = renderer.renderTarget.renderTarget.uid;
 
-        this._maskStackHash[renderTargetUid] ??= 0;
+        this.#_maskStackHash[renderTargetUid] ??= 0;
     }
 
     public pop(mask: Effect, _container: Container, instructionSet: InstructionSet): void
     {
         const effect = mask as StencilMask;
 
-        const renderer = this._renderer;
+        const renderer = this.#_renderer;
 
         // stencil is stored based on current render target..
         renderer.renderPipes.batch.break(instructionSet);
@@ -128,7 +128,7 @@ export class StencilMaskPipe implements InstructionPipe<StencilMaskInstruction>
             canBundle: false,
         } as StencilMaskInstruction);
 
-        const maskData = this._maskHash.get(mask as StencilMask);
+        const maskData = this.#_maskHash.get(mask as StencilMask);
 
         for (let i = 0; i < maskData.instructionsLength; i++)
         {
@@ -145,10 +145,10 @@ export class StencilMaskPipe implements InstructionPipe<StencilMaskInstruction>
 
     public execute(instruction: StencilMaskInstruction)
     {
-        const renderer = this._renderer;
+        const renderer = this.#_renderer;
         const renderTargetUid = renderer.renderTarget.renderTarget.uid;
 
-        let maskStackIndex = this._maskStackHash[renderTargetUid] ??= 0;
+        let maskStackIndex = this.#_maskStackHash[renderTargetUid] ??= 0;
 
         if (instruction.action === 'pushMaskBegin')
         {
@@ -205,13 +205,13 @@ export class StencilMaskPipe implements InstructionPipe<StencilMaskInstruction>
             renderer.colorMask.setMask(0xF);
         }
 
-        this._maskStackHash[renderTargetUid] = maskStackIndex;
+        this.#_maskStackHash[renderTargetUid] = maskStackIndex;
     }
 
     public destroy()
     {
-        this._renderer = null;
-        this._maskStackHash = null;
-        this._maskHash = null;
+        this.#_renderer = null;
+        this.#_maskStackHash = null;
+        this.#_maskHash = null;
     }
 }

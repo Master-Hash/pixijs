@@ -52,32 +52,32 @@ export class GlGeometrySystem implements System
     protected _geometryVaoHash: Record<number, Record<string, WebGLVertexArrayObject>> = Object.create(null);
 
     /** Renderer that owns this {@link GeometrySystem}. */
-    private _renderer: WebGLRenderer;
+    #_renderer: WebGLRenderer;
 
     /** @param renderer - The renderer this System works for. */
     constructor(renderer: WebGLRenderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
         this._activeGeometry = null;
         this._activeVao = null;
 
         this.hasVao = true;
         this.hasInstance = true;
 
-        this._renderer.renderableGC.addManagedHash(this, '_geometryVaoHash');
+        this.#_renderer.renderableGC.addManagedHash(this, '_geometryVaoHash');
     }
 
     /** Sets up the renderer context and necessary buffers. */
     protected contextChange(): void
     {
-        const gl = this.gl = this._renderer.gl;
+        const gl = this.gl = this.#_renderer.gl;
 
-        if (!this._renderer.context.supports.vertexArrayObject)
+        if (!this.#_renderer.context.supports.vertexArrayObject)
         {
             throw new Error('[PixiJS] Vertex Array Objects are not supported on this device');
         }
 
-        const nativeVaoExtension = this._renderer.context.extensions.vertexArrayObject;
+        const nativeVaoExtension = this.#_renderer.context.extensions.vertexArrayObject;
 
         if (nativeVaoExtension)
         {
@@ -91,7 +91,7 @@ export class GlGeometrySystem implements System
                 nativeVaoExtension.deleteVertexArrayOES(vao);
         }
 
-        const nativeInstancedExtension = this._renderer.context.extensions.vertexAttribDivisorANGLE;
+        const nativeInstancedExtension = this.#_renderer.context.extensions.vertexAttribDivisorANGLE;
 
         if (nativeInstancedExtension)
         {
@@ -150,7 +150,7 @@ export class GlGeometrySystem implements System
     {
         const geometry = this._activeGeometry;
 
-        const bufferSystem = this._renderer.buffer;
+        const bufferSystem = this.#_renderer.buffer;
 
         for (let i = 0; i < geometry.buffers.length; i++)
         {
@@ -219,11 +219,11 @@ export class GlGeometrySystem implements System
      */
     protected initGeometryVao(geometry: Geometry, program: GlProgram, _incRefCount = true): WebGLVertexArrayObject
     {
-        const gl = this._renderer.gl;
+        const gl = this.#_renderer.gl;
         // const CONTEXT_UID = this.CONTEXT_UID;
-        const bufferSystem = this._renderer.buffer;
+        const bufferSystem = this.#_renderer.buffer;
 
-        this._renderer.shader._getProgramData(program);
+        this.#_renderer.shader._getProgramData(program);
 
         this.checkCompatibility(geometry, program);
 
@@ -346,9 +346,9 @@ export class GlGeometrySystem implements System
      */
     protected activateVao(geometry: Geometry, program: GlProgram): void
     {
-        const gl = this._renderer.gl;
+        const gl = this.#_renderer.gl;
 
-        const bufferSystem = this._renderer.buffer;
+        const bufferSystem = this.#_renderer.buffer;
         const attributes = geometry.attributes;
 
         if (geometry.indexBuffer)
@@ -437,7 +437,7 @@ export class GlGeometrySystem implements System
      */
     public draw(topology?: Topology, size?: number, start?: number, instanceCount?: number): this
     {
-        const { gl } = this._renderer;
+        const { gl } = this.#_renderer;
         const geometry = this._activeGeometry;
 
         const glTopology = topologyToGlMap[topology || geometry.topology];
@@ -483,7 +483,7 @@ export class GlGeometrySystem implements System
 
     public destroy(): void
     {
-        this._renderer = null;
+        this.#_renderer = null;
         this.gl = null;
         this._activeVao = null;
         this._activeGeometry = null;

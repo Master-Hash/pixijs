@@ -77,7 +77,7 @@ export class RenderGroup implements Instruction
 
     public instructionSet: InstructionSet = new InstructionSet();
 
-    private readonly _onRenderContainers: Container[] = [];
+    readonly #_onRenderContainers: Container[] = [];
 
     /**
      * Indicates if the cached texture needs to be updated.
@@ -125,11 +125,11 @@ export class RenderGroup implements Instruction
      */
     public _parentCacheAsTextureRenderGroup: RenderGroup;
 
-    private _inverseWorldTransform: Matrix;
-    private _textureOffsetInverseTransform: Matrix;
-    private _inverseParentTextureTransform: Matrix;
+    #_inverseWorldTransform: Matrix;
+    #_textureOffsetInverseTransform: Matrix;
+    #_inverseParentTextureTransform: Matrix;
 
-    private _matrixDirty = 0b111;
+    #_matrixDirty = 0b111;
 
     public init(root: Container)
     {
@@ -202,7 +202,7 @@ export class RenderGroup implements Instruction
         this.updateTick = 0;
         this.structureDidChange = true;
 
-        this._onRenderContainers.length = 0;
+        this.#_onRenderContainers.length = 0;
         this.renderGroupParent = null;
 
         this.disableCacheAsTexture();
@@ -217,7 +217,7 @@ export class RenderGroup implements Instruction
     {
         if (renderGroupChild.renderGroupParent)
         {
-            renderGroupChild.renderGroupParent._removeRenderGroupChild(renderGroupChild);
+            renderGroupChild.renderGroupParent.#_removeRenderGroupChild(renderGroupChild);
         }
 
         renderGroupChild.renderGroupParent = this;
@@ -225,7 +225,7 @@ export class RenderGroup implements Instruction
         this.renderGroupChildren.push(renderGroupChild);
     }
 
-    private _removeRenderGroupChild(renderGroupChild: RenderGroup)
+    #_removeRenderGroupChild(renderGroupChild: RenderGroup)
     {
         const index = this.renderGroupChildren.indexOf(renderGroupChild);
 
@@ -294,7 +294,7 @@ export class RenderGroup implements Instruction
 
         if (child.renderGroup)
         {
-            this._removeRenderGroupChild(child.renderGroup);
+            this.#_removeRenderGroupChild(child.renderGroup);
 
             return;
         }
@@ -354,19 +354,19 @@ export class RenderGroup implements Instruction
      */
     public addOnRender(container: Container)
     {
-        this._onRenderContainers.push(container);
+        this.#_onRenderContainers.push(container);
     }
 
     public removeOnRender(container: Container)
     {
-        this._onRenderContainers.splice(this._onRenderContainers.indexOf(container), 1);
+        this.#_onRenderContainers.splice(this.#_onRenderContainers.indexOf(container), 1);
     }
 
     public runOnRender(renderer: Renderer)
     {
-        for (let i = 0; i < this._onRenderContainers.length; i++)
+        for (let i = 0; i < this.#_onRenderContainers.length; i++)
         {
-            this._onRenderContainers[i]._onRender(renderer);
+            this.#_onRenderContainers[i]._onRender(renderer);
         }
     }
 
@@ -379,7 +379,7 @@ export class RenderGroup implements Instruction
         (this.childrenRenderablesToUpdate as any) = null;
         (this.childrenToUpdate as any) = null;
         (this.renderGroupChildren as any) = null;
-        (this._onRenderContainers as any) = null;
+        (this.#_onRenderContainers as any) = null;
         this.instructionSet = null;
     }
 
@@ -389,13 +389,13 @@ export class RenderGroup implements Instruction
 
         for (let i = 0; i < children.length; i++)
         {
-            this._getChildren(children[i], out);
+            this.#_getChildren(children[i], out);
         }
 
         return out;
     }
 
-    private _getChildren(container: Container, out: Container[] = []): Container[]
+    #_getChildren(container: Container, out: Container[] = []): Container[]
     {
         out.push(container);
 
@@ -405,7 +405,7 @@ export class RenderGroup implements Instruction
 
         for (let i = 0; i < children.length; i++)
         {
-            this._getChildren(children[i], out);
+            this.#_getChildren(children[i], out);
         }
 
         return out;
@@ -413,7 +413,7 @@ export class RenderGroup implements Instruction
 
     public invalidateMatrices()
     {
-        this._matrixDirty = 0b111;
+        this.#_matrixDirty = 0b111;
     }
 
     /**
@@ -422,14 +422,14 @@ export class RenderGroup implements Instruction
      */
     public get inverseWorldTransform()
     {
-        if ((this._matrixDirty & 0b001) === 0) return this._inverseWorldTransform;
+        if ((this.#_matrixDirty & 0b001) === 0) return this.#_inverseWorldTransform;
 
-        this._matrixDirty &= ~0b001;
+        this.#_matrixDirty &= ~0b001;
 
         // TODO - add dirty flag
-        this._inverseWorldTransform ||= new Matrix();
+        this.#_inverseWorldTransform ||= new Matrix();
 
-        return this._inverseWorldTransform
+        return this.#_inverseWorldTransform
             .copyFrom(this.worldTransform)
             .invert();
     }
@@ -440,14 +440,14 @@ export class RenderGroup implements Instruction
      */
     public get textureOffsetInverseTransform()
     {
-        if ((this._matrixDirty & 0b010) === 0) return this._textureOffsetInverseTransform;
+        if ((this.#_matrixDirty & 0b010) === 0) return this.#_textureOffsetInverseTransform;
 
-        this._matrixDirty &= ~0b010;
+        this.#_matrixDirty &= ~0b010;
 
-        this._textureOffsetInverseTransform ||= new Matrix();
+        this.#_textureOffsetInverseTransform ||= new Matrix();
 
         // TODO shared.. bad!
-        return this._textureOffsetInverseTransform
+        return this.#_textureOffsetInverseTransform
             .copyFrom(this.inverseWorldTransform)
             .translate(
                 -this._textureBounds.x,
@@ -462,18 +462,18 @@ export class RenderGroup implements Instruction
      */
     public get inverseParentTextureTransform()
     {
-        if ((this._matrixDirty & 0b100) === 0) return this._inverseParentTextureTransform;
+        if ((this.#_matrixDirty & 0b100) === 0) return this.#_inverseParentTextureTransform;
 
-        this._matrixDirty &= ~0b100;
+        this.#_matrixDirty &= ~0b100;
 
         const parentCacheAsTexture = this._parentCacheAsTextureRenderGroup;
 
         if (parentCacheAsTexture)
         {
-            this._inverseParentTextureTransform ||= new Matrix();
+            this.#_inverseParentTextureTransform ||= new Matrix();
 
             // Get relative transform by removing parent's world transform
-            return this._inverseParentTextureTransform
+            return this.#_inverseParentTextureTransform
                 .copyFrom(this.worldTransform)
                 .prepend(parentCacheAsTexture.inverseWorldTransform)
                 // Offset by texture bounds

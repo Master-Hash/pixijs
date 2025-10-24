@@ -87,72 +87,72 @@ export class PipelineSystem implements System
         type: [ExtensionType.WebGPUSystem],
         name: 'pipeline',
     } as const;
-    private readonly _renderer: WebGPURenderer;
+    readonly #_renderer: WebGPURenderer;
 
     protected CONTEXT_UID: number;
 
-    private _moduleCache: Record<string, GPUShaderModule> = Object.create(null);
-    private _bufferLayoutsCache: Record<number, GPUVertexBufferLayout[]> = Object.create(null);
-    private readonly _bindingNamesCache: Record<string, Record<string, string>> = Object.create(null);
+    #_moduleCache: Record<string, GPUShaderModule> = Object.create(null);
+    #_bufferLayoutsCache: Record<number, GPUVertexBufferLayout[]> = Object.create(null);
+    readonly #_bindingNamesCache: Record<string, Record<string, string>> = Object.create(null);
 
-    private _pipeCache: PipeHash = Object.create(null);
-    private readonly _pipeStateCaches: Record<number, PipeHash> = Object.create(null);
+    #_pipeCache: PipeHash = Object.create(null);
+    readonly #_pipeStateCaches: Record<number, PipeHash> = Object.create(null);
 
-    private _gpu: GPU;
-    private _stencilState: StencilState;
+    #_gpu: GPU;
+    #_stencilState: StencilState;
 
-    private _stencilMode: STENCIL_MODES;
-    private _colorMask = 0b1111;
-    private _multisampleCount = 1;
-    private _depthStencilAttachment: 0 | 1;
+    #_stencilMode: STENCIL_MODES;
+    #_colorMask = 0b1111;
+    #_multisampleCount = 1;
+    #_depthStencilAttachment: 0 | 1;
 
     constructor(renderer: WebGPURenderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     protected contextChange(gpu: GPU): void
     {
-        this._gpu = gpu;
+        this.#_gpu = gpu;
         this.setStencilMode(STENCIL_MODES.DISABLED);
 
-        this._updatePipeHash();
+        this.#_updatePipeHash();
     }
 
     public setMultisampleCount(multisampleCount: number): void
     {
-        if (this._multisampleCount === multisampleCount) return;
+        if (this.#_multisampleCount === multisampleCount) return;
 
-        this._multisampleCount = multisampleCount;
+        this.#_multisampleCount = multisampleCount;
 
-        this._updatePipeHash();
+        this.#_updatePipeHash();
     }
 
     public setRenderTarget(renderTarget: GpuRenderTarget)
     {
-        this._multisampleCount = renderTarget.msaaSamples;
-        this._depthStencilAttachment = renderTarget.descriptor.depthStencilAttachment ? 1 : 0;
+        this.#_multisampleCount = renderTarget.msaaSamples;
+        this.#_depthStencilAttachment = renderTarget.descriptor.depthStencilAttachment ? 1 : 0;
 
-        this._updatePipeHash();
+        this.#_updatePipeHash();
     }
 
     public setColorMask(colorMask: number): void
     {
-        if (this._colorMask === colorMask) return;
+        if (this.#_colorMask === colorMask) return;
 
-        this._colorMask = colorMask;
+        this.#_colorMask = colorMask;
 
-        this._updatePipeHash();
+        this.#_updatePipeHash();
     }
 
     public setStencilMode(stencilMode: STENCIL_MODES): void
     {
-        if (this._stencilMode === stencilMode) return;
+        if (this.#_stencilMode === stencilMode) return;
 
-        this._stencilMode = stencilMode;
-        this._stencilState = GpuStencilModesToPixi[stencilMode];
+        this.#_stencilMode = stencilMode;
+        this.#_stencilState = GpuStencilModesToPixi[stencilMode];
 
-        this._updatePipeHash();
+        this.#_updatePipeHash();
     }
 
     public setPipeline(geometry: Geometry, program: GpuProgram, state: State, passEncoder: GPURenderPassEncoder): void
@@ -174,7 +174,7 @@ export class PipelineSystem implements System
             ensureAttributes(geometry, program.attributeData);
 
             // prepare the geometry for the pipeline
-            this._generateBufferKey(geometry);
+            this.#_generateBufferKey(geometry);
         }
 
         topology ||= geometry.topology;
@@ -188,36 +188,36 @@ export class PipelineSystem implements System
             topologyStringToId[topology],
         );
 
-        if (this._pipeCache[key]) return this._pipeCache[key];
+        if (this.#_pipeCache[key]) return this.#_pipeCache[key];
 
-        this._pipeCache[key] = this._createPipeline(geometry, program, state, topology);
+        this.#_pipeCache[key] = this.#_createPipeline(geometry, program, state, topology);
 
-        return this._pipeCache[key];
+        return this.#_pipeCache[key];
     }
 
-    private _createPipeline(geometry: Geometry, program: GpuProgram, state: State, topology: Topology): GPURenderPipeline
+    #_createPipeline(geometry: Geometry, program: GpuProgram, state: State, topology: Topology): GPURenderPipeline
     {
-        const device = this._gpu.device;
+        const device = this.#_gpu.device;
 
-        const buffers = this._createVertexBufferLayouts(geometry, program);
+        const buffers = this.#_createVertexBufferLayouts(geometry, program);
 
-        const blendModes = this._renderer.state.getColorTargets(state);
+        const blendModes = this.#_renderer.state.getColorTargets(state);
 
-        blendModes[0].writeMask = this._stencilMode === STENCIL_MODES.RENDERING_MASK_ADD ? 0 : this._colorMask;
+        blendModes[0].writeMask = this.#_stencilMode === STENCIL_MODES.RENDERING_MASK_ADD ? 0 : this.#_colorMask;
 
-        const layout = this._renderer.shader.getProgramData(program).pipeline;
+        const layout = this.#_renderer.shader.getProgramData(program).pipeline;
 
         const descriptor: GPURenderPipelineDescriptor = {
             // TODO later check if its helpful to create..
             // layout,
             vertex: {
-                module: this._getModule(program.vertex.source),
+                module: this.#_getModule(program.vertex.source),
                 entryPoint: program.vertex.entryPoint,
                 // geometry..
                 buffers,
             },
             fragment: {
-                module: this._getModule(program.fragment.source),
+                module: this.#_getModule(program.fragment.source),
                 entryPoint: program.fragment.entryPoint,
                 targets: blendModes,
             },
@@ -227,18 +227,18 @@ export class PipelineSystem implements System
             },
             layout,
             multisample: {
-                count: this._multisampleCount,
+                count: this.#_multisampleCount,
             },
             // depthStencil,
             label: `PIXI Pipeline`,
         };
 
         // only apply if the texture has stencil or depth
-        if (this._depthStencilAttachment)
+        if (this.#_depthStencilAttachment)
         {
             // mask states..
             descriptor.depthStencil = {
-                ...this._stencilState,
+                ...this.#_stencilState,
                 format: 'depth24plus-stencil8',
                 depthWriteEnabled: state.depthTest,
                 depthCompare: state.depthTest ? 'less' : 'always',
@@ -250,23 +250,23 @@ export class PipelineSystem implements System
         return pipeline;
     }
 
-    private _getModule(code: string): GPUShaderModule
+    #_getModule(code: string): GPUShaderModule
     {
-        return this._moduleCache[code] || this._createModule(code);
+        return this.#_moduleCache[code] || this.#_createModule(code);
     }
 
-    private _createModule(code: string): GPUShaderModule
+    #_createModule(code: string): GPUShaderModule
     {
-        const device = this._gpu.device;
+        const device = this.#_gpu.device;
 
-        this._moduleCache[code] = device.createShaderModule({
+        this.#_moduleCache[code] = device.createShaderModule({
             code,
         });
 
-        return this._moduleCache[code];
+        return this.#_moduleCache[code];
     }
 
-    private _generateBufferKey(geometry: Geometry): number
+    #_generateBufferKey(geometry: Geometry): number
     {
         const keyGen = [];
         let index = 0;
@@ -291,7 +291,7 @@ export class PipelineSystem implements System
         return geometry._layoutKey;
     }
 
-    private _generateAttributeLocationsKey(program: GpuProgram): number
+    #_generateAttributeLocationsKey(program: GpuProgram): number
     {
         const keyGen = [];
         let index = 0;
@@ -324,9 +324,9 @@ export class PipelineSystem implements System
     {
         const key = (geometry._layoutKey << 16) | program._attributeLocationsKey;
 
-        if (this._bindingNamesCache[key]) return this._bindingNamesCache[key];
+        if (this.#_bindingNamesCache[key]) return this.#_bindingNamesCache[key];
 
-        const data = this._createVertexBufferLayouts(geometry, program);
+        const data = this.#_createVertexBufferLayouts(geometry, program);
 
         // now map the data to the buffers..
         const bufferNamesToBind: Record<string, string> = Object.create(null);
@@ -349,20 +349,20 @@ export class PipelineSystem implements System
             }
         }
 
-        this._bindingNamesCache[key] = bufferNamesToBind;
+        this.#_bindingNamesCache[key] = bufferNamesToBind;
 
         return bufferNamesToBind;
     }
 
-    private _createVertexBufferLayouts(geometry: Geometry, program: GpuProgram): GPUVertexBufferLayout[]
+    #_createVertexBufferLayouts(geometry: Geometry, program: GpuProgram): GPUVertexBufferLayout[]
     {
-        if (!program._attributeLocationsKey) this._generateAttributeLocationsKey(program);
+        if (!program._attributeLocationsKey) this.#_generateAttributeLocationsKey(program);
 
         const key = (geometry._layoutKey << 16) | program._attributeLocationsKey;
 
-        if (this._bufferLayoutsCache[key])
+        if (this.#_bufferLayoutsCache[key])
         {
-            return this._bufferLayoutsCache[key];
+            return this.#_bufferLayoutsCache[key];
         }
 
         const vertexBuffersLayout: GPUVertexBufferLayout[] = [];
@@ -408,31 +408,31 @@ export class PipelineSystem implements System
             }
         });
 
-        this._bufferLayoutsCache[key] = vertexBuffersLayout;
+        this.#_bufferLayoutsCache[key] = vertexBuffersLayout;
 
         return vertexBuffersLayout;
     }
 
-    private _updatePipeHash(): void
+    #_updatePipeHash(): void
     {
         const key = getGlobalStateKey(
-            this._stencilMode,
-            this._multisampleCount,
-            this._colorMask,
-            this._depthStencilAttachment
+            this.#_stencilMode,
+            this.#_multisampleCount,
+            this.#_colorMask,
+            this.#_depthStencilAttachment
         );
 
-        if (!this._pipeStateCaches[key])
+        if (!this.#_pipeStateCaches[key])
         {
-            this._pipeStateCaches[key] = Object.create(null);
+            this.#_pipeStateCaches[key] = Object.create(null);
         }
 
-        this._pipeCache = this._pipeStateCaches[key];
+        this.#_pipeCache = this.#_pipeStateCaches[key];
     }
 
     public destroy(): void
     {
-        (this._renderer as null) = null;
-        this._bufferLayoutsCache = null;
+        (this.#_renderer as null) = null;
+        this.#_bufferLayoutsCache = null;
     }
 }
