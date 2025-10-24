@@ -79,15 +79,15 @@ export class BackgroundSystem implements System<BackgroundSystemOptions>
      */
     public clearBeforeRender: boolean;
 
-    private readonly _backgroundColor: Color;
+    readonly #_backgroundColor: Color;
 
     constructor()
     {
         this.clearBeforeRender = true;
 
-        this._backgroundColor = new Color(0x000000);
+        this.#_backgroundColor = new Color(0x000000);
 
-        this.color = this._backgroundColor; // run bg color setter
+        this.color = this.#_backgroundColor; // run bg color setter
         this.alpha = 1;
     }
 
@@ -100,16 +100,16 @@ export class BackgroundSystem implements System<BackgroundSystemOptions>
         options = { ...BackgroundSystem.defaultOptions, ...options };
 
         this.clearBeforeRender = options.clearBeforeRender;
-        this.color = options.background || options.backgroundColor || this._backgroundColor; // run bg color setter
+        this.color = options.background || options.backgroundColor || this.#_backgroundColor; // run bg color setter
         this.alpha = options.backgroundAlpha;
 
-        this._backgroundColor.setAlpha(options.backgroundAlpha);
+        this.#_backgroundColor.setAlpha(options.backgroundAlpha);
     }
 
     /** The background color to fill if not transparent */
     get color(): Color
     {
-        return this._backgroundColor;
+        return this.#_backgroundColor;
     }
 
     set color(value: ColorSource)
@@ -118,7 +118,7 @@ export class BackgroundSystem implements System<BackgroundSystemOptions>
 
         const incoming = Color.shared.setValue(value);
 
-        if (incoming.alpha < 1 && this._backgroundColor.alpha === 1)
+        if (incoming.alpha < 1 && this.#_backgroundColor.alpha === 1)
         {
             warn(
                 'Cannot set a transparent background on an opaque canvas. '
@@ -126,24 +126,24 @@ export class BackgroundSystem implements System<BackgroundSystemOptions>
             );
         }
         // #endif
-        this._backgroundColor.setValue(value);
+        this.#_backgroundColor.setValue(value);
     }
 
     /** The background color alpha. Setting this to 0 will make the canvas transparent. */
     get alpha(): number
     {
-        return this._backgroundColor.alpha;
+        return this.#_backgroundColor.alpha;
     }
 
     set alpha(value: number)
     {
-        this._backgroundColor.setAlpha(value);
+        this.#_backgroundColor.setAlpha(value);
     }
 
     /** The background color as an [R, G, B, A] array. */
     get colorRgba(): RgbaArray
     {
-        return this._backgroundColor.toArray() as RgbaArray;
+        return this.#_backgroundColor.toArray() as RgbaArray;
     }
 
     /**

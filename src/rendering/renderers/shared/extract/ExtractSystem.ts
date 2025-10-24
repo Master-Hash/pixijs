@@ -456,15 +456,15 @@ export class ExtractSystem implements System
         quality: 1,
     };
 
-    private _renderer: Renderer;
+    #_renderer: Renderer;
 
     /** @param renderer - The renderer this System works for. */
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
-    private _normalizeOptions<T extends ExtractOptions>(
+    #_normalizeOptions<T extends ExtractOptions>(
         options: ExtractImageOptions | Container | Texture,
         defaults: Partial<T> = {},
     ): T
@@ -558,7 +558,7 @@ export class ExtractSystem implements System
      */
     public async base64(options: ExtractImageOptions | Container | Texture): Promise<string>
     {
-        options = this._normalizeOptions<ExtractImageOptions>(
+        options = this.#_normalizeOptions<ExtractImageOptions>(
             options,
             ExtractSystem.defaultImageOptions
         );
@@ -652,11 +652,11 @@ export class ExtractSystem implements System
      */
     public canvas(options: ExtractOptions | Container | Texture): ICanvas
     {
-        options = this._normalizeOptions(options);
+        options = this.#_normalizeOptions(options);
 
         const target = options.target;
 
-        const renderer = this._renderer;
+        const renderer = this.#_renderer;
 
         if (target instanceof Texture)
         {
@@ -704,11 +704,11 @@ export class ExtractSystem implements System
      */
     public pixels(options: ExtractOptions | Container | Texture): GetPixelsOutput
     {
-        options = this._normalizeOptions(options);
+        options = this.#_normalizeOptions(options);
 
         const target = options.target;
 
-        const renderer = this._renderer;
+        const renderer = this.#_renderer;
         const texture = target instanceof Texture
             ? target
             : renderer.textureGenerator.generateTexture(options as GenerateTextureOptions);
@@ -769,11 +769,11 @@ export class ExtractSystem implements System
      */
     public texture(options: ExtractOptions | Container | Texture): Texture
     {
-        options = this._normalizeOptions(options);
+        options = this.#_normalizeOptions(options);
 
         if (options.target instanceof Texture) return options.target;
 
-        return this._renderer.textureGenerator.generateTexture(options as GenerateTextureOptions);
+        return this.#_renderer.textureGenerator.generateTexture(options as GenerateTextureOptions);
     }
 
     /**
@@ -823,7 +823,7 @@ export class ExtractSystem implements System
     public download(options: ExtractDownloadOptions | Container | Texture)
     {
         /* eslint-disable no-restricted-globals */
-        options = this._normalizeOptions<ExtractDownloadOptions>(options);
+        options = this.#_normalizeOptions<ExtractDownloadOptions>(options);
 
         const canvas = this.canvas(options);
 
@@ -857,7 +857,7 @@ export class ExtractSystem implements System
     {
         const width = options.width ?? 200;
 
-        options = this._normalizeOptions(options);
+        options = this.#_normalizeOptions(options);
 
         const canvas = this.canvas(options);
 
@@ -879,6 +879,6 @@ export class ExtractSystem implements System
 
     public destroy(): void
     {
-        this._renderer = null as any as Renderer;
+        this.#_renderer = null as any as Renderer;
     }
 }

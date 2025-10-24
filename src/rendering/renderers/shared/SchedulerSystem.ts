@@ -24,7 +24,7 @@ export class SchedulerSystem implements System<null>
         priority: 0,
     } as const;
 
-    private readonly _tasks: {
+    readonly #_tasks: {
         func: (elapsed: number) => void;
         duration: number;
         offset: number
@@ -35,12 +35,12 @@ export class SchedulerSystem implements System<null>
     }[] = [];
 
     /** a small off set to apply to the repeat schedules. This is just to make sure they run at slightly different times */
-    private _offset = 0;
+    #_offset = 0;
 
     /** Initializes the scheduler system and starts the ticker. */
     public init(): void
     {
-        Ticker.system.add(this._update, this);
+        Ticker.system.add(this.#_update, this);
     }
 
     /**
@@ -58,11 +58,11 @@ export class SchedulerSystem implements System<null>
 
         if (useOffset)
         {
-            this._offset += 1000;
-            offset = this._offset;
+            this.#_offset += 1000;
+            offset = this.#_offset;
         }
 
-        this._tasks.push({
+        this.#_tasks.push({
             func,
             duration,
             start: performance.now(),
@@ -81,11 +81,11 @@ export class SchedulerSystem implements System<null>
      */
     public cancel(id: number): void
     {
-        for (let i = 0; i < this._tasks.length; i++)
+        for (let i = 0; i < this.#_tasks.length; i++)
         {
-            if (this._tasks[i].id === id)
+            if (this.#_tasks[i].id === id)
             {
-                this._tasks.splice(i, 1);
+                this.#_tasks.splice(i, 1);
 
                 return;
             }
@@ -96,13 +96,13 @@ export class SchedulerSystem implements System<null>
      * Updates and executes the scheduled tasks.
      * @private
      */
-    private _update(): void
+    #_update(): void
     {
         const now = performance.now();
 
-        for (let i = 0; i < this._tasks.length; i++)
+        for (let i = 0; i < this.#_tasks.length; i++)
         {
-            const task = this._tasks[i];
+            const task = this.#_tasks[i];
 
             if ((now - task.offset) - task.last >= task.duration)
             {
@@ -120,8 +120,8 @@ export class SchedulerSystem implements System<null>
      */
     public destroy(): void
     {
-        Ticker.system.remove(this._update, this);
+        Ticker.system.remove(this.#_update, this);
 
-        this._tasks.length = 0;
+        this.#_tasks.length = 0;
     }
 }

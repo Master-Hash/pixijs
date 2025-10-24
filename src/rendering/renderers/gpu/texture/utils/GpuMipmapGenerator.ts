@@ -21,7 +21,7 @@ export class GpuMipmapGenerator
         this.pipelines = {};
     }
 
-    private _getMipmapPipeline(format: GPUTextureFormat)
+    #_getMipmapPipeline(format: GPUTextureFormat)
     {
         let pipeline = this.pipelines[format];
 
@@ -85,7 +85,7 @@ export class GpuMipmapGenerator
      */
     public generateMipmap(texture: GPUTexture)
     {
-        const pipeline = this._getMipmapPipeline(texture.format);
+        const pipeline = this.#_getMipmapPipeline(texture.format);
 
         if (texture.dimension === '3d' || texture.dimension === '1d')
         {

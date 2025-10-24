@@ -143,9 +143,9 @@ export class Buffer extends EventEmitter<{
     /** @internal */
     public _updateSize: number;
 
-    private _data: TypedArray;
+    #_data: TypedArray;
 
-    private _dataInt32: Int32Array = null;
+    #_dataInt32: Int32Array = null;
 
     /**
      * should the GPU buffer be shrunk when the data becomes smaller?
@@ -179,7 +179,7 @@ export class Buffer extends EventEmitter<{
             data = new Float32Array(data as number[]);
         }
 
-        this._data = data as TypedArray;
+        this.#_data = data as TypedArray;
 
         size ??= (data as TypedArray)?.byteLength;
 
@@ -198,7 +198,7 @@ export class Buffer extends EventEmitter<{
     /** the data in the buffer */
     get data()
     {
-        return this._data;
+        return this.#_data;
     }
 
     set data(value: TypedArray)
@@ -208,12 +208,12 @@ export class Buffer extends EventEmitter<{
 
     get dataInt32()
     {
-        if (!this._dataInt32)
+        if (!this.#_dataInt32)
         {
-            this._dataInt32 = new Int32Array((this.data as any).buffer);
+            this.#_dataInt32 = new Int32Array((this.data as any).buffer);
         }
 
-        return this._dataInt32;
+        return this.#_dataInt32;
     }
 
     /** whether the buffer is static or not */
@@ -249,7 +249,7 @@ export class Buffer extends EventEmitter<{
         this._updateSize = (size * value.BYTES_PER_ELEMENT);
 
         // If the data hasn't changed, early return after emitting 'update'
-        if (this._data === value)
+        if (this.#_data === value)
         {
             if (syncGPU) this.emit('update', this);
 
@@ -257,10 +257,10 @@ export class Buffer extends EventEmitter<{
         }
 
         // Cache old data and update to new value
-        const oldData = this._data;
+        const oldData = this.#_data;
 
-        this._data = value;
-        this._dataInt32 = null;
+        this.#_data = value;
+        this.#_dataInt32 = null;
 
         // Event handling
         if (!oldData || oldData.length !== value.length)
@@ -305,7 +305,7 @@ export class Buffer extends EventEmitter<{
         this.emit('destroy', this);
         this.emit('change', this);
 
-        this._data = null;
+        this.#_data = null;
         (this.descriptor as null) = null;
 
         this.removeAllListeners();

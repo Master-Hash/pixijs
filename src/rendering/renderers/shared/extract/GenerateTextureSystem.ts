@@ -225,11 +225,11 @@ export class GenerateTextureSystem implements System
         name: 'textureGenerator',
     } as const;
 
-    private readonly _renderer: Renderer;
+    readonly #_renderer: Renderer;
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     /**
@@ -280,8 +280,8 @@ export class GenerateTextureSystem implements System
             };
         }
 
-        const resolution = options.resolution || this._renderer.resolution;
-        const antialias = options.antialias || this._renderer.view.antialias;
+        const resolution = options.resolution || this.#_renderer.resolution;
+        const antialias = options.antialias || this.#_renderer.view.antialias;
 
         const container = options.target;
 
@@ -314,7 +314,7 @@ export class GenerateTextureSystem implements System
 
         const transform = Matrix.shared.translate(-region.x, -region.y);
 
-        this._renderer.render({
+        this.#_renderer.render({
             container,
             transform,
             target,
@@ -328,6 +328,6 @@ export class GenerateTextureSystem implements System
 
     public destroy(): void
     {
-        (this._renderer as null) = null;
+        (this.#_renderer as null) = null;
     }
 }
