@@ -34,11 +34,11 @@ export class CanvasPoolClass
      * @default false
      */
     public enableFullScreen: boolean;
-    private _canvasPool: {[x in string | number]: CanvasAndContext[]};
+    #_canvasPool: {[x in string | number]: CanvasAndContext[]};
 
     constructor(canvasOptions?: ICanvasRenderingContext2DSettings)
     {
-        this._canvasPool = Object.create(null);
+        this.#_canvasPool = Object.create(null);
         this.canvasOptions = canvasOptions || {};
         this.enableFullScreen = false;
     }
@@ -48,7 +48,7 @@ export class CanvasPoolClass
      * @param pixelWidth - Width of texture in pixels.
      * @param pixelHeight - Height of texture in pixels.
      */
-    private _createCanvasAndContext(pixelWidth: number, pixelHeight: number): CanvasAndContext
+    #_createCanvasAndContext(pixelWidth: number, pixelHeight: number): CanvasAndContext
     {
         const canvas = DOMAdapter.get().createCanvas();
 
@@ -76,16 +76,16 @@ export class CanvasPoolClass
 
         const key = (minWidth << 17) + (minHeight << 1);
 
-        if (!this._canvasPool[key])
+        if (!this.#_canvasPool[key])
         {
-            this._canvasPool[key] = [];
+            this.#_canvasPool[key] = [];
         }
 
-        let canvasAndContext = this._canvasPool[key].pop();
+        let canvasAndContext = this.#_canvasPool[key].pop();
 
         if (!canvasAndContext)
         {
-            canvasAndContext = this._createCanvasAndContext(minWidth, minHeight);
+            canvasAndContext = this.#_createCanvasAndContext(minWidth, minHeight);
         }
 
         return canvasAndContext;
@@ -105,12 +105,12 @@ export class CanvasPoolClass
         canvasAndContext.context.resetTransform();
         canvasAndContext.context.clearRect(0, 0, width, height);
 
-        this._canvasPool[key].push(canvasAndContext);
+        this.#_canvasPool[key].push(canvasAndContext);
     }
 
     public clear(): void
     {
-        this._canvasPool = {};
+        this.#_canvasPool = {};
     }
 }
 

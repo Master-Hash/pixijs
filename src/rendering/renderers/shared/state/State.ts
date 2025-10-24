@@ -38,8 +38,8 @@ export class State
     public data: number;
     /** @internal */
     public _blendModeId: number;
-    private _blendMode: BLEND_MODES;
-    private _polygonOffset: number;
+    #_blendMode: BLEND_MODES;
+    #_polygonOffset: number;
 
     constructor()
     {
@@ -185,13 +185,13 @@ export class State
      */
     get blendMode(): BLEND_MODES
     {
-        return this._blendMode;
+        return this.#_blendMode;
     }
 
     set blendMode(value: BLEND_MODES)
     {
         this.blend = (value !== 'none');
-        this._blendMode = value;
+        this.#_blendMode = value;
         this._blendModeId = blendModeIds[value as keyof typeof blendModeIds] || 0;
     }
 
@@ -201,13 +201,13 @@ export class State
      */
     get polygonOffset(): number
     {
-        return this._polygonOffset;
+        return this.#_polygonOffset;
     }
 
     set polygonOffset(value: number)
     {
         this.offsets = !!value;
-        this._polygonOffset = value;
+        this.#_polygonOffset = value;
     }
 
     // #if _DEBUG

@@ -44,11 +44,11 @@ export class HelloSystem implements System<HelloSystemOptions>
         hello: false,
     };
 
-    private readonly _renderer: Renderer;
+    readonly #_renderer: Renderer;
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#_renderer = renderer;
     }
 
     /**
@@ -59,11 +59,11 @@ export class HelloSystem implements System<HelloSystemOptions>
     {
         if (options.hello)
         {
-            let name = this._renderer.name;
+            let name = this.#_renderer.name;
 
-            if (this._renderer.type === RendererType.WEBGL)
+            if (this.#_renderer.type === RendererType.WEBGL)
             {
-                name += ` ${(this._renderer as WebGLRenderer).context.webGLVersion}`;
+                name += ` ${(this.#_renderer as WebGLRenderer).context.webGLVersion}`;
             }
 
             sayHello(name);
