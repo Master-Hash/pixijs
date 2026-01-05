@@ -27,14 +27,14 @@ export class DOMPipe implements RenderPipe<DOMContainer>
         name: 'dom',
     } as const;
 
-    private _renderer: Renderer;
+    #renderer: Renderer;
 
     /** Array to keep track of attached DOM elements */
-    private readonly _attachedDomElements: DOMContainer[] = [];
+    readonly #attachedDomElements: DOMContainer[] = [];
     /** The main DOM element that acts as a container for other DOM elements */
-    private readonly _domElement: HTMLDivElement;
+    readonly #domElement: HTMLDivElement;
     /** The CanvasTransformSync instance that keeps the DOM element in sync with the canvas */
-    private _canvasObserver: CanvasObserver;
+    #canvasObserver: CanvasObserver;
 
     /**
      * Constructor for the DOMPipe class.
@@ -42,31 +42,31 @@ export class DOMPipe implements RenderPipe<DOMContainer>
      */
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#renderer = renderer;
 
         // Add this DOMPipe to the postrender runner of the renderer
         // we want to dom elements are calculated after all things have been rendered
-        this._renderer.runners.postrender.add(this);
+        this.#renderer.runners.postrender.add(this);
 
         // add DOMPipe to init runners
-        this._renderer.runners.init.add(this);
+        this.#renderer.runners.init.add(this);
 
         // Create a main DOM element to contain other DOM elements
-        this._domElement = document.createElement('div');
-        this._domElement.style.position = 'absolute';
-        this._domElement.style.top = '0';
-        this._domElement.style.left = '0';
-        this._domElement.style.pointerEvents = 'none';
-        this._domElement.style.zIndex = '1000';
+        this.#domElement = document.createElement('div');
+        this.#domElement.style.position = 'absolute';
+        this.#domElement.style.top = '0';
+        this.#domElement.style.left = '0';
+        this.#domElement.style.pointerEvents = 'none';
+        this.#domElement.style.zIndex = '1000';
     }
 
     /** Initializes the DOMPipe, setting up the main DOM element and adding it to the document body. */
     public init(): void
     {
         // Initialize the CanvasTransformSync to keep the DOM element in sync with the canvas
-        this._canvasObserver = new CanvasObserver({
-            domElement: this._domElement,
-            renderer: this._renderer,
+        this.#canvasObserver = new CanvasObserver({
+            domElement: this.#domElement,
+            renderer: this.#renderer,
         });
     }
 
@@ -77,9 +77,9 @@ export class DOMPipe implements RenderPipe<DOMContainer>
      */
     public addRenderable(domContainer: DOMContainer, _instructionSet: InstructionSet): void
     {
-        if (!this._attachedDomElements.includes(domContainer))
+        if (!this.#attachedDomElements.includes(domContainer))
         {
-            this._attachedDomElements.push(domContainer);
+            this.#attachedDomElements.push(domContainer);
         }
     }
 
@@ -105,17 +105,17 @@ export class DOMPipe implements RenderPipe<DOMContainer>
     /** Handles the post-rendering process, ensuring DOM elements are correctly positioned and visible. */
     public postrender(): void
     {
-        const attachedDomElements = this._attachedDomElements;
+        const attachedDomElements = this.#attachedDomElements;
 
         if (attachedDomElements.length === 0)
         {
-            this._domElement.remove();
+            this.#domElement.remove();
 
             return;
         }
 
         // Ensure the main DOM element is attached to the same parent as the canvas
-        this._canvasObserver.ensureAttached();
+        this.#canvasObserver.ensureAttached();
 
         for (let i = 0; i < attachedDomElements.length; i++)
         {
@@ -130,11 +130,11 @@ export class DOMPipe implements RenderPipe<DOMContainer>
             }
             else
             {
-                if (!this._domElement.contains(element))
+                if (!this.#domElement.contains(element))
                 {
                     element.style.position = 'absolute';
                     element.style.pointerEvents = 'auto';
-                    this._domElement.appendChild(element);
+                    this.#domElement.appendChild(element);
                 }
 
                 const wt = domContainer.worldTransform;
@@ -152,18 +152,18 @@ export class DOMPipe implements RenderPipe<DOMContainer>
     /** Destroys the DOMPipe, removing all attached DOM elements and cleaning up resources. */
     public destroy(): void
     {
-        this._renderer.runners.postrender.remove(this);
+        this.#renderer.runners.postrender.remove(this);
 
-        for (let i = 0; i < this._attachedDomElements.length; i++)
+        for (let i = 0; i < this.#attachedDomElements.length; i++)
         {
-            const domContainer = this._attachedDomElements[i];
+            const domContainer = this.#attachedDomElements[i];
 
             domContainer.element?.remove();
         }
 
-        this._attachedDomElements.length = 0;
-        this._domElement.remove();
-        this._canvasObserver.destroy();
-        this._renderer = null;
+        this.#attachedDomElements.length = 0;
+        this.#domElement.remove();
+        this.#canvasObserver.destroy();
+        this.#renderer = null;
     }
 }

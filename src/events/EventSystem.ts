@@ -274,7 +274,7 @@ export class EventSystem implements System<EventSystemOptions>
         wheel: true,
     };
 
-    private static _defaultEventMode: EventMode;
+    static #defaultEventMode: EventMode;
 
     /**
      * The default interaction mode for all display objects.
@@ -285,7 +285,7 @@ export class EventSystem implements System<EventSystemOptions>
      */
     public static get defaultEventMode()
     {
-        return this._defaultEventMode;
+        return this.#defaultEventMode;
     }
 
     /**
@@ -482,7 +482,7 @@ export class EventSystem implements System<EventSystemOptions>
 
         this.setTargetElement(canvas as HTMLCanvasElement);
         this.resolution = resolution;
-        EventSystem._defaultEventMode = options.eventMode ?? 'passive';
+        EventSystem.#defaultEventMode = options.eventMode ?? 'passive';
         Object.assign(this.features, options.eventFeatures ?? {});
         this.rootBoundary.enableGlobalMoveEvents = this.features.globalMove;
     }
