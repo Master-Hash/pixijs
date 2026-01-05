@@ -89,10 +89,10 @@ export class Culler
      */
     public cull(container: Container, view: RectangleLike, skipUpdateTransform = true)
     {
-        this._cullRecursive(container, view, skipUpdateTransform);
+        this.#cullRecursive(container, view, skipUpdateTransform);
     }
 
-    private _cullRecursive(container: Container, view: RectangleLike, skipUpdateTransform = true)
+    #cullRecursive(container: Container, view: RectangleLike, skipUpdateTransform = true)
     {
         if (container.cullable && container.measurable && container.includeInBuild)
         {
@@ -120,7 +120,7 @@ export class Culler
 
         for (let i = 0; i < container.children.length; i++)
         {
-            this._cullRecursive(container.children[i], view, skipUpdateTransform);
+            this.#cullRecursive(container.children[i], view, skipUpdateTransform);
         }
     }
 

@@ -84,11 +84,11 @@ export class ResizePlugin
     /** @internal */
     public static render: () => void;
     /** @internal */
-    private static _resizeId: number;
+    static #resizeId: number;
     /** @internal */
-    private static _resizeTo: Window | HTMLElement;
+    static #resizeTo: Window | HTMLElement;
     /** @internal */
-    private static _cancelResize: () => void;
+    static #cancelResize: () => void;
 
     /**
      * Initialize the plugin with scope of application instance
@@ -118,41 +118,41 @@ export class ResizePlugin
 
         this.queueResize = (): void =>
         {
-            if (!this._resizeTo)
+            if (!this.#resizeTo)
             {
                 return;
             }
 
-            this._cancelResize();
+            this.#cancelResize();
 
             // // Throttle resize events per raf
-            this._resizeId = requestAnimationFrame(() => this.resize());
+            this.#resizeId = requestAnimationFrame(() => this.resize());
         };
 
-        this._cancelResize = (): void =>
+        this.#cancelResize = (): void =>
         {
-            if (this._resizeId)
+            if (this.#resizeId)
             {
-                cancelAnimationFrame(this._resizeId);
-                this._resizeId = null;
+                cancelAnimationFrame(this.#resizeId);
+                this.#resizeId = null;
             }
         };
 
         this.resize = (): void =>
         {
-            if (!this._resizeTo)
+            if (!this.#resizeTo)
             {
                 return;
             }
 
             // clear queue resize
-            this._cancelResize();
+            this.#cancelResize();
 
             let width: number;
             let height: number;
 
             // Resize to the window
-            if (this._resizeTo === globalThis.window)
+            if (this.#resizeTo === globalThis.window)
             {
                 width = globalThis.innerWidth;
                 height = globalThis.innerHeight;
@@ -160,7 +160,7 @@ export class ResizePlugin
             // Resize to other HTML entities
             else
             {
-                const { clientWidth, clientHeight } = this._resizeTo as HTMLElement;
+                const { clientWidth, clientHeight } = this.#resizeTo as HTMLElement;
 
                 width = clientWidth;
                 height = clientHeight;
@@ -171,8 +171,8 @@ export class ResizePlugin
         };
 
         // On resize
-        this._resizeId = null;
-        this._resizeTo = null;
+        this.#resizeId = null;
+        this.#resizeTo = null;
         this.resizeTo = options.resizeTo || null;
     }
 
@@ -183,8 +183,8 @@ export class ResizePlugin
     public static destroy(): void
     {
         globalThis.removeEventListener('resize', this.queueResize);
-        this._cancelResize();
-        this._cancelResize = null;
+        this.#cancelResize();
+        this.#cancelResize = null;
         this.queueResize = null;
         this.resizeTo = null;
         this.resize = null;

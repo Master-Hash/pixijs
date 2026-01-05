@@ -130,7 +130,7 @@ export class CullerPlugin
     public static stage: Container;
     /** @internal */
     public static render: () => void;
-    private static _renderRef: () => void;
+    static #renderRef: () => void;
 
     /**
      * Initialize the plugin with scope of application instance
@@ -139,7 +139,7 @@ export class CullerPlugin
      */
     public static init(options?: PixiMixins.ApplicationOptions): void
     {
-        this._renderRef = this.render.bind(this);
+        this.#renderRef = this.render.bind(this);
 
         this.render = (): void =>
         {
@@ -154,6 +154,6 @@ export class CullerPlugin
     /** @internal */
     public static destroy(): void
     {
-        this.render = this._renderRef;
+        this.render = this.#renderRef;
     }
 }
