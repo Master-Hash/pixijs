@@ -178,11 +178,11 @@ export class AccessibilitySystem implements System<AccessibilitySystemOptions>
     #canvasObserver: CanvasObserver;
 
     // eslint-disable-next-line @typescript-eslint/prefer-readonly
-    #isRunningTests: boolean = false;
+    private _isRunningTests: boolean = false;
 
     /** Bound function references for proper event listener removal */
-    #boundOnKeyDown: (e: KeyboardEvent) => void = this.#onKeyDown.bind(this);
-    #boundOnMouseMove: (e: MouseEvent) => void = this.#onMouseMove.bind(this);
+    #boundOnKeyDown: (e: KeyboardEvent) => void = this._onKeyDown.bind(this);
+    #boundOnMouseMove: (e: MouseEvent) => void = this._onMouseMove.bind(this);
 
     // eslint-disable-next-line jsdoc/require-param
     /**
@@ -439,7 +439,7 @@ export class AccessibilitySystem implements System<AccessibilitySystemOptions>
         {
             if (!container._accessibleActive)
             {
-                this.#addChild(container);
+                this._addChild(container);
             }
 
             container._renderId = this.#renderId;
@@ -507,7 +507,7 @@ export class AccessibilitySystem implements System<AccessibilitySystemOptions>
         this.#androidUpdateCount = now + this.#androidUpdateFrequency;
 
         if ((!this.#renderer.renderingToScreen || !this.#renderer.view.canvas)
-            && !this.#isRunningTests)
+            && !this._isRunningTests)
         {
             return;
         }
@@ -642,7 +642,7 @@ export class AccessibilitySystem implements System<AccessibilitySystemOptions>
      * @private
      * @param {Container} container - The child to make accessible.
      */
-    #addChild<T extends Container>(container: T): void
+    private _addChild<T extends Container>(container: T): void
     {
         const pool = this.#getPool(container.accessibleType);
 
@@ -828,7 +828,7 @@ export class AccessibilitySystem implements System<AccessibilitySystemOptions>
      * @private
      * @param {KeyboardEvent} e - The keydown event.
      */
-    #onKeyDown(e: KeyboardEvent): void
+    private _onKeyDown(e: KeyboardEvent): void
     {
         if (e.keyCode !== KEY_CODE_TAB || !this.#activateOnTab)
         {
@@ -843,7 +843,7 @@ export class AccessibilitySystem implements System<AccessibilitySystemOptions>
      * @private
      * @param {MouseEvent} e - The mouse event.
      */
-    #onMouseMove(e: MouseEvent): void
+    private _onMouseMove(e: MouseEvent): void
     {
         if (e.movementX === 0 && e.movementY === 0)
         {
