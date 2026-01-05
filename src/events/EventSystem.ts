@@ -427,10 +427,10 @@ export class EventSystem implements System<EventSystemOptions>
      */
     public readonly features: EventSystemFeatures;
 
-    private _currentCursor: string;
-    private readonly _rootPointerEvent: FederatedPointerEvent;
-    private readonly _rootWheelEvent: FederatedWheelEvent;
-    private _eventsAdded: boolean;
+    #currentCursor: string;
+    readonly #rootPointerEvent: FederatedPointerEvent;
+    readonly #rootWheelEvent: FederatedWheelEvent;
+    #eventsAdded: boolean;
 
     /**
      * @param {Renderer} renderer
@@ -442,10 +442,10 @@ export class EventSystem implements System<EventSystemOptions>
         EventsTicker.init(this);
 
         this.autoPreventDefault = true;
-        this._eventsAdded = false;
+        this.#eventsAdded = false;
 
-        this._rootPointerEvent = new FederatedPointerEvent(null);
-        this._rootWheelEvent = new FederatedWheelEvent(null);
+        this.#rootPointerEvent = new FederatedPointerEvent(null);
+        this.#rootWheelEvent = new FederatedWheelEvent(null);
 
         this.cursorStyles = {
             default: 'inherit',
@@ -465,10 +465,10 @@ export class EventSystem implements System<EventSystemOptions>
             }
         });
 
-        this._onPointerDown = this._onPointerDown.bind(this);
-        this._onPointerMove = this._onPointerMove.bind(this);
-        this._onPointerUp = this._onPointerUp.bind(this);
-        this._onPointerOverOut = this._onPointerOverOut.bind(this);
+        this.#onPointerDown = this.#onPointerDown.bind(this);
+        this.#onPointerMove = this.#onPointerMove.bind(this);
+        this.#onPointerUp = this.#onPointerUp.bind(this);
+        this.#onPointerOverOut = this.#onPointerOverOut.bind(this);
         this.onWheel = this.onWheel.bind(this);
     }
 
@@ -502,7 +502,7 @@ export class EventSystem implements System<EventSystemOptions>
         EventsTicker.destroy();
         this.setTargetElement(null);
         this.renderer = null;
-        this._currentCursor = null;
+        this.#currentCursor = null;
     }
 
     /**
@@ -548,11 +548,11 @@ export class EventSystem implements System<EventSystemOptions>
             applyStyles = false;
         }
         // if the mode didn't actually change, bail early
-        if (this._currentCursor === mode)
+        if (this.#currentCursor === mode)
         {
             return;
         }
-        this._currentCursor = mode;
+        this.#currentCursor = mode;
         const style = this.cursorStyles[mode];
 
         // only do things if there is a cursor style for it
@@ -614,19 +614,19 @@ export class EventSystem implements System<EventSystemOptions>
      */
     public get pointer(): Readonly<FederatedPointerEvent>
     {
-        return this._rootPointerEvent;
+        return this.#rootPointerEvent;
     }
 
     /**
      * Event handler for pointer down events on {@link EventSystem#domElement this.domElement}.
      * @param nativeEvent - The native mouse/pointer/touch event.
      */
-    private _onPointerDown(nativeEvent: MouseEvent | PointerEvent | TouchEvent): void
+    #onPointerDown(nativeEvent: MouseEvent | PointerEvent | TouchEvent): void
     {
         if (!this.features.click) return;
         this.rootBoundary.rootTarget = this.renderer.lastObjectRendered;
 
-        const events = this._normalizeToPointerData(nativeEvent);
+        const events = this.#normalizeToPointerData(nativeEvent);
 
         /*
          * No need to prevent default on natural pointer events, as there are no side effects
@@ -649,7 +649,7 @@ export class EventSystem implements System<EventSystemOptions>
         for (let i = 0, j = events.length; i < j; i++)
         {
             const nativeEvent = events[i];
-            const federatedEvent = this._bootstrapEvent(this._rootPointerEvent, nativeEvent);
+            const federatedEvent = this.#bootstrapEvent(this.#rootPointerEvent, nativeEvent);
 
             this.rootBoundary.mapEvent(federatedEvent);
         }
@@ -661,18 +661,18 @@ export class EventSystem implements System<EventSystemOptions>
      * Event handler for pointer move events on on {@link EventSystem#domElement this.domElement}.
      * @param nativeEvent - The native mouse/pointer/touch events.
      */
-    private _onPointerMove(nativeEvent: MouseEvent | PointerEvent | TouchEvent): void
+    #onPointerMove(nativeEvent: MouseEvent | PointerEvent | TouchEvent): void
     {
         if (!this.features.move) return;
         this.rootBoundary.rootTarget = this.renderer.lastObjectRendered;
 
         EventsTicker.pointerMoved();
 
-        const normalizedEvents = this._normalizeToPointerData(nativeEvent);
+        const normalizedEvents = this.#normalizeToPointerData(nativeEvent);
 
         for (let i = 0, j = normalizedEvents.length; i < j; i++)
         {
-            const event = this._bootstrapEvent(this._rootPointerEvent, normalizedEvents[i]);
+            const event = this.#bootstrapEvent(this.#rootPointerEvent, normalizedEvents[i]);
 
             this.rootBoundary.mapEvent(event);
         }
@@ -684,7 +684,7 @@ export class EventSystem implements System<EventSystemOptions>
      * Event handler for pointer up events on {@link EventSystem#domElement this.domElement}.
      * @param nativeEvent - The native mouse/pointer/touch event.
      */
-    private _onPointerUp(nativeEvent: MouseEvent | PointerEvent | TouchEvent): void
+    #onPointerUp(nativeEvent: MouseEvent | PointerEvent | TouchEvent): void
     {
         if (!this.features.click) return;
         this.rootBoundary.rootTarget = this.renderer.lastObjectRendered;
@@ -698,11 +698,11 @@ export class EventSystem implements System<EventSystemOptions>
         }
 
         const outside = target !== this.domElement ? 'outside' : '';
-        const normalizedEvents = this._normalizeToPointerData(nativeEvent);
+        const normalizedEvents = this.#normalizeToPointerData(nativeEvent);
 
         for (let i = 0, j = normalizedEvents.length; i < j; i++)
         {
-            const event = this._bootstrapEvent(this._rootPointerEvent, normalizedEvents[i]);
+            const event = this.#bootstrapEvent(this.#rootPointerEvent, normalizedEvents[i]);
 
             event.type += outside;
 
@@ -716,16 +716,16 @@ export class EventSystem implements System<EventSystemOptions>
      * Event handler for pointer over & out events on {@link EventSystem#domElement this.domElement}.
      * @param nativeEvent - The native mouse/pointer/touch event.
      */
-    private _onPointerOverOut(nativeEvent: MouseEvent | PointerEvent | TouchEvent): void
+    #onPointerOverOut(nativeEvent: MouseEvent | PointerEvent | TouchEvent): void
     {
         if (!this.features.click) return;
         this.rootBoundary.rootTarget = this.renderer.lastObjectRendered;
 
-        const normalizedEvents = this._normalizeToPointerData(nativeEvent);
+        const normalizedEvents = this.#normalizeToPointerData(nativeEvent);
 
         for (let i = 0, j = normalizedEvents.length; i < j; i++)
         {
-            const event = this._bootstrapEvent(this._rootPointerEvent, normalizedEvents[i]);
+            const event = this.#bootstrapEvent(this.#rootPointerEvent, normalizedEvents[i]);
 
             this.rootBoundary.mapEvent(event);
         }
@@ -775,16 +775,16 @@ export class EventSystem implements System<EventSystemOptions>
      */
     public setTargetElement(element: HTMLElement): void
     {
-        this._removeEvents();
+        this.#removeEvents();
         this.domElement = element;
         EventsTicker.domElement = element;
-        this._addEvents();
+        this.#addEvents();
     }
 
     /** Register event listeners on {@link Renderer#domElement this.domElement}. */
-    private _addEvents(): void
+    #addEvents(): void
     {
-        if (this._eventsAdded || !this.domElement)
+        if (this.#eventsAdded || !this.domElement)
         {
             return;
         }
@@ -812,30 +812,30 @@ export class EventSystem implements System<EventSystemOptions>
          */
         if (this.supportsPointerEvents)
         {
-            globalThis.document.addEventListener('pointermove', this._onPointerMove, true);
-            this.domElement.addEventListener('pointerdown', this._onPointerDown, true);
+            globalThis.document.addEventListener('pointermove', this.#onPointerMove, true);
+            this.domElement.addEventListener('pointerdown', this.#onPointerDown, true);
             // pointerout is fired in addition to pointerup (for touch events) and pointercancel
             // we already handle those, so for the purposes of what we do in onPointerOut, we only
             // care about the pointerleave event
-            this.domElement.addEventListener('pointerleave', this._onPointerOverOut, true);
-            this.domElement.addEventListener('pointerover', this._onPointerOverOut, true);
+            this.domElement.addEventListener('pointerleave', this.#onPointerOverOut, true);
+            this.domElement.addEventListener('pointerover', this.#onPointerOverOut, true);
             // globalThis.addEventListener('pointercancel', this.onPointerCancel, true);
-            globalThis.addEventListener('pointerup', this._onPointerUp, true);
+            globalThis.addEventListener('pointerup', this.#onPointerUp, true);
         }
         else
         {
-            globalThis.document.addEventListener('mousemove', this._onPointerMove, true);
-            this.domElement.addEventListener('mousedown', this._onPointerDown, true);
-            this.domElement.addEventListener('mouseout', this._onPointerOverOut, true);
-            this.domElement.addEventListener('mouseover', this._onPointerOverOut, true);
-            globalThis.addEventListener('mouseup', this._onPointerUp, true);
+            globalThis.document.addEventListener('mousemove', this.#onPointerMove, true);
+            this.domElement.addEventListener('mousedown', this.#onPointerDown, true);
+            this.domElement.addEventListener('mouseout', this.#onPointerOverOut, true);
+            this.domElement.addEventListener('mouseover', this.#onPointerOverOut, true);
+            globalThis.addEventListener('mouseup', this.#onPointerUp, true);
 
             if (this.supportsTouchEvents)
             {
-                this.domElement.addEventListener('touchstart', this._onPointerDown, true);
+                this.domElement.addEventListener('touchstart', this.#onPointerDown, true);
                 // this.domElement.addEventListener('touchcancel', this.onPointerCancel, true);
-                this.domElement.addEventListener('touchend', this._onPointerUp, true);
-                this.domElement.addEventListener('touchmove', this._onPointerMove, true);
+                this.domElement.addEventListener('touchend', this.#onPointerUp, true);
+                this.domElement.addEventListener('touchmove', this.#onPointerMove, true);
             }
         }
 
@@ -844,13 +844,13 @@ export class EventSystem implements System<EventSystemOptions>
             capture: true,
         });
 
-        this._eventsAdded = true;
+        this.#eventsAdded = true;
     }
 
     /** Unregister event listeners on {@link EventSystem#domElement this.domElement}. */
-    private _removeEvents(): void
+    #removeEvents(): void
     {
-        if (!this._eventsAdded || !this.domElement)
+        if (!this.#eventsAdded || !this.domElement)
         {
             return;
         }
@@ -875,34 +875,34 @@ export class EventSystem implements System<EventSystemOptions>
 
         if (this.supportsPointerEvents)
         {
-            globalThis.document.removeEventListener('pointermove', this._onPointerMove, true);
-            this.domElement.removeEventListener('pointerdown', this._onPointerDown, true);
-            this.domElement.removeEventListener('pointerleave', this._onPointerOverOut, true);
-            this.domElement.removeEventListener('pointerover', this._onPointerOverOut, true);
+            globalThis.document.removeEventListener('pointermove', this.#onPointerMove, true);
+            this.domElement.removeEventListener('pointerdown', this.#onPointerDown, true);
+            this.domElement.removeEventListener('pointerleave', this.#onPointerOverOut, true);
+            this.domElement.removeEventListener('pointerover', this.#onPointerOverOut, true);
             // globalThis.removeEventListener('pointercancel', this.onPointerCancel, true);
-            globalThis.removeEventListener('pointerup', this._onPointerUp, true);
+            globalThis.removeEventListener('pointerup', this.#onPointerUp, true);
         }
         else
         {
-            globalThis.document.removeEventListener('mousemove', this._onPointerMove, true);
-            this.domElement.removeEventListener('mousedown', this._onPointerDown, true);
-            this.domElement.removeEventListener('mouseout', this._onPointerOverOut, true);
-            this.domElement.removeEventListener('mouseover', this._onPointerOverOut, true);
-            globalThis.removeEventListener('mouseup', this._onPointerUp, true);
+            globalThis.document.removeEventListener('mousemove', this.#onPointerMove, true);
+            this.domElement.removeEventListener('mousedown', this.#onPointerDown, true);
+            this.domElement.removeEventListener('mouseout', this.#onPointerOverOut, true);
+            this.domElement.removeEventListener('mouseover', this.#onPointerOverOut, true);
+            globalThis.removeEventListener('mouseup', this.#onPointerUp, true);
 
             if (this.supportsTouchEvents)
             {
-                this.domElement.removeEventListener('touchstart', this._onPointerDown, true);
+                this.domElement.removeEventListener('touchstart', this.#onPointerDown, true);
                 // this.domElement.removeEventListener('touchcancel', this.onPointerCancel, true);
-                this.domElement.removeEventListener('touchend', this._onPointerUp, true);
-                this.domElement.removeEventListener('touchmove', this._onPointerMove, true);
+                this.domElement.removeEventListener('touchend', this.#onPointerUp, true);
+                this.domElement.removeEventListener('touchmove', this.#onPointerMove, true);
             }
         }
 
         this.domElement.removeEventListener('wheel', this.onWheel, true);
 
         this.domElement = null;
-        this._eventsAdded = false;
+        this.#eventsAdded = false;
     }
 
     /**
@@ -961,7 +961,7 @@ export class EventSystem implements System<EventSystemOptions>
      * @returns An array containing a single normalized pointer event, in the case of a pointer
      *  or mouse event, or a multiple normalized pointer events if there are multiple changed touches
      */
-    private _normalizeToPointerData(event: TouchEvent | MouseEvent | PointerEvent): PointerEvent[]
+    #normalizeToPointerData(event: TouchEvent | MouseEvent | PointerEvent): PointerEvent[]
     {
         const normalizedEvents = [];
 
@@ -1040,9 +1040,9 @@ export class EventSystem implements System<EventSystemOptions>
      */
     protected normalizeWheelEvent(nativeEvent: WheelEvent): FederatedWheelEvent
     {
-        const event = this._rootWheelEvent;
+        const event = this.#rootWheelEvent;
 
-        this._transferMouseData(event, nativeEvent);
+        this.#transferMouseData(event, nativeEvent);
 
         // When WheelEvent is triggered by scrolling with mouse wheel, reading WheelEvent.deltaMode
         // before deltaX/deltaY/deltaZ on Firefox will result in WheelEvent.DOM_DELTA_LINE (1),
@@ -1071,7 +1071,7 @@ export class EventSystem implements System<EventSystemOptions>
      * @param event
      * @param nativeEvent
      */
-    private _bootstrapEvent(event: FederatedPointerEvent, nativeEvent: PointerEvent): FederatedPointerEvent
+    #bootstrapEvent(event: FederatedPointerEvent, nativeEvent: PointerEvent): FederatedPointerEvent
     {
         event.originalEvent = null;
         event.nativeEvent = nativeEvent;
@@ -1086,7 +1086,7 @@ export class EventSystem implements System<EventSystemOptions>
         event.tiltX = nativeEvent.tiltX;
         event.tiltY = nativeEvent.tiltY;
         event.twist = nativeEvent.twist;
-        this._transferMouseData(event, nativeEvent);
+        this.#transferMouseData(event, nativeEvent);
 
         this.mapPositionToPoint(event.screen, nativeEvent.clientX, nativeEvent.clientY);
         event.global.copyFrom(event.screen);// global = screen for top-level
@@ -1114,7 +1114,7 @@ export class EventSystem implements System<EventSystemOptions>
      * @param event
      * @param nativeEvent
      */
-    private _transferMouseData(event: FederatedMouseEvent, nativeEvent: MouseEvent): void
+    #transferMouseData(event: FederatedMouseEvent, nativeEvent: MouseEvent): void
     {
         event.isTrusted = nativeEvent.isTrusted;
         event.srcElement = nativeEvent.srcElement;
