@@ -118,8 +118,8 @@ export class Resolver
     ) => string = this.#defaultBundleIdentifierOptions.extractAssetIdFromBundle;
 
     #assetMap: Record<string, ResolvedAsset[]> = {};
-    #preferredOrder: PreferOrder[] = [];
-    readonly #parsers: ResolveURLParser[] = [];
+    private _preferredOrder: PreferOrder[] = [];
+    private readonly _parsers: ResolveURLParser[] = [];
 
     #resolverHash: Record<string, ResolvedAsset> = {};
     #rootPath: string;
@@ -165,7 +165,7 @@ export class Resolver
     {
         preferOrders.forEach((prefer) =>
         {
-            this.#preferredOrder.push(prefer);
+            this._preferredOrder.push(prefer);
 
             if (!prefer.priority)
             {
@@ -255,7 +255,7 @@ export class Resolver
      */
     public get parsers(): ResolveURLParser[]
     {
-        return this.#parsers;
+        return this._parsers;
     }
 
     /** Used for testing, this resets the resolver to its initial state */
@@ -264,7 +264,7 @@ export class Resolver
         this.setBundleIdentifier(this.#defaultBundleIdentifierOptions);
 
         this.#assetMap = {};
-        this.#preferredOrder = [];
+        this._preferredOrder = [];
         // Do not reset this._parsers
 
         this.#resolverHash = {};
@@ -509,7 +509,7 @@ export class Resolver
             // Helper function to parse a URL string using registered parsers
             const parseUrl = (url: string): ResolvedAsset =>
             {
-                const parser = this.#parsers.find((p) => p.test(url));
+                const parser = this._parsers.find((p) => p.test(url));
 
                 return {
                     ...parser?.parse(url),
@@ -769,7 +769,7 @@ export class Resolver
         {
             const asset = assets[i];
 
-            const preferred = this.#preferredOrder.find((preference: PreferOrder) =>
+            const preferred = this._preferredOrder.find((preference: PreferOrder) =>
                 preference.params.format.includes(asset.format));
 
             if (preferred)
@@ -778,7 +778,7 @@ export class Resolver
             }
         }
 
-        return this.#preferredOrder[0];
+        return this._preferredOrder[0];
     }
 
     /**
