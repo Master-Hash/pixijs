@@ -6,10 +6,10 @@ import type { CacheParser } from './CacheParser';
 /** @internal */
 class CacheClass
 {
-    private readonly _parsers: CacheParser[] = [];
+    readonly #parsers: CacheParser[] = [];
 
-    private readonly _cache: Map<any, any> = new Map();
-    private readonly _cacheMap: Map<string, {
+    readonly #cache: Map<any, any> = new Map();
+    readonly #cacheMap: Map<string, {
         keys: string[],
         cacheKeys: string[],
     }> = new Map();
@@ -17,8 +17,8 @@ class CacheClass
     /** Clear all entries. */
     public reset(): void
     {
-        this._cacheMap.clear();
-        this._cache.clear();
+        this.#cacheMap.clear();
+        this.#cache.clear();
     }
 
     /**
@@ -27,7 +27,7 @@ class CacheClass
      */
     public has(key: any): boolean
     {
-        return this._cache.has(key);
+        return this.#cache.has(key);
     }
 
     /**
@@ -36,7 +36,7 @@ class CacheClass
      */
     public get<T = any>(key: any): T
     {
-        const result = this._cache.get(key);
+        const result = this.#cache.get(key);
 
         if (!result)
         {
@@ -92,21 +92,21 @@ class CacheClass
         // this is so we can remove them later..
         keys.forEach((key) =>
         {
-            this._cacheMap.set(key, cachedAssets as any);
+            this.#cacheMap.set(key, cachedAssets as any);
         });
 
         cacheKeys.forEach((key) =>
         {
             const val = cacheableAssets ? cacheableAssets[key] : value;
 
-            if (this._cache.has(key) && this._cache.get(key) !== val)
+            if (this.#cache.has(key) && this.#cache.get(key) !== val)
             {
                 // #if _DEBUG
                 warn('[Cache] already has key:', key);
                 // #endif
             }
 
-            this._cache.set(key, cacheableMap.get(key));
+            this.#cache.set(key, cacheableMap.get(key));
         });
     }
 
@@ -118,7 +118,7 @@ class CacheClass
      */
     public remove(key: any): void
     {
-        if (!this._cacheMap.has(key))
+        if (!this.#cacheMap.has(key))
         {
             // #if _DEBUG
             warn(`[Assets] Asset id ${key} was not found in the Cache`);
@@ -127,18 +127,18 @@ class CacheClass
             return;
         }
 
-        const cacheMap = this._cacheMap.get(key);
+        const cacheMap = this.#cacheMap.get(key);
 
         const cacheKeys = cacheMap.cacheKeys;
 
         cacheKeys.forEach((key) =>
         {
-            this._cache.delete(key);
+            this.#cache.delete(key);
         });
 
         cacheMap.keys.forEach((key: string) =>
         {
-            this._cacheMap.delete(key);
+            this.#cacheMap.delete(key);
         });
     }
 
@@ -148,7 +148,7 @@ class CacheClass
      */
     public get parsers(): CacheParser[]
     {
-        return this._parsers;
+        return this.#parsers;
     }
 }
 

@@ -46,23 +46,23 @@ import type { ResolvedAsset } from './types';
 export class BackgroundLoader
 {
     /** Whether or not the loader should continue loading. */
-    private _isActive: boolean;
+    #isActive: boolean;
 
     /** Assets to load. */
-    private readonly _assetList: ResolvedAsset[];
+    readonly #assetList: ResolvedAsset[];
 
     /** Whether or not the loader is loading. */
-    private _isLoading: boolean;
+    #isLoading: boolean;
 
     /** Number of assets to load at a time. */
-    private readonly _maxConcurrent: number;
+    readonly #maxConcurrent: number;
 
     /**
      * Should the loader log to the console.
      * @advanced
      */
     public verbose: boolean;
-    private readonly _loader: Loader;
+    readonly #loader: Loader;
 
     /**
      * @param loader
@@ -70,10 +70,10 @@ export class BackgroundLoader
      */
     constructor(loader: Loader, verbose = false)
     {
-        this._loader = loader;
-        this._assetList = [];
-        this._isLoading = false;
-        this._maxConcurrent = 1;
+        this.#loader = loader;
+        this.#assetList = [];
+        this.#isLoading = false;
+        this.#maxConcurrent = 1;
         this.verbose = verbose;
     }
 
@@ -104,18 +104,18 @@ export class BackgroundLoader
     {
         assetUrls.forEach((a) =>
         {
-            this._assetList.push(a);
+            this.#assetList.push(a);
         });
 
         if (this.verbose)
         {
             // eslint-disable-next-line no-console
-            console.log('[BackgroundLoader] assets: ', this._assetList);
+            console.log('[BackgroundLoader] assets: ', this.#assetList);
         }
 
-        if (this._isActive && !this._isLoading)
+        if (this.#isActive && !this.#isLoading)
         {
-            void this._next();
+            void this.#next();
         }
     }
 
@@ -124,26 +124,26 @@ export class BackgroundLoader
      *
      * The max assets it will try to load at one time will be 4.
      */
-    private async _next(): Promise<void>
+    async #next(): Promise<void>
     {
-        if (this._assetList.length && this._isActive)
+        if (this.#assetList.length && this.#isActive)
         {
-            this._isLoading = true;
+            this.#isLoading = true;
 
             const toLoad = [];
 
-            const toLoadAmount = Math.min(this._assetList.length, this._maxConcurrent);
+            const toLoadAmount = Math.min(this.#assetList.length, this.#maxConcurrent);
 
             for (let i = 0; i < toLoadAmount; i++)
             {
-                toLoad.push(this._assetList.pop());
+                toLoad.push(this.#assetList.pop());
             }
 
-            await this._loader.load(toLoad);
+            await this.#loader.load(toLoad);
 
-            this._isLoading = false;
+            this.#isLoading = false;
 
-            void this._next();
+            void this.#next();
         }
     }
 
@@ -175,18 +175,18 @@ export class BackgroundLoader
      */
     public get active(): boolean
     {
-        return this._isActive;
+        return this.#isActive;
     }
 
     set active(value: boolean)
     {
-        if (this._isActive === value) return;
+        if (this.#isActive === value) return;
 
-        this._isActive = value;
+        this.#isActive = value;
 
-        if (value && !this._isLoading)
+        if (value && !this.#isLoading)
         {
-            void this._next();
+            void this.#next();
         }
     }
 }
