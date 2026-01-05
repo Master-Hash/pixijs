@@ -161,7 +161,7 @@ export class BlurFilter extends Filter
      */
     public blurYFilter: BlurFilterPass;
 
-    private _repeatEdgePixels = false;
+    #repeatEdgePixels = false;
 
     /**
      * @param {filters.BlurFilterOptions} options - The options of the blur filter.
@@ -250,7 +250,7 @@ export class BlurFilter extends Filter
 
     protected updatePadding(): void
     {
-        if (this._repeatEdgePixels)
+        if (this.#repeatEdgePixels)
         {
             this.padding = 0;
         }
@@ -443,12 +443,12 @@ export class BlurFilter extends Filter
      */
     get repeatEdgePixels(): boolean
     {
-        return this._repeatEdgePixels;
+        return this.#repeatEdgePixels;
     }
 
     set repeatEdgePixels(value: boolean)
     {
-        this._repeatEdgePixels = value;
+        this.#repeatEdgePixels = value;
         this.updatePadding();
     }
 }
