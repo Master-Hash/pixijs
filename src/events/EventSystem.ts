@@ -428,7 +428,7 @@ export class EventSystem implements System<EventSystemOptions>
     public readonly features: EventSystemFeatures;
 
     #currentCursor: string;
-    readonly #rootPointerEvent: FederatedPointerEvent;
+    private readonly _rootPointerEvent: FederatedPointerEvent;
     readonly #rootWheelEvent: FederatedWheelEvent;
     #eventsAdded: boolean;
 
@@ -444,7 +444,7 @@ export class EventSystem implements System<EventSystemOptions>
         this.autoPreventDefault = true;
         this.#eventsAdded = false;
 
-        this.#rootPointerEvent = new FederatedPointerEvent(null);
+        this._rootPointerEvent = new FederatedPointerEvent(null);
         this.#rootWheelEvent = new FederatedWheelEvent(null);
 
         this.cursorStyles = {
@@ -614,7 +614,7 @@ export class EventSystem implements System<EventSystemOptions>
      */
     public get pointer(): Readonly<FederatedPointerEvent>
     {
-        return this.#rootPointerEvent;
+        return this._rootPointerEvent;
     }
 
     /**
@@ -649,7 +649,7 @@ export class EventSystem implements System<EventSystemOptions>
         for (let i = 0, j = events.length; i < j; i++)
         {
             const nativeEvent = events[i];
-            const federatedEvent = this.#bootstrapEvent(this.#rootPointerEvent, nativeEvent);
+            const federatedEvent = this.#bootstrapEvent(this._rootPointerEvent, nativeEvent);
 
             this.rootBoundary.mapEvent(federatedEvent);
         }
@@ -672,7 +672,7 @@ export class EventSystem implements System<EventSystemOptions>
 
         for (let i = 0, j = normalizedEvents.length; i < j; i++)
         {
-            const event = this.#bootstrapEvent(this.#rootPointerEvent, normalizedEvents[i]);
+            const event = this.#bootstrapEvent(this._rootPointerEvent, normalizedEvents[i]);
 
             this.rootBoundary.mapEvent(event);
         }
@@ -702,7 +702,7 @@ export class EventSystem implements System<EventSystemOptions>
 
         for (let i = 0, j = normalizedEvents.length; i < j; i++)
         {
-            const event = this.#bootstrapEvent(this.#rootPointerEvent, normalizedEvents[i]);
+            const event = this.#bootstrapEvent(this._rootPointerEvent, normalizedEvents[i]);
 
             event.type += outside;
 
@@ -725,7 +725,7 @@ export class EventSystem implements System<EventSystemOptions>
 
         for (let i = 0, j = normalizedEvents.length; i < j; i++)
         {
-            const event = this.#bootstrapEvent(this.#rootPointerEvent, normalizedEvents[i]);
+            const event = this.#bootstrapEvent(this._rootPointerEvent, normalizedEvents[i]);
 
             this.rootBoundary.mapEvent(event);
         }
@@ -1071,7 +1071,7 @@ export class EventSystem implements System<EventSystemOptions>
      * @param event
      * @param nativeEvent
      */
-    private #bootstrapEvent(event: FederatedPointerEvent, nativeEvent: PointerEvent): FederatedPointerEvent
+    #bootstrapEvent(event: FederatedPointerEvent, nativeEvent: PointerEvent): FederatedPointerEvent
     {
         event.originalEvent = null;
         event.nativeEvent = nativeEvent;
