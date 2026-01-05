@@ -309,7 +309,7 @@ export class AssetsClass
     /** takes care of loading assets in the background */
     readonly #backgroundLoader: BackgroundLoader;
 
-    readonly #detections: FormatDetectionParser[] = [];
+    private readonly _detections: FormatDetectionParser[] = [];
 
     #initialized = false;
 
@@ -422,10 +422,10 @@ export class AssetsClass
         const resolutionPref = options.texturePreference?.resolution ?? 1;
         const resolution = (typeof resolutionPref === 'number') ? [resolutionPref] : resolutionPref;
 
-        const formats = await this.#detectFormats({
+        const formats = await this._detectFormats({
             preferredFormats: options.texturePreference?.format,
             skipDetections: options.skipDetections,
-            detections: this.#detections
+            detections: this._detections
         });
 
         this.resolver.prefer({
@@ -1190,7 +1190,7 @@ export class AssetsClass
      * @param options.detections - the detections to use
      * @returns - the detected formats
      */
-    async #detectFormats(options: {
+    private async _detectFormats(options: {
         preferredFormats: string | string[],
         skipDetections: boolean,
         detections: FormatDetectionParser[]
@@ -1230,7 +1230,7 @@ export class AssetsClass
      */
     public get detections(): FormatDetectionParser[]
     {
-        return this.#detections;
+        return this._detections;
     }
 
     /**

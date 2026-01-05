@@ -6,7 +6,7 @@ import type { CacheParser } from './CacheParser';
 /** @internal */
 class CacheClass
 {
-    readonly #parsers: CacheParser[] = [];
+    private readonly _parsers: CacheParser[] = [];
 
     readonly #cache: Map<any, any> = new Map();
     readonly #cacheMap: Map<string, {
@@ -148,7 +148,7 @@ class CacheClass
      */
     public get parsers(): CacheParser[]
     {
-        return this.#parsers;
+        return this._parsers;
     }
 }
 

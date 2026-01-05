@@ -147,7 +147,7 @@ export class Loader
      * await loader.load('image1.png');
      */
     public loadOptions: LoadOptions = { ...Loader.defaultOptions };
-    readonly #parsers: LoaderParser[] = [];
+    private readonly _parsers: LoaderParser[] = [];
     #parserHash: Record<string, LoaderParser>;
 
     #parsersValidated = false;
@@ -156,7 +156,7 @@ export class Loader
      * All loader parsers registered
      * @type {assets.LoaderParser[]}
      */
-    public parsers = new Proxy(this.#parsers, {
+    public parsers = new Proxy(this._parsers, {
         set: (target, key, value) =>
         {
             this.#parsersValidated = false;
@@ -386,7 +386,7 @@ export class Loader
     {
         this.#parsersValidated = true;
 
-        this.#parserHash = this.#parsers
+        this.#parserHash = this._parsers
             .filter((parser) => parser.name || parser.id)
             .reduce((hash, parser) =>
             {
