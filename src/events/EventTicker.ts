@@ -13,10 +13,10 @@ class EventsTickerClass
     /** The frequency that fake events will be fired. */
     public interactionFrequency = 10;
 
-    private _deltaTime = 0;
-    private _didMove = false;
-    private _tickerAdded = false;
-    private _pauseUpdate = true;
+    #deltaTime = 0;
+    #didMove = false;
+    #tickerAdded = false;
+    #pauseUpdate = true;
 
     /**
      * Initializes the event ticker.
@@ -27,67 +27,67 @@ class EventsTickerClass
         this.removeTickerListener();
         this.events = events;
         this.interactionFrequency = 10;
-        this._deltaTime = 0;
-        this._didMove = false;
-        this._tickerAdded = false;
-        this._pauseUpdate = true;
+        this.#deltaTime = 0;
+        this.#didMove = false;
+        this.#tickerAdded = false;
+        this.#pauseUpdate = true;
     }
 
     /** Whether to pause the update checks or not. */
     get pauseUpdate(): boolean
     {
-        return this._pauseUpdate;
+        return this.#pauseUpdate;
     }
 
     set pauseUpdate(paused: boolean)
     {
-        this._pauseUpdate = paused;
+        this.#pauseUpdate = paused;
     }
 
     /** Adds the ticker listener. */
     public addTickerListener(): void
     {
-        if (this._tickerAdded || !this.domElement)
+        if (this.#tickerAdded || !this.domElement)
         {
             return;
         }
 
-        Ticker.system.add(this._tickerUpdate, this, UPDATE_PRIORITY.INTERACTION);
+        Ticker.system.add(this.#tickerUpdate, this, UPDATE_PRIORITY.INTERACTION);
 
-        this._tickerAdded = true;
+        this.#tickerAdded = true;
     }
 
     /** Removes the ticker listener. */
     public removeTickerListener(): void
     {
-        if (!this._tickerAdded)
+        if (!this.#tickerAdded)
         {
             return;
         }
 
-        Ticker.system.remove(this._tickerUpdate, this);
+        Ticker.system.remove(this.#tickerUpdate, this);
 
-        this._tickerAdded = false;
+        this.#tickerAdded = false;
     }
 
     /** Sets flag to not fire extra events when the user has already moved there mouse */
     public pointerMoved(): void
     {
-        this._didMove = true;
+        this.#didMove = true;
     }
 
     /** Updates the state of interactive objects. */
-    private _update(): void
+    #update(): void
     {
-        if (!this.domElement || this._pauseUpdate)
+        if (!this.domElement || this.#pauseUpdate)
         {
             return;
         }
 
         // if the user move the mouse this check has already been done using the mouse move!
-        if (this._didMove)
+        if (this.#didMove)
         {
-            this._didMove = false;
+            this.#didMove = false;
 
             return;
         }
@@ -118,18 +118,18 @@ class EventsTickerClass
      * Invoked by a throttled ticker update from {@link Ticker.system}.
      * @param ticker - The throttled ticker.
      */
-    private _tickerUpdate(ticker: Ticker): void
+    #tickerUpdate(ticker: Ticker): void
     {
-        this._deltaTime += ticker.deltaTime;
+        this.#deltaTime += ticker.deltaTime;
 
-        if (this._deltaTime < this.interactionFrequency)
+        if (this.#deltaTime < this.interactionFrequency)
         {
             return;
         }
 
-        this._deltaTime = 0;
+        this.#deltaTime = 0;
 
-        this._update();
+        this.#update();
     }
 
     /** Destroys the event ticker. */
@@ -138,10 +138,10 @@ class EventsTickerClass
         this.removeTickerListener();
         this.events = null;
         this.domElement = null;
-        this._deltaTime = 0;
-        this._didMove = false;
-        this._tickerAdded = false;
-        this._pauseUpdate = true;
+        this.#deltaTime = 0;
+        this.#didMove = false;
+        this.#tickerAdded = false;
+        this.#pauseUpdate = true;
     }
 }
 

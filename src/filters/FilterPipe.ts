@@ -19,16 +19,16 @@ export class FilterPipe implements InstructionPipe<FilterInstruction>
         name: 'filter',
     } as const;
 
-    private _renderer: Renderer;
+    #renderer: Renderer;
 
     constructor(renderer: Renderer)
     {
-        this._renderer = renderer;
+        this.#renderer = renderer;
     }
 
     public push(filterEffect: Effect, container: Container, instructionSet: InstructionSet): void
     {
-        const renderPipes = this._renderer.renderPipes;
+        const renderPipes = this.#renderer.renderPipes;
 
         renderPipes.batch.break(instructionSet);
 
@@ -43,7 +43,7 @@ export class FilterPipe implements InstructionPipe<FilterInstruction>
 
     public pop(_filterEffect: Effect, _container: Container, instructionSet: InstructionSet): void
     {
-        this._renderer.renderPipes.batch.break(instructionSet);
+        this.#renderer.renderPipes.batch.break(instructionSet);
 
         instructionSet.add({
             renderPipeId: 'filter',
@@ -56,16 +56,16 @@ export class FilterPipe implements InstructionPipe<FilterInstruction>
     {
         if (instruction.action === 'pushFilter')
         {
-            this._renderer.filter.push(instruction);
+            this.#renderer.filter.push(instruction);
         }
         else if (instruction.action === 'popFilter')
         {
-            this._renderer.filter.pop();
+            this.#renderer.filter.pop();
         }
     }
 
     public destroy(): void
     {
-        this._renderer = null;
+        this.#renderer = null;
     }
 }
