@@ -84,16 +84,16 @@ export class Resolver
      */
     public static RETINA_PREFIX = /@([0-9\.]+)x/;
 
-    private readonly _defaultBundleIdentifierOptions: Required<BundleIdentifierOptions> = {
+    readonly #defaultBundleIdentifierOptions: Required<BundleIdentifierOptions> = {
         connector: '-',
         createBundleAssetId: (bundleId, assetId) =>
-            `${bundleId}${this._bundleIdConnector}${assetId}`,
+            `${bundleId}${this.#bundleIdConnector}${assetId}`,
         extractAssetIdFromBundle: (bundleId, assetBundleId) =>
-            assetBundleId.replace(`${bundleId}${this._bundleIdConnector}`, ''),
+            assetBundleId.replace(`${bundleId}${this.#bundleIdConnector}`, ''),
     };
 
     /** The character that is used to connect the bundleId and the assetId when generating a bundle asset id key */
-    private _bundleIdConnector = this._defaultBundleIdentifierOptions.connector;
+    #bundleIdConnector = this.#defaultBundleIdentifierOptions.connector;
 
     /**
      * A function that generates a bundle asset id key from a bundleId and an assetId
@@ -101,10 +101,10 @@ export class Resolver
      * @param assetId  - the assetId
      * @returns the bundle asset id key
      */
-    private _createBundleAssetId: (
+    #createBundleAssetId: (
         bundleId: string,
         assetId: string
-    ) => string = this._defaultBundleIdentifierOptions.createBundleAssetId;
+    ) => string = this.#defaultBundleIdentifierOptions.createBundleAssetId;
 
     /**
      * A function that generates an assetId from a bundle asset id key. This is the reverse of generateBundleAssetId
@@ -112,21 +112,21 @@ export class Resolver
      * @param assetBundleId - the bundle asset id key
      * @returns the assetId
      */
-    private _extractAssetIdFromBundle: (
+    #extractAssetIdFromBundle: (
         bundleId: string,
         assetBundleId: string
-    ) => string = this._defaultBundleIdentifierOptions.extractAssetIdFromBundle;
+    ) => string = this.#defaultBundleIdentifierOptions.extractAssetIdFromBundle;
 
-    private _assetMap: Record<string, ResolvedAsset[]> = {};
-    private _preferredOrder: PreferOrder[] = [];
-    private readonly _parsers: ResolveURLParser[] = [];
+    #assetMap: Record<string, ResolvedAsset[]> = {};
+    #preferredOrder: PreferOrder[] = [];
+    readonly #parsers: ResolveURLParser[] = [];
 
-    private _resolverHash: Record<string, ResolvedAsset> = {};
-    private _rootPath: string;
-    private _basePath: string;
-    private _manifest: AssetsManifest;
-    private _bundles: Record<string, string[]> = {};
-    private _defaultSearchParams: string;
+    #resolverHash: Record<string, ResolvedAsset> = {};
+    #rootPath: string;
+    #basePath: string;
+    #manifest: AssetsManifest;
+    #bundles: Record<string, string[]> = {};
+    #defaultSearchParams: string;
 
     /**
      * Override how the resolver deals with generating bundle ids.
@@ -135,11 +135,11 @@ export class Resolver
      */
     public setBundleIdentifier(bundleIdentifier: BundleIdentifierOptions): void
     {
-        this._bundleIdConnector = bundleIdentifier.connector ?? this._bundleIdConnector;
-        this._createBundleAssetId = bundleIdentifier.createBundleAssetId ?? this._createBundleAssetId;
-        this._extractAssetIdFromBundle = bundleIdentifier.extractAssetIdFromBundle ?? this._extractAssetIdFromBundle;
+        this.#bundleIdConnector = bundleIdentifier.connector ?? this.#bundleIdConnector;
+        this.#createBundleAssetId = bundleIdentifier.createBundleAssetId ?? this.#createBundleAssetId;
+        this.#extractAssetIdFromBundle = bundleIdentifier.extractAssetIdFromBundle ?? this.#extractAssetIdFromBundle;
 
-        if (this._extractAssetIdFromBundle('foo', this._createBundleAssetId('foo', 'bar')) !== 'bar')
+        if (this.#extractAssetIdFromBundle('foo', this.#createBundleAssetId('foo', 'bar')) !== 'bar')
         {
             throw new Error('[Resolver] GenerateBundleAssetId are not working correctly');
         }
@@ -165,7 +165,7 @@ export class Resolver
     {
         preferOrders.forEach((prefer) =>
         {
-            this._preferredOrder.push(prefer);
+            this.#preferredOrder.push(prefer);
 
             if (!prefer.priority)
             {
@@ -174,7 +174,7 @@ export class Resolver
             }
         });
 
-        this._resolverHash = {};
+        this.#resolverHash = {};
     }
 
     /**
@@ -187,12 +187,12 @@ export class Resolver
      */
     public set basePath(basePath: string)
     {
-        this._basePath = basePath;
+        this.#basePath = basePath;
     }
 
     public get basePath(): string
     {
-        return this._basePath;
+        return this.#basePath;
     }
 
     /**
@@ -208,12 +208,12 @@ export class Resolver
      */
     public set rootPath(rootPath: string)
     {
-        this._rootPath = rootPath;
+        this.#rootPath = rootPath;
     }
 
     public get rootPath(): string
     {
-        return this._rootPath;
+        return this.#rootPath;
     }
 
     /**
@@ -255,24 +255,24 @@ export class Resolver
      */
     public get parsers(): ResolveURLParser[]
     {
-        return this._parsers;
+        return this.#parsers;
     }
 
     /** Used for testing, this resets the resolver to its initial state */
     public reset(): void
     {
-        this.setBundleIdentifier(this._defaultBundleIdentifierOptions);
+        this.setBundleIdentifier(this.#defaultBundleIdentifierOptions);
 
-        this._assetMap = {};
-        this._preferredOrder = [];
+        this.#assetMap = {};
+        this.#preferredOrder = [];
         // Do not reset this._parsers
 
-        this._resolverHash = {};
-        this._rootPath = null;
-        this._basePath = null;
-        this._manifest = null;
-        this._bundles = {};
-        this._defaultSearchParams = null;
+        this.#resolverHash = {};
+        this.#rootPath = null;
+        this.#basePath = null;
+        this.#manifest = null;
+        this.#bundles = {};
+        this.#defaultSearchParams = null;
     }
 
     /**
@@ -283,13 +283,13 @@ export class Resolver
     {
         if (typeof searchParams === 'string')
         {
-            this._defaultSearchParams = searchParams;
+            this.#defaultSearchParams = searchParams;
         }
         else
         {
             const queryValues = searchParams as Record<string, any>;
 
-            this._defaultSearchParams = Object.keys(queryValues)
+            this.#defaultSearchParams = Object.keys(queryValues)
                 .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryValues[key])}`)
                 .join('&');
         }
@@ -324,14 +324,14 @@ export class Resolver
      */
     public addManifest(manifest: AssetsManifest): void
     {
-        if (this._manifest)
+        if (this.#manifest)
         {
             // #if _DEBUG
             warn('[Resolver] Manifest already exists, this will be overwritten');
             // #endif
         }
 
-        this._manifest = manifest;
+        this.#manifest = manifest;
 
         manifest.bundles.forEach((bundle) =>
         {
@@ -391,14 +391,14 @@ export class Resolver
 
             if (typeof aliases === 'string')
             {
-                const bundleAssetId = this._createBundleAssetId(bundleId, aliases);
+                const bundleAssetId = this.#createBundleAssetId(bundleId, aliases);
 
                 assetNames.push(bundleAssetId);
                 ids = [aliases, bundleAssetId];
             }
             else
             {
-                const bundleIds = aliases.map((name) => this._createBundleAssetId(bundleId, name));
+                const bundleIds = aliases.map((name) => this.#createBundleAssetId(bundleId, name));
 
                 assetNames.push(...bundleIds);
                 ids = [...aliases, ...bundleIds];
@@ -413,7 +413,7 @@ export class Resolver
             });
         });
 
-        this._bundles[bundleId] = assetNames;
+        this.#bundles[bundleId] = assetNames;
     }
 
     /**
@@ -509,7 +509,7 @@ export class Resolver
             // Helper function to parse a URL string using registered parsers
             const parseUrl = (url: string): ResolvedAsset =>
             {
-                const parser = this._parsers.find((p) => p.test(url));
+                const parser = this.#parsers.find((p) => p.test(url));
 
                 return {
                     ...parser?.parse(url),
@@ -550,7 +550,7 @@ export class Resolver
                         throw new Error(`[Resolver] alias is undefined for this asset: ${formattedAsset.src}`);
                     }
 
-                    formattedAsset = this._buildResolvedAsset(formattedAsset, {
+                    formattedAsset = this.#buildResolvedAsset(formattedAsset, {
                         aliases: aliasesToUse,
                         data,
                         format,
@@ -565,7 +565,7 @@ export class Resolver
 
             aliasesToUse.forEach((alias) =>
             {
-                this._assetMap[alias] = resolvedAssets;
+                this.#assetMap[alias] = resolvedAssets;
             });
         });
     }
@@ -623,7 +623,7 @@ export class Resolver
 
         bundleIds.forEach((bundleId) =>
         {
-            const assetNames = this._bundles[bundleId];
+            const assetNames = this.#bundles[bundleId];
 
             if (assetNames)
             {
@@ -635,7 +635,7 @@ export class Resolver
                 {
                     const asset = results[key];
 
-                    assets[this._extractAssetIdFromBundle(bundleId, key)] = asset;
+                    assets[this.#extractAssetIdFromBundle(bundleId, key)] = asset;
                 }
 
                 out[bundleId] = assets;
@@ -696,12 +696,12 @@ export class Resolver
 
         keys.forEach((key) =>
         {
-            if (!this._resolverHash[key])
+            if (!this.#resolverHash[key])
             {
-                if (this._assetMap[key])
+                if (this.#assetMap[key])
                 {
-                    let assets = this._assetMap[key];
-                    const preferredOrder = this._getPreferredOrder(assets);
+                    let assets = this.#assetMap[key];
+                    const preferredOrder = this.#getPreferredOrder(assets);
 
                     preferredOrder?.priority.forEach((priorityKey) =>
                     {
@@ -724,18 +724,18 @@ export class Resolver
                         });
                     });
 
-                    this._resolverHash[key] = assets[0];
+                    this.#resolverHash[key] = assets[0];
                 }
                 else
                 {
-                    this._resolverHash[key] = this._buildResolvedAsset({
+                    this.#resolverHash[key] = this.#buildResolvedAsset({
                         alias: [key],
                         src: key,
                     }, {});
                 }
             }
 
-            result[key] = this._resolverHash[key];
+            result[key] = this.#resolverHash[key];
         });
 
         return singleAsset ? result[keys[0]] : result;
@@ -747,7 +747,7 @@ export class Resolver
      */
     public hasKey(key: string): boolean
     {
-        return !!this._assetMap[key];
+        return !!this.#assetMap[key];
     }
 
     /**
@@ -756,20 +756,20 @@ export class Resolver
      */
     public hasBundle(key: string): boolean
     {
-        return !!this._bundles[key];
+        return !!this.#bundles[key];
     }
 
     /**
      * Internal function for figuring out what prefer criteria an asset should use.
      * @param assets
      */
-    private _getPreferredOrder(assets: ResolvedAsset[]): PreferOrder
+    #getPreferredOrder(assets: ResolvedAsset[]): PreferOrder
     {
         for (let i = 0; i < assets.length; i++)
         {
             const asset = assets[i];
 
-            const preferred = this._preferredOrder.find((preference: PreferOrder) =>
+            const preferred = this.#preferredOrder.find((preference: PreferOrder) =>
                 preference.params.format.includes(asset.format));
 
             if (preferred)
@@ -778,7 +778,7 @@ export class Resolver
             }
         }
 
-        return this._preferredOrder[0];
+        return this.#preferredOrder[0];
     }
 
     /**
@@ -786,16 +786,16 @@ export class Resolver
      * @param url - The url to append the default parameters to
      * @returns - The url with the default parameters appended
      */
-    private _appendDefaultSearchParams(url: string): string
+    #appendDefaultSearchParams(url: string): string
     {
-        if (!this._defaultSearchParams) return url;
+        if (!this.#defaultSearchParams) return url;
 
         const paramConnector = (/\?/).test(url) ? '&' : '?';
 
-        return `${url}${paramConnector}${this._defaultSearchParams}`;
+        return `${url}${paramConnector}${this.#defaultSearchParams}`;
     }
 
-    private _buildResolvedAsset(formattedAsset: ResolvedAsset, data?: {
+    #buildResolvedAsset(formattedAsset: ResolvedAsset, data?: {
         aliases?: string[],
         data?: Record<string, unknown>
         loadParser?: string,
@@ -806,13 +806,13 @@ export class Resolver
     {
         const { aliases, data: assetData, loadParser, parser, format, progressSize } = data;
 
-        if (this._basePath || this._rootPath)
+        if (this.#basePath || this.#rootPath)
         {
-            formattedAsset.src = path.toAbsolute(formattedAsset.src, this._basePath, this._rootPath);
+            formattedAsset.src = path.toAbsolute(formattedAsset.src, this.#basePath, this.#rootPath);
         }
 
         formattedAsset.alias = aliases ?? formattedAsset.alias ?? [formattedAsset.src];
-        formattedAsset.src = this._appendDefaultSearchParams(formattedAsset.src);
+        formattedAsset.src = this.#appendDefaultSearchParams(formattedAsset.src);
         formattedAsset.data = { ...assetData || {}, ...formattedAsset.data };
         formattedAsset.loadParser = loadParser ?? formattedAsset.loadParser;
         formattedAsset.parser = parser ?? formattedAsset.parser;
