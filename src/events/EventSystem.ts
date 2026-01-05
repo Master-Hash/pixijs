@@ -427,10 +427,10 @@ export class EventSystem implements System<EventSystemOptions>
      */
     public readonly features: EventSystemFeatures;
 
-    private _currentCursor: string;
-    private readonly _rootPointerEvent: FederatedPointerEvent;
-    private readonly _rootWheelEvent: FederatedWheelEvent;
-    private _eventsAdded: boolean;
+    #currentCursor: string;
+    readonly #rootPointerEvent: FederatedPointerEvent;
+    readonly #rootWheelEvent: FederatedWheelEvent;
+    #eventsAdded: boolean;
 
     /**
      * @param {Renderer} renderer
@@ -442,10 +442,10 @@ export class EventSystem implements System<EventSystemOptions>
         EventsTicker.init(this);
 
         this.autoPreventDefault = true;
-        this._eventsAdded = false;
+        this.#eventsAdded = false;
 
-        this._rootPointerEvent = new FederatedPointerEvent(null);
-        this._rootWheelEvent = new FederatedWheelEvent(null);
+        this.#rootPointerEvent = new FederatedPointerEvent(null);
+        this.#rootWheelEvent = new FederatedWheelEvent(null);
 
         this.cursorStyles = {
             default: 'inherit',
@@ -502,7 +502,7 @@ export class EventSystem implements System<EventSystemOptions>
         EventsTicker.destroy();
         this.setTargetElement(null);
         this.renderer = null;
-        this._currentCursor = null;
+        this.#currentCursor = null;
     }
 
     /**
@@ -548,11 +548,11 @@ export class EventSystem implements System<EventSystemOptions>
             applyStyles = false;
         }
         // if the mode didn't actually change, bail early
-        if (this._currentCursor === mode)
+        if (this.#currentCursor === mode)
         {
             return;
         }
-        this._currentCursor = mode;
+        this.#currentCursor = mode;
         const style = this.cursorStyles[mode];
 
         // only do things if there is a cursor style for it
@@ -614,7 +614,7 @@ export class EventSystem implements System<EventSystemOptions>
      */
     public get pointer(): Readonly<FederatedPointerEvent>
     {
-        return this._rootPointerEvent;
+        return this.#rootPointerEvent;
     }
 
     /**
@@ -626,7 +626,7 @@ export class EventSystem implements System<EventSystemOptions>
         if (!this.features.click) return;
         this.rootBoundary.rootTarget = this.renderer.lastObjectRendered;
 
-        const events = this._normalizeToPointerData(nativeEvent);
+        const events = this.#normalizeToPointerData(nativeEvent);
 
         /*
          * No need to prevent default on natural pointer events, as there are no side effects
@@ -649,7 +649,7 @@ export class EventSystem implements System<EventSystemOptions>
         for (let i = 0, j = events.length; i < j; i++)
         {
             const nativeEvent = events[i];
-            const federatedEvent = this._bootstrapEvent(this._rootPointerEvent, nativeEvent);
+            const federatedEvent = this.#bootstrapEvent(this.#rootPointerEvent, nativeEvent);
 
             this.rootBoundary.mapEvent(federatedEvent);
         }
@@ -668,11 +668,11 @@ export class EventSystem implements System<EventSystemOptions>
 
         EventsTicker.pointerMoved();
 
-        const normalizedEvents = this._normalizeToPointerData(nativeEvent);
+        const normalizedEvents = this.#normalizeToPointerData(nativeEvent);
 
         for (let i = 0, j = normalizedEvents.length; i < j; i++)
         {
-            const event = this._bootstrapEvent(this._rootPointerEvent, normalizedEvents[i]);
+            const event = this.#bootstrapEvent(this.#rootPointerEvent, normalizedEvents[i]);
 
             this.rootBoundary.mapEvent(event);
         }
@@ -698,11 +698,11 @@ export class EventSystem implements System<EventSystemOptions>
         }
 
         const outside = target !== this.domElement ? 'outside' : '';
-        const normalizedEvents = this._normalizeToPointerData(nativeEvent);
+        const normalizedEvents = this.#normalizeToPointerData(nativeEvent);
 
         for (let i = 0, j = normalizedEvents.length; i < j; i++)
         {
-            const event = this._bootstrapEvent(this._rootPointerEvent, normalizedEvents[i]);
+            const event = this.#bootstrapEvent(this.#rootPointerEvent, normalizedEvents[i]);
 
             event.type += outside;
 
@@ -721,11 +721,11 @@ export class EventSystem implements System<EventSystemOptions>
         if (!this.features.click) return;
         this.rootBoundary.rootTarget = this.renderer.lastObjectRendered;
 
-        const normalizedEvents = this._normalizeToPointerData(nativeEvent);
+        const normalizedEvents = this.#normalizeToPointerData(nativeEvent);
 
         for (let i = 0, j = normalizedEvents.length; i < j; i++)
         {
-            const event = this._bootstrapEvent(this._rootPointerEvent, normalizedEvents[i]);
+            const event = this.#bootstrapEvent(this.#rootPointerEvent, normalizedEvents[i]);
 
             this.rootBoundary.mapEvent(event);
         }
@@ -778,13 +778,13 @@ export class EventSystem implements System<EventSystemOptions>
         this._removeEvents();
         this.domElement = element;
         EventsTicker.domElement = element;
-        this._addEvents();
+        this.#addEvents();
     }
 
     /** Register event listeners on {@link Renderer#domElement this.domElement}. */
-    private _addEvents(): void
+    #addEvents(): void
     {
-        if (this._eventsAdded || !this.domElement)
+        if (this.#eventsAdded || !this.domElement)
         {
             return;
         }
@@ -844,13 +844,13 @@ export class EventSystem implements System<EventSystemOptions>
             capture: true,
         });
 
-        this._eventsAdded = true;
+        this.#eventsAdded = true;
     }
 
     /** Unregister event listeners on {@link EventSystem#domElement this.domElement}. */
     private _removeEvents(): void
     {
-        if (!this._eventsAdded || !this.domElement)
+        if (!this.#eventsAdded || !this.domElement)
         {
             return;
         }
@@ -902,7 +902,7 @@ export class EventSystem implements System<EventSystemOptions>
         this.domElement.removeEventListener('wheel', this.onWheel, true);
 
         this.domElement = null;
-        this._eventsAdded = false;
+        this.#eventsAdded = false;
     }
 
     /**
@@ -961,7 +961,7 @@ export class EventSystem implements System<EventSystemOptions>
      * @returns An array containing a single normalized pointer event, in the case of a pointer
      *  or mouse event, or a multiple normalized pointer events if there are multiple changed touches
      */
-    private _normalizeToPointerData(event: TouchEvent | MouseEvent | PointerEvent): PointerEvent[]
+    #normalizeToPointerData(event: TouchEvent | MouseEvent | PointerEvent): PointerEvent[]
     {
         const normalizedEvents = [];
 
@@ -1040,9 +1040,9 @@ export class EventSystem implements System<EventSystemOptions>
      */
     protected normalizeWheelEvent(nativeEvent: WheelEvent): FederatedWheelEvent
     {
-        const event = this._rootWheelEvent;
+        const event = this.#rootWheelEvent;
 
-        this._transferMouseData(event, nativeEvent);
+        this.#transferMouseData(event, nativeEvent);
 
         // When WheelEvent is triggered by scrolling with mouse wheel, reading WheelEvent.deltaMode
         // before deltaX/deltaY/deltaZ on Firefox will result in WheelEvent.DOM_DELTA_LINE (1),
@@ -1071,7 +1071,7 @@ export class EventSystem implements System<EventSystemOptions>
      * @param event
      * @param nativeEvent
      */
-    private _bootstrapEvent(event: FederatedPointerEvent, nativeEvent: PointerEvent): FederatedPointerEvent
+    private #bootstrapEvent(event: FederatedPointerEvent, nativeEvent: PointerEvent): FederatedPointerEvent
     {
         event.originalEvent = null;
         event.nativeEvent = nativeEvent;
@@ -1086,7 +1086,7 @@ export class EventSystem implements System<EventSystemOptions>
         event.tiltX = nativeEvent.tiltX;
         event.tiltY = nativeEvent.tiltY;
         event.twist = nativeEvent.twist;
-        this._transferMouseData(event, nativeEvent);
+        this.#transferMouseData(event, nativeEvent);
 
         this.mapPositionToPoint(event.screen, nativeEvent.clientX, nativeEvent.clientY);
         event.global.copyFrom(event.screen);// global = screen for top-level
@@ -1114,7 +1114,7 @@ export class EventSystem implements System<EventSystemOptions>
      * @param event
      * @param nativeEvent
      */
-    private _transferMouseData(event: FederatedMouseEvent, nativeEvent: MouseEvent): void
+    #transferMouseData(event: FederatedMouseEvent, nativeEvent: MouseEvent): void
     {
         event.isTrusted = nativeEvent.isTrusted;
         event.srcElement = nativeEvent.srcElement;
