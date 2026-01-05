@@ -78,7 +78,7 @@ export class ObservablePoint implements PointLike
     public _y: number;
 
     /** This object used to call the `onUpdate` callback when the point changes. */
-    private readonly _observer: Observer<ObservablePoint>;
+    readonly #observer: Observer<ObservablePoint>;
 
     /**
      * Creates a new `ObservablePoint`
@@ -91,7 +91,7 @@ export class ObservablePoint implements PointLike
         this._x = x || 0;
         this._y = y || 0;
 
-        this._observer = observer;
+        this.#observer = observer;
     }
 
     /**
@@ -118,7 +118,7 @@ export class ObservablePoint implements PointLike
      */
     public clone(observer?: Observer<ObservablePoint>): ObservablePoint
     {
-        return new ObservablePoint(observer ?? this._observer, this._x, this._y);
+        return new ObservablePoint(observer ?? this.#observer, this._x, this._y);
     }
 
     /**
@@ -146,7 +146,7 @@ export class ObservablePoint implements PointLike
         {
             this._x = x;
             this._y = y;
-            this._observer._onUpdate(this);
+            this.#observer._onUpdate(this);
         }
 
         return this;
@@ -181,7 +181,7 @@ export class ObservablePoint implements PointLike
         {
             this._x = p.x;
             this._y = p.y;
-            this._observer._onUpdate(this);
+            this.#observer._onUpdate(this);
         }
 
         return this;
@@ -240,7 +240,7 @@ export class ObservablePoint implements PointLike
     // #if _DEBUG
     public toString(): string
     {
-        return `[pixi.js/math:ObservablePoint x=${this._x} y=${this._y} scope=${this._observer}]`;
+        return `[pixi.js/math:ObservablePoint x=${this._x} y=${this._y} scope=${this.#observer}]`;
     }
     // #endif
 
@@ -268,7 +268,7 @@ export class ObservablePoint implements PointLike
         if (this._x !== value)
         {
             this._x = value;
-            this._observer._onUpdate(this);
+            this.#observer._onUpdate(this);
         }
     }
 
@@ -296,7 +296,7 @@ export class ObservablePoint implements PointLike
         if (this._y !== value)
         {
             this._y = value;
-            this._observer._onUpdate(this);
+            this.#observer._onUpdate(this);
         }
     }
 }

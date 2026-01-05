@@ -99,7 +99,7 @@ export interface DisplacementFilterOptions extends FilterOptions
  */
 export class DisplacementFilter extends Filter
 {
-    private readonly _sprite: Sprite;
+    readonly #sprite: Sprite;
 
     /**
      * @param {Sprite | DisplacementFilterOptions} options - The sprite or options object.
@@ -171,8 +171,8 @@ export class DisplacementFilter extends Filter
             },
         });
 
-        this._sprite = options.sprite;
-        this._sprite.renderable = false;
+        this.#sprite = options.sprite;
+        this.#sprite.renderable = false;
     }
 
     /**
@@ -194,11 +194,11 @@ export class DisplacementFilter extends Filter
 
         filterManager.calculateSpriteMatrix(
             uniforms.uFilterMatrix,
-            this._sprite
+            this.#sprite
         );
 
         // Extract rotation from world transform
-        const wt = this._sprite.worldTransform;
+        const wt = this.#sprite.worldTransform;
         const lenX = Math.sqrt((wt.a * wt.a) + (wt.b * wt.b));
         const lenY = Math.sqrt((wt.c * wt.c) + (wt.d * wt.d));
 
@@ -210,7 +210,7 @@ export class DisplacementFilter extends Filter
             uniforms.uRotation[3] = wt.d / lenY;
         }
 
-        this.resources.uMapTexture = this._sprite.texture.source;
+        this.resources.uMapTexture = this.#sprite.texture.source;
 
         filterManager.applyFilter(this, input, output, clearMode);
     }

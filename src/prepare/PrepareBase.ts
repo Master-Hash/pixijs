@@ -45,7 +45,7 @@ export abstract class PrepareBase
     /** Timeout id for next processing call */
     protected timeout?: number;
 
-    private _destroyed: boolean;
+    #destroyed: boolean;
 
     /**
      * @param {Renderer} renderer - A reference to the current renderer
@@ -83,7 +83,7 @@ export abstract class PrepareBase
             // handle containers and their children
             if (resourceItem instanceof Container)
             {
-                this._addContainer(resourceItem);
+                this.#addContainer(resourceItem);
             }
             else
             {
@@ -98,14 +98,14 @@ export abstract class PrepareBase
      * Recursively add a container and its children to the queue
      * @param {Container} container - The container to add to the queue
      */
-    private _addContainer(container: Container): void
+    #addContainer(container: Container): void
     {
         this.resolveQueueItem(container, this.queue);
 
         // recursively add children
         for (const child of container.children)
         {
-            this._addContainer(child);
+            this.#addContainer(child);
         }
     }
 
@@ -131,7 +131,7 @@ export abstract class PrepareBase
                 this.dedupeQueue();
 
                 // launch first tick
-                Ticker.system.addOnce(this._tick, this, UPDATE_PRIORITY.UTILITY);
+                Ticker.system.addOnce(this.#tick, this, UPDATE_PRIORITY.UTILITY);
             }
             else
             {
@@ -163,22 +163,22 @@ export abstract class PrepareBase
 
     public destroy(): void
     {
-        this._destroyed = true;
+        this.#destroyed = true;
         clearTimeout(this.timeout);
     }
 
     /** called per frame by the ticker, defer processing to next tick */
-    private readonly _tick = () =>
+    readonly #tick = () =>
     {
-        if (this._destroyed) return;
+        if (this.#destroyed) return;
 
-        this.timeout = setTimeout(this._processQueue, 0) as unknown as number;
+        this.timeout = setTimeout(this.#processQueue, 0) as unknown as number;
     };
 
     /** process the queue up to max item limit per frame */
-    private readonly _processQueue = () =>
+    readonly #processQueue = () =>
     {
-        if (this._destroyed) return;
+        if (this.#destroyed) return;
 
         const { queue } = this;
         let itemsProcessed = 0;
@@ -196,17 +196,17 @@ export abstract class PrepareBase
         if (queue.length)
         {
             // queue is not empty, continue processing on next frame
-            Ticker.system.addOnce(this._tick, this, UPDATE_PRIORITY.UTILITY);
+            Ticker.system.addOnce(this.#tick, this, UPDATE_PRIORITY.UTILITY);
         }
         else
         {
             // queue is empty, resolve immediately
-            this._resolve();
+            this.#resolve();
         }
     };
 
     /** Call all the resolve callbacks */
-    private _resolve(): void
+    #resolve(): void
     {
         const { resolves } = this;
 
