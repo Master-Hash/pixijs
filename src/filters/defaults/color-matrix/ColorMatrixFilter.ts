@@ -117,7 +117,7 @@ export class ColorMatrixFilter extends Filter
 
         if (multiply)
         {
-            this.#multiply(newMatrix, this.matrix, matrix);
+            this._multiply(newMatrix, this.matrix, matrix);
             newMatrix = this.#colorMatrix(newMatrix) as any;
         }
 
@@ -135,7 +135,7 @@ export class ColorMatrixFilter extends Filter
      * @param b - 5x4 matrix the second operand
      * @returns {number[]} 5x4 matrix
      */
-    #multiply(out: ColorMatrix, a: ColorMatrix, b: ColorMatrix): ColorMatrix
+    private _multiply(out: ColorMatrix, a: ColorMatrix, b: ColorMatrix): ColorMatrix
     {
         // Red Channel
         out[0] = (a[0] * b[0]) + (a[1] * b[5]) + (a[2] * b[10]) + (a[3] * b[15]);
