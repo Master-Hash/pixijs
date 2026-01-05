@@ -146,7 +146,7 @@ export class TickerPlugin
     /** @internal */
     public static stop: () => void;
     /** @internal */
-    static #ticker: Ticker;
+    private static _ticker: Ticker;
     /** @internal */
     public static ticker: Ticker;
 
@@ -187,15 +187,15 @@ export class TickerPlugin
 
         this.stop = (): void =>
         {
-            this.#ticker.stop();
+            this._ticker.stop();
         };
 
         this.start = (): void =>
         {
-            this.#ticker.start();
+            this._ticker.start();
         };
 
-        this.#ticker = null;
+        this._ticker = null;
         this.ticker = options.sharedTicker ? Ticker.shared : new Ticker();
 
         // Start the rendering
@@ -211,9 +211,9 @@ export class TickerPlugin
      */
     public static destroy(): void
     {
-        if (this.#ticker)
+        if (this._ticker)
         {
-            const oldTicker = this.#ticker;
+            const oldTicker = this._ticker;
 
             this.ticker = null;
             oldTicker.destroy();
